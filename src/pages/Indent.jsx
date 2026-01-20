@@ -14,7 +14,7 @@ const Indent = () => {
     department:'',
     prefer: '',
     numberOfPost: '',
-    competitionDate: '',
+    completionDate: '',
     socialSite: '',
     indentNumber: '',
     timestamp: '',
@@ -394,7 +394,7 @@ const fetchLastIndentNumber = async () => {
       !formData.post ||
       !formData.gender ||
       !formData.numberOfPost ||
-      !formData.competitionDate ||
+      !formData.completionDate ||
       !formData.socialSite
     ) {
       toast.error('Please fill all required fields');
@@ -419,8 +419,8 @@ const fetchLastIndentNumber = async () => {
       const indentNumber = await generateIndentNumber();
       const timestamp = getCurrentTimestamp();
 
-      // Format the competition date to MM/DD/YYYY for Google Sheets
-      const formattedDate = formatDateForSheet(formData.competitionDate);
+      // Format the completion date to MM/DD/YYYY for Google Sheets
+      const formattedDate = formatDateForSheet(formData.completionDate);
       console.log(indentNumber);
 
       // Prepare row data with additional columns for experience and social site types
@@ -464,7 +464,7 @@ const fetchLastIndentNumber = async () => {
           department:'',
           prefer: '',
           numberOfPost: '',
-          competitionDate: '',
+          completionDate: '',
           socialSite: '',
           indentNumber: '',
           timestamp: '',
@@ -504,7 +504,7 @@ const fetchLastIndentNumber = async () => {
       department:'',
       prefer: '',
       numberOfPost: '',
-      competitionDate: '',
+      completionDate: '',
       socialSite: '',
       indentNumber: '',
       timestamp: '',
@@ -677,12 +677,12 @@ const fetchLastIndentNumber = async () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Competition Date *
+                  Completion Date *
                 </label>
                 <input
                   type="date"
-                  name="competitionDate"
-                  value={formData.competitionDate}
+                  name="completionDate"
+                  value={formData.completionDate}
                   onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
