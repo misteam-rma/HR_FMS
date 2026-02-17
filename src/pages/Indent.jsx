@@ -11,7 +11,7 @@ const Indent = () => {
   const [formData, setFormData] = useState({
     post: '',
     gender: '',
-    department:'',
+    department: '',
     prefer: '',
     numberOfPost: '',
     completionDate: '',
@@ -29,17 +29,17 @@ const Indent = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [emailData, setEmailData] = useState({
-  recipientName: "",
-  recipientEmail: "",
-  subject: "",
-  message: "",
+    recipientName: "",
+    recipientEmail: "",
+    subject: "",
+    message: "",
   });
 
   const handleShareClick = (item) => {
-  setSelectedRow(item);
-  
-  // Create a formatted message with row details
-  const formattedMessage = `
+    setSelectedRow(item);
+
+    // Create a formatted message with row details
+    const formattedMessage = `
 Indent Details:
 
 Indent Number: ${item.indentNumber}
@@ -56,94 +56,94 @@ Social Site Types: ${item.socialSiteTypes || 'N/A'}
 This indent requires your attention.
   `.trim();
 
-  setEmailData({
-    recipientName: '',
-    recipientEmail: '',
-    subject: ``,
-    message: formattedMessage
-  });
-  setShowEmailModal(true);
-};
-
-const handleEmailSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!emailData.recipientEmail || !emailData.subject || !emailData.message) {
-    toast.error('Please fill all required fields');
-    return;
-  }
-
-  try {
-    setSubmitting(true);
-    
-    const response = await fetch('https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec', {
-      method: 'POST',
-      body: new URLSearchParams({
-        action: 'shareViaEmail',
-        recipientEmail: emailData.recipientEmail,
-        subject: emailData.subject,
-        message: emailData.message,
-        documents: JSON.stringify([]) // You can add documents if needed
-      }),
+    setEmailData({
+      recipientName: '',
+      recipientEmail: '',
+      subject: ``,
+      message: formattedMessage
     });
+    setShowEmailModal(true);
+  };
 
-    const result = await response.json();
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
 
-    if (result.success) {
-      toast.success('Email sent successfully!');
-      setShowEmailModal(false);
-      setEmailData({
-        recipientName: '',
-        recipientEmail: '',
-        subject: '',
-        message: ''
-      });
-    } else {
-      toast.error('Failed to send email: ' + (result.error || 'Unknown error'));
+    if (!emailData.recipientEmail || !emailData.subject || !emailData.message) {
+      toast.error('Please fill all required fields');
+      return;
     }
-  } catch (error) {
-    console.error('Email send error:', error);
-    toast.error('Failed to send email!');
-  } finally {
-    setSubmitting(false);
-  }
-};
 
-const handleEmailInputChange = (e) => {
-  const { name, value } = e.target;
-  setEmailData(prev => ({
-    ...prev,
-    [name]: value
-  }));
-};
+    try {
+      setSubmitting(true);
+
+      const response = await fetch('https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec', {
+        method: 'POST',
+        body: new URLSearchParams({
+          action: 'shareViaEmail',
+          recipientEmail: emailData.recipientEmail,
+          subject: emailData.subject,
+          message: emailData.message,
+          documents: JSON.stringify([]) // You can add documents if needed
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Email sent successfully!');
+        setShowEmailModal(false);
+        setEmailData({
+          recipientName: '',
+          recipientEmail: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        toast.error('Failed to send email: ' + (result.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Email send error:', error);
+      toast.error('Failed to send email!');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEmailInputChange = (e) => {
+    const { name, value } = e.target;
+    setEmailData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const fetchDepartments = async () => {
-  try {
-    const response = await fetch(
-      'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=Master&action=fetch'
-    );
-    
-    const result = await response.json();
-    
-    if (result.success && result.data && result.data.length > 0) {
-      // Extract unique departments from Column B (index 1), skip header row
-      const deptList = result.data
-        .slice(1) // Skip header row
-        .map(row => row[1]) // Column B is index 1
-        .filter(dept => dept && dept.trim() !== '') // Remove empty values
-        .filter((dept, index, self) => self.indexOf(dept) === index); // Get unique values
-      
-      setDepartments(deptList);
+    try {
+      const response = await fetch(
+        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=Master&action=fetch'
+      );
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.length > 0) {
+        // Extract unique departments from Column B (index 1), skip header row
+        const deptList = result.data
+          .slice(1) // Skip header row
+          .map(row => row[1]) // Column B is index 1
+          .filter(dept => dept && dept.trim() !== '') // Remove empty values
+          .filter((dept, index, self) => self.indexOf(dept) === index); // Get unique values
+
+        setDepartments(deptList);
+      }
+    } catch (error) {
+      console.error('Error fetching departments:', error);
     }
-  } catch (error) {
-    console.error('Error fetching departments:', error);
-  }
-};
+  };
 
   const handleCreativeClick = (item) => {
     // Navigate to JobPoster page with indent data
-    navigate('/jobPoster', { 
-      state: { 
+    navigate('/jobPoster', {
+      state: {
         post: item.post,
         experience: item.experience,
         indentNumber: item.indentNumber
@@ -175,187 +175,187 @@ const handleEmailInputChange = (e) => {
     loadData();
   }, []);
 
-const generateIndentNumber = async () => {
-  try {
-    const result = await fetchLastIndentNumber();
-    
-    if (result.success) {
-      const nextNumber = result.lastIndentNumber + 1;
-      return `REC-${String(nextNumber).padStart(2, '0')}`;
+  const generateIndentNumber = async () => {
+    try {
+      const result = await fetchLastIndentNumber();
+
+      if (result.success) {
+        const nextNumber = result.lastIndentNumber + 1;
+        return `REC-${String(nextNumber).padStart(2, '0')}`;
+      }
+      // Fallback if fetch fails
+      return 'REC-01';
+    } catch (error) {
+      console.error('Error generating indent number:', error);
+      return 'REC-01';
     }
-    // Fallback if fetch fails
-    return 'REC-01';
-  } catch (error) {
-    console.error('Error generating indent number:', error);
-    return 'REC-01';
-  }
-};
+  };
 
-const getCurrentTimestamp = () => {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const year = now.getFullYear();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const getCurrentTimestamp = () => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
 
-  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-};
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
 
   const fetchIndentDataFromRow7 = async () => {
-  try {
-    const response = await fetch(
-      'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
-    );
-    
-    const result = await response.json();
-    
-    if (result.success && result.data && result.data.length >= 7) {
-      // Get data starting from row 7 (array index 6) to end
-      const dataFromRow7 = result.data.slice(6);
-      
-      // Find headers (assuming they're in row 6 - array index 5)
-      const headers = result.data[5].map(h => h.trim());
-      
-      // Find column indices for important fields
-      const timestampIndex = headers.indexOf('Timestamp');
-      const indentNumberIndex = headers.indexOf('Indent Number');
-      const postIndex = headers.indexOf('Post');
-      const genderIndex = headers.indexOf('Gender');
-      const departmentIndex = headers.indexOf('Department');
-       const preferIndex = headers.indexOf('Prefer');
-         const noOFPostIndex = headers.indexOf('Number Of Posts');
-         const completionDateIndex = headers.indexOf('Completion Date');
-         const socialSiteIndex = headers.indexOf('Social Site');
-         const experienceIndex = headers.indexOf('Experience')
-         const socialSiteTypesIndex = headers.indexOf('Social Site Types')
-      // Add other column indices as needed
-      
-      // Process the data
-      const processedData = dataFromRow7.map(row => ({
-        timestamp: row[timestampIndex],
-        indentNumber: row[indentNumberIndex],
-        post: row[postIndex],
-        gender: row[genderIndex],
-        department: row[departmentIndex],
-        prefer:row[preferIndex],
-        noOfPost:row[noOFPostIndex],
-        completionDate:row[completionDateIndex],
-        socialSite:row[socialSiteIndex],
-        experience:row[experienceIndex],
-        socialSiteTypes:row[socialSiteTypesIndex],
-        // Add other fields as needed
-      }));
-      setIndentData(processedData)
-      return {
-        success: true,
-        data: processedData,
-        headers: headers
-      };
-    } else {
+    try {
+      const response = await fetch(
+        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
+      );
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.length >= 7) {
+        // Get data starting from row 7 (array index 6) to end
+        const dataFromRow7 = result.data.slice(6);
+
+        // Find headers (assuming they're in row 6 - array index 5)
+        const headers = result.data[5].map(h => h.trim());
+
+        // Find column indices for important fields
+        const timestampIndex = headers.indexOf('Timestamp');
+        const indentNumberIndex = headers.indexOf('Indent Number');
+        const postIndex = headers.indexOf('Post');
+        const genderIndex = headers.indexOf('Gender');
+        const departmentIndex = headers.indexOf('Department');
+        const preferIndex = headers.indexOf('Prefer');
+        const noOFPostIndex = headers.indexOf('Number Of Posts');
+        const completionDateIndex = headers.indexOf('Completion Date');
+        const socialSiteIndex = headers.indexOf('Social Site');
+        const experienceIndex = headers.indexOf('Experience')
+        const socialSiteTypesIndex = headers.indexOf('Social Site Types')
+        // Add other column indices as needed
+
+        // Process the data
+        const processedData = dataFromRow7.map(row => ({
+          timestamp: row[timestampIndex],
+          indentNumber: row[indentNumberIndex],
+          post: row[postIndex],
+          gender: row[genderIndex],
+          department: row[departmentIndex],
+          prefer: row[preferIndex],
+          noOfPost: row[noOFPostIndex],
+          completionDate: row[completionDateIndex],
+          socialSite: row[socialSiteIndex],
+          experience: row[experienceIndex],
+          socialSiteTypes: row[socialSiteTypesIndex],
+          // Add other fields as needed
+        }));
+        setIndentData(processedData)
+        return {
+          success: true,
+          data: processedData,
+          headers: headers
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Not enough rows in sheet data'
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
       return {
         success: false,
-        error: 'Not enough rows in sheet data'
+        error: error.message
       };
     }
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-};
+  };
 
-const fetchLastIndentNumber = async () => {
-  try {
-    const response = await fetch(
-      'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
-    );
-    
-    const result = await response.json();
-    console.log('Full sheet data:', result); // Debugging
-    
-    if (result.success && result.data && result.data.length > 1) {
-      // Find the first row with actual headers (skip empty rows)
-      let headerRowIndex = 0;
-      while (headerRowIndex < result.data.length && 
-             result.data[headerRowIndex].every(cell => !cell || cell.trim() === '')) {
-        headerRowIndex++;
-      }
-      
-      if (headerRowIndex >= result.data.length) {
-        throw new Error('No header row found in sheet');
-      }
-      
-      const headers = result.data[headerRowIndex].map(h => h ? h.trim().toLowerCase() : '');
-      console.log('Headers found:', headers);
-      
-      // Try to find the indent number column by common names
-      const possibleNames = ['indent number', 'indentnumber', 'indent_no', 'indentno', 'indent'];
-      let indentNumberIndex = -1;
-      
-      for (const name of possibleNames) {
-        indentNumberIndex = headers.indexOf(name);
-        if (indentNumberIndex !== -1) break;
-      }
-      
-      if (indentNumberIndex === -1) {
-        // If still not found, try to find by position (from your screenshot it's column B/index 1)
-        indentNumberIndex = 1;
-        console.warn('Using fallback column index 1 for indent number');
-      }
-      
-      // Find the last non-empty row with data
-      let lastDataRowIndex = result.data.length - 1;
-      while (lastDataRowIndex > headerRowIndex && 
-             (!result.data[lastDataRowIndex][indentNumberIndex] || 
-              result.data[lastDataRowIndex][indentNumberIndex].trim() === '')) {
-        lastDataRowIndex--;
-      }
-      
-      if (lastDataRowIndex <= headerRowIndex) {
+  const fetchLastIndentNumber = async () => {
+    try {
+      const response = await fetch(
+        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
+      );
+
+      const result = await response.json();
+      console.log('Full sheet data:', result); // Debugging
+
+      if (result.success && result.data && result.data.length > 1) {
+        // Find the first row with actual headers (skip empty rows)
+        let headerRowIndex = 0;
+        while (headerRowIndex < result.data.length &&
+          result.data[headerRowIndex].every(cell => !cell || cell.trim() === '')) {
+          headerRowIndex++;
+        }
+
+        if (headerRowIndex >= result.data.length) {
+          throw new Error('No header row found in sheet');
+        }
+
+        const headers = result.data[headerRowIndex].map(h => h ? h.trim().toLowerCase() : '');
+        console.log('Headers found:', headers);
+
+        // Try to find the indent number column by common names
+        const possibleNames = ['indent number', 'indentnumber', 'indent_no', 'indentno', 'indent'];
+        let indentNumberIndex = -1;
+
+        for (const name of possibleNames) {
+          indentNumberIndex = headers.indexOf(name);
+          if (indentNumberIndex !== -1) break;
+        }
+
+        if (indentNumberIndex === -1) {
+          // If still not found, try to find by position (from your screenshot it's column B/index 1)
+          indentNumberIndex = 1;
+          console.warn('Using fallback column index 1 for indent number');
+        }
+
+        // Find the last non-empty row with data
+        let lastDataRowIndex = result.data.length - 1;
+        while (lastDataRowIndex > headerRowIndex &&
+          (!result.data[lastDataRowIndex][indentNumberIndex] ||
+            result.data[lastDataRowIndex][indentNumberIndex].trim() === '')) {
+          lastDataRowIndex--;
+        }
+
+        if (lastDataRowIndex <= headerRowIndex) {
+          return {
+            success: true,
+            lastIndentNumber: 0,
+            message: 'No data rows found'
+          };
+        }
+
+        const lastIndentNumber = result.data[lastDataRowIndex][indentNumberIndex];
+        console.log('Last indent number found:', lastIndentNumber);
+
+        // Extract numeric part from "REC-01" format
+        let numericValue = 0;
+        if (typeof lastIndentNumber === 'string') {
+          const match = lastIndentNumber.match(/\d+/);
+          numericValue = match ? parseInt(match[0]) : 0;
+        } else {
+          numericValue = parseInt(lastIndentNumber) || 0;
+        }
+
+        return {
+          success: true,
+          lastIndentNumber: numericValue,
+          fullLastIndent: lastIndentNumber
+        };
+      } else {
         return {
           success: true,
           lastIndentNumber: 0,
-          message: 'No data rows found'
+          message: 'Sheet is empty or has no data rows'
         };
       }
-      
-      const lastIndentNumber = result.data[lastDataRowIndex][indentNumberIndex];
-      console.log('Last indent number found:', lastIndentNumber);
-      
-      // Extract numeric part from "REC-01" format
-      let numericValue = 0;
-      if (typeof lastIndentNumber === 'string') {
-        const match = lastIndentNumber.match(/\d+/);
-        numericValue = match ? parseInt(match[0]) : 0;
-      } else {
-        numericValue = parseInt(lastIndentNumber) || 0;
-      }
-      
+    } catch (error) {
+      console.error('Error in fetchLastIndentNumber:', error);
       return {
-        success: true,
-        lastIndentNumber: numericValue,
-        fullLastIndent: lastIndentNumber
-      };
-    } else {
-      return {
-        success: true,
-        lastIndentNumber: 0,
-        message: 'Sheet is empty or has no data rows'
+        success: false,
+        error: error.message,
+        lastIndentNumber: 0
       };
     }
-  } catch (error) {
-    console.error('Error in fetchLastIndentNumber:', error);
-    return {
-      success: false,
-      error: error.message,
-      lastIndentNumber: 0
-    };
-  }
-};
+  };
 
 
 
@@ -371,7 +371,7 @@ const fetchLastIndentNumber = async () => {
 
   const handleSocialSiteTypeChange = (e) => {
     const { value, checked } = e.target;
-    
+
     setFormData(prev => {
       if (checked) {
         return {
@@ -461,7 +461,7 @@ const fetchLastIndentNumber = async () => {
         setFormData({
           post: '',
           gender: '',
-          department:'',
+          department: '',
           prefer: '',
           numberOfPost: '',
           completionDate: '',
@@ -501,7 +501,7 @@ const fetchLastIndentNumber = async () => {
     setFormData({
       post: '',
       gender: '',
-      department:'',
+      department: '',
       prefer: '',
       numberOfPost: '',
       completionDate: '',
@@ -1015,40 +1015,40 @@ const fetchLastIndentNumber = async () => {
                         <div className="text-sm text-gray-900 break-words">
                           {item.completionDate
                             ? (() => {
-                                const date = new Date(item.completionDate);
-                                if (!date || isNaN(date.getTime()))
-                                  return "Invalid date";
-                                const day = date
-                                  .getDate()
-                                  .toString()
-                                  .padStart(2, "0");
-                                const month = (date.getMonth() + 1)
-                                  .toString()
-                                  .padStart(2, "0");
-                                const year = date.getFullYear();
-                                const hours = date
-                                  .getHours()
-                                  .toString()
-                                  .padStart(2, "0");
-                                const minutes = date
-                                  .getMinutes()
-                                  .toString()
-                                  .padStart(2, "0");
-                                const seconds = date
-                                  .getSeconds()
-                                  .toString()
-                                  .padStart(2, "0");
-                                return (
-                                  <div>
-                                    <div className="font-medium break-words">
-                                      {`${day}/${month}/${year}`}
-                                    </div>
-                                    <div className="text-xs text-gray-500 break-words">
-                                      {`${hours}:${minutes}:${seconds}`}
-                                    </div>
+                              const date = new Date(item.completionDate);
+                              if (!date || isNaN(date.getTime()))
+                                return "Invalid date";
+                              const day = date
+                                .getDate()
+                                .toString()
+                                .padStart(2, "0");
+                              const month = (date.getMonth() + 1)
+                                .toString()
+                                .padStart(2, "0");
+                              const year = date.getFullYear();
+                              const hours = date
+                                .getHours()
+                                .toString()
+                                .padStart(2, "0");
+                              const minutes = date
+                                .getMinutes()
+                                .toString()
+                                .padStart(2, "0");
+                              const seconds = date
+                                .getSeconds()
+                                .toString()
+                                .padStart(2, "0");
+                              return (
+                                <div>
+                                  <div className="font-medium break-words">
+                                    {`${day}/${month}/${year}`}
                                   </div>
-                                );
-                              })()
+                                  <div className="text-xs text-gray-500 break-words">
+                                    {`${hours}:${minutes}:${seconds}`}
+                                  </div>
+                                </div>
+                              );
+                            })()
                             : "—"}
                         </div>
                       </td>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Clock, CheckCircle, X, Upload, Share } from 'lucide-react';
+import { Search, Clock, CheckCircle, X, Upload, Share, QrCode, Download } from 'lucide-react';
 import useDataStore from '../store/dataStore';
 import toast from 'react-hot-toast';
+import { QRCodeSVG } from 'qrcode.react';
 
 const FindEnquiry = () => {
   const [activeTab, setActiveTab] = useState('pending');
@@ -18,191 +19,192 @@ const FindEnquiry = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-const [shareFormData, setShareFormData] = useState({
-  recipientName: '',
-  recipientEmail: '',
-  subject: 'Candidate Enquiry Details',
-  message: 'Please find the candidate enquiry details attached below.',
-});
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [shareFormData, setShareFormData] = useState({
+    recipientName: '',
+    recipientEmail: '',
+    subject: 'Candidate Enquiry Details',
+    message: 'Please find the candidate enquiry details attached below.',
+  });
 
-const [formData, setFormData] = useState({
-  candidateName: '',
-  candidateDOB: '',
-  candidatePhone: '',
-  candidateEmail: '',
-  previousCompany: '',
-  jobExperience: '',
-  department: '', 
-  previousPosition: '',
-  maritalStatus: '',
-  candidatePhoto: null,
-  candidateResume: null,
-  presentAddress: '',
-  aadharNo: '',
-  lastSalaryDrawn: '',
-  reasonForLeaving: '',
-  status: 'NeedMore'
-});
+  const [formData, setFormData] = useState({
+    candidateName: '',
+    candidateDOB: '',
+    candidatePhone: '',
+    candidateEmail: '',
+    previousCompany: '',
+    jobExperience: '',
+    department: '',
+    previousPosition: '',
+    maritalStatus: '',
+    candidatePhoto: null,
+    candidateResume: null,
+    presentAddress: '',
+    aadharNo: '',
+    lastSalaryDrawn: '',
+    reasonForLeaving: '',
+    status: 'NeedMore'
+  });
 
   // Google Drive folder ID for file uploads
   const GOOGLE_DRIVE_FOLDER_ID = '13WWtV4E5AapVE2gkcjOZvTnH4Lx4IerR';
 
   // Fetch all necessary data
-const fetchAllData = async () => {
-  setLoading(true);
-  setTableLoading(true);
-  setError(null);
-  
-  try {
-    // Fetch INDENT data
-    const indentResponse = await fetch(
-      'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
-    );
-    
-    if (!indentResponse.ok) {
-      throw new Error(`HTTP error! status: ${indentResponse.status}`);
-    }
-    
-    const indentResult = await indentResponse.json();
-    
-    if (indentResult.success && indentResult.data && indentResult.data.length >= 7) {
-      const headers = indentResult.data[5].map(h => h.trim());
-      const dataFromRow7 = indentResult.data.slice(6);
-      
-      const getIndex = (headerName) => headers.findIndex(h => h === headerName);
-      
-      const processedData = dataFromRow7
-        .filter(row => {
-          const status = row[getIndex('Status')];
-          const planned2 = row[getIndex('Planned 2')];
-          const actual2 = row[getIndex('Actual 2')];
-          
-          return status === 'NeedMore' && 
-                 planned2 && 
-                 (!actual2 || actual2 === '');
-        })
-        .map(row => ({
-          id: row[getIndex('Timestamp')],
-          indentNo: row[getIndex('Indent Number')],
-          post: row[getIndex('Post')],
-          department: row[getIndex('Department')],
-          gender: row[getIndex('Gender')],
-          prefer: row[getIndex('Prefer')],
-          numberOfPost: row[getIndex('Number Of Posts')],
-          competitionDate: row[getIndex('Completion Date')],
-          socialSite: row[getIndex('Social Site')],
-          status: row[getIndex('Status')],
-          plannedDate: row[getIndex('Planned 2')],
-          actual: row[getIndex('Actual 2')],
-          experience: row[getIndex('Experience')],
-        }));
-      
-      // Fetch ENQUIRY data to check for completed recruitments
-      const enquiryResponse = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=ENQUIRY&action=fetch'
+  const fetchAllData = async () => {
+    setLoading(true);
+    setTableLoading(true);
+    setError(null);
+
+    try {
+      // Fetch INDENT data
+      const indentResponse = await fetch(
+        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
       );
-      
-      if (!enquiryResponse.ok) {
-        throw new Error(`HTTP error! status: ${enquiryResponse.status}`);
-      }
-      
-      const enquiryResult = await enquiryResponse.json();
-      
-      if (enquiryResult.success && enquiryResult.data && enquiryResult.data.length > 0) {
-        // First row contains headers (row 6 in your sheet)
-        const headers = enquiryResult.data[5].map(h => h ? h.trim() : '');
-        const enquiryRows = enquiryResult.data.slice(6);
-        
-        const getEnquiryIndex = (headerName) => headers.findIndex(h => h === headerName);
-        
-        // Count completed recruitments per indent number
-        const indentRecruitmentCount = {};
-        
-        enquiryRows.forEach(row => {
-          if (row[getEnquiryIndex('Timestamp')]) { // Filter out empty rows
-            const indentNo = row[getEnquiryIndex('Indent Number')];
-            const statusColumn = 27; // Column AB (index 27 as columns start from 0)
-            const statusValue = row[statusColumn]; // Column AB value
-            
-            if (indentNo && statusValue) {
-              if (!indentRecruitmentCount[indentNo]) {
-                indentRecruitmentCount[indentNo] = 0;
-              }
-              indentRecruitmentCount[indentNo]++;
-            }
-          }
-        });
-        
-        // Filter out indent items where recruitment is complete
-        const pendingTasks = processedData.filter(task => {
-          if (!task.plannedDate || task.actual) return false;
-          
-          const indentNo = task.indentNo;
-          const requiredPosts = parseInt(task.numberOfPost) || 0;
-          const completedRecruitments = indentRecruitmentCount[indentNo] || 0;
-          
-          // Show in pending only if not all required posts are filled
-          return completedRecruitments < requiredPosts;
-        });
-        
-        setIndentData(pendingTasks);
-      } else {
-        setIndentData(processedData.filter(task => task.plannedDate && !task.actual));
+
+      if (!indentResponse.ok) {
+        throw new Error(`HTTP error! status: ${indentResponse.status}`);
       }
 
-      // Process ENQUIRY data for history tab
-      if (enquiryResult.success && enquiryResult.data && enquiryResult.data.length > 0) {
-        // First row contains headers (row 6 in your sheet)
-        const headers = enquiryResult.data[5].map(h => h ? h.trim() : '');
-        const enquiryRows = enquiryResult.data.slice(6);
-        
-        const getEnquiryIndex = (headerName) => headers.findIndex(h => h === headerName);
-        
-        const processedEnquiryData = enquiryRows
-          .filter(row => row[getEnquiryIndex('Timestamp')]) // Filter out empty rows
+      const indentResult = await indentResponse.json();
+
+      if (indentResult.success && indentResult.data && indentResult.data.length >= 7) {
+        const headers = indentResult.data[5].map(h => h.trim());
+        const dataFromRow7 = indentResult.data.slice(6);
+
+        const getIndex = (headerName) => headers.findIndex(h => h === headerName);
+
+        const processedData = dataFromRow7
+          .filter(row => {
+            const status = row[getIndex('Status')];
+            const planned2 = row[getIndex('Planned 2')];
+            const actual2 = row[getIndex('Actual 2')];
+
+            return status === 'NeedMore' &&
+              planned2 &&
+              (!actual2 || actual2 === '');
+          })
           .map(row => ({
-            id: row[getEnquiryIndex('Timestamp')],
-            indentNo: row[getEnquiryIndex('Indent Number')],
-            candidateEnquiryNo: row[getEnquiryIndex('Candidate Enquiry Number')],
-            applyingForPost: row[getEnquiryIndex('Applying For the Post')],
-            department: row[getEnquiryIndex('Department')],
-            candidateName: row[getEnquiryIndex('Candidate Name')],
-            candidateDOB: row[getEnquiryIndex('DCB')], // DCB appears to be DOB in your sheet
-            candidatePhone: row[getEnquiryIndex('Candidate Phone Number')],
-            candidateEmail: row[getEnquiryIndex('Candidate Email')],
-            previousCompany: row[getEnquiryIndex('Previous Company Name')],
-            jobExperience: row[getEnquiryIndex('Job Experience')] || '',
-            lastSalary: row[getEnquiryIndex('Last Salary')] || '',
-            previousPosition: row[getEnquiryIndex('Previous Position')] || '',
-            reasonForLeaving: row[getEnquiryIndex('Reason For Leaving')] || '',
-            maritalStatus: row[getEnquiryIndex('Marital Status')] || '',
-            lastEmployerMobile: row[getEnquiryIndex('Last Employer Mobile')] || '',
-            candidatePhoto: row[getEnquiryIndex('Candidate Photo')] || '',
-            candidateResume: row[19] || '',
-            referenceBy: row[getEnquiryIndex('Reference By')] || '',
-            presentAddress: row[getEnquiryIndex('Present Address')] || '',
-            aadharNo: row[getEnquiryIndex('Aadhar No')] || '',
-            lastSalaryDrawn : row[getEnquiryIndex('Last Salary Drawn')] || '',
+            id: row[getIndex('Timestamp')],
+            indentNo: row[getIndex('Indent Number')],
+            post: row[getIndex('Post')],
+            department: row[getIndex('Department')],
+            gender: row[getIndex('Gender')],
+            prefer: row[getIndex('Prefer')],
+            numberOfPost: row[getIndex('Number Of Posts')],
+            competitionDate: row[getIndex('Completion Date')],
+            socialSite: row[getIndex('Social Site')],
+            status: row[getIndex('Status')],
+            plannedDate: row[getIndex('Planned 2')],
+            actual: row[getIndex('Actual 2')],
+            experience: row[getIndex('Experience')],
           }));
-        
-         setEnquiryData(processedEnquiryData);
-      }
-      
-    } else {
-      throw new Error(indentResult.error || 'Not enough rows in INDENT sheet data');
-    }
-    
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    setError(error.message);
-    toast.error('Failed to fetch data');
-  } finally {
-    setLoading(false);
-    setTableLoading(false);
-  }
-};
 
-   const generateNextAAPIndentNumber = () => {
+        // Fetch ENQUIRY data to check for completed recruitments
+        const enquiryResponse = await fetch(
+          'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=ENQUIRY&action=fetch'
+        );
+
+        if (!enquiryResponse.ok) {
+          throw new Error(`HTTP error! status: ${enquiryResponse.status}`);
+        }
+
+        const enquiryResult = await enquiryResponse.json();
+
+        if (enquiryResult.success && enquiryResult.data && enquiryResult.data.length > 0) {
+          // First row contains headers (row 6 in your sheet)
+          const headers = enquiryResult.data[5].map(h => h ? h.trim() : '');
+          const enquiryRows = enquiryResult.data.slice(6);
+
+          const getEnquiryIndex = (headerName) => headers.findIndex(h => h === headerName);
+
+          // Count completed recruitments per indent number
+          const indentRecruitmentCount = {};
+
+          enquiryRows.forEach(row => {
+            if (row[getEnquiryIndex('Timestamp')]) { // Filter out empty rows
+              const indentNo = row[getEnquiryIndex('Indent Number')];
+              const statusColumn = 27; // Column AB (index 27 as columns start from 0)
+              const statusValue = row[statusColumn]; // Column AB value
+
+              if (indentNo && statusValue) {
+                if (!indentRecruitmentCount[indentNo]) {
+                  indentRecruitmentCount[indentNo] = 0;
+                }
+                indentRecruitmentCount[indentNo]++;
+              }
+            }
+          });
+
+          // Filter out indent items where recruitment is complete
+          const pendingTasks = processedData.filter(task => {
+            if (!task.plannedDate || task.actual) return false;
+
+            const indentNo = task.indentNo;
+            const requiredPosts = parseInt(task.numberOfPost) || 0;
+            const completedRecruitments = indentRecruitmentCount[indentNo] || 0;
+
+            // Show in pending only if not all required posts are filled
+            return completedRecruitments < requiredPosts;
+          });
+
+          setIndentData(pendingTasks);
+        } else {
+          setIndentData(processedData.filter(task => task.plannedDate && !task.actual));
+        }
+
+        // Process ENQUIRY data for history tab
+        if (enquiryResult.success && enquiryResult.data && enquiryResult.data.length > 0) {
+          // First row contains headers (row 6 in your sheet)
+          const headers = enquiryResult.data[5].map(h => h ? h.trim() : '');
+          const enquiryRows = enquiryResult.data.slice(6);
+
+          const getEnquiryIndex = (headerName) => headers.findIndex(h => h === headerName);
+
+          const processedEnquiryData = enquiryRows
+            .filter(row => row[getEnquiryIndex('Timestamp')]) // Filter out empty rows
+            .map(row => ({
+              id: row[getEnquiryIndex('Timestamp')],
+              indentNo: row[getEnquiryIndex('Indent Number')],
+              candidateEnquiryNo: row[getEnquiryIndex('Candidate Enquiry Number')],
+              applyingForPost: row[getEnquiryIndex('Applying For the Post')],
+              department: row[getEnquiryIndex('Department')],
+              candidateName: row[getEnquiryIndex('Candidate Name')],
+              candidateDOB: row[getEnquiryIndex('DCB')], // DCB appears to be DOB in your sheet
+              candidatePhone: row[getEnquiryIndex('Candidate Phone Number')],
+              candidateEmail: row[getEnquiryIndex('Candidate Email')],
+              previousCompany: row[getEnquiryIndex('Previous Company Name')],
+              jobExperience: row[getEnquiryIndex('Job Experience')] || '',
+              lastSalary: row[getEnquiryIndex('Last Salary')] || '',
+              previousPosition: row[getEnquiryIndex('Previous Position')] || '',
+              reasonForLeaving: row[getEnquiryIndex('Reason For Leaving')] || '',
+              maritalStatus: row[getEnquiryIndex('Marital Status')] || '',
+              lastEmployerMobile: row[getEnquiryIndex('Last Employer Mobile')] || '',
+              candidatePhoto: row[getEnquiryIndex('Candidate Photo')] || '',
+              candidateResume: row[19] || '',
+              referenceBy: row[getEnquiryIndex('Reference By')] || '',
+              presentAddress: row[getEnquiryIndex('Present Address')] || '',
+              aadharNo: row[getEnquiryIndex('Aadhar No')] || '',
+              lastSalaryDrawn: row[getEnquiryIndex('Last Salary Drawn')] || '',
+            }));
+
+          setEnquiryData(processedEnquiryData);
+        }
+
+      } else {
+        throw new Error(indentResult.error || 'Not enough rows in INDENT sheet data');
+      }
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError(error.message);
+      toast.error('Failed to fetch data');
+    } finally {
+      setLoading(false);
+      setTableLoading(false);
+    }
+  };
+
+  const generateNextAAPIndentNumber = () => {
     // Extract all indent numbers from both indentData and enquiryData
     const allIndentNumbers = [
       ...indentData.map(item => item.indentNo),
@@ -211,7 +213,7 @@ const fetchAllData = async () => {
 
     // Find the highest AAP number
     let maxAAPNumber = 0;
-    
+
     allIndentNumbers.forEach(indentNo => {
       const match = indentNo.match(/^AAP-(\d+)$/i);
       if (match && match[1]) {
@@ -232,11 +234,11 @@ const fetchAllData = async () => {
     if (enquiryData.length === 0) {
       return 'ENQ-01';
     }
-    
+
     // Find the highest existing candidate number
     const lastNumber = enquiryData.reduce((max, enquiry) => {
       if (!enquiry.candidateEnquiryNo) return max;
-      
+
       const match = enquiry.candidateEnquiryNo.match(/ENQ-(\d+)/i);
       if (match && match[1]) {
         const num = parseInt(match[1], 10);
@@ -244,7 +246,7 @@ const fetchAllData = async () => {
       }
       return max;
     }, 0);
-    
+
     const nextNumber = lastNumber + 1;
     return `ENQ-${String(nextNumber).padStart(2, '0')}`;
   };
@@ -263,7 +265,7 @@ const fetchAllData = async () => {
   const uploadFileToGoogleDrive = async (file, type) => {
     try {
       const base64Data = await fileToBase64(file);
-      
+
       const response = await fetch(
         'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec',
         {
@@ -282,7 +284,7 @@ const fetchAllData = async () => {
       );
 
       const result = await response.json();
-      
+
       if (result.success) {
         return result.fileUrl;
       } else {
@@ -300,360 +302,360 @@ const fetchAllData = async () => {
 
   const historyData = enquiryData;
 
- const handleEnquiryClick = (item = null) => {
-  let indentNo = '';
-  let isNewAAP = false;
-  
-  if (item) {
-    setSelectedItem(item);
-    indentNo = item.indentNo;
-  } else {
-    indentNo = generateNextAAPIndentNumber();
-    isNewAAP = true;
-    
-    setSelectedItem({
-      indentNo: indentNo,
-      post: '',
-      gender: '',
-      prefer: '',
-      numberOfPost: '',
-      competitionDate: '',
-      socialSite: '',
-      status: 'NeedMore',
-      plannedDate: '',
-      actual: '',
-      experience: ''
-    });
-  }
+  const handleEnquiryClick = (item = null) => {
+    let indentNo = '';
+    let isNewAAP = false;
 
-  const candidateNo = generateCandidateNumber();
-  setGeneratedCandidateNo(candidateNo);
-  
-  // Ensure all fields are properly initialized with empty strings, not undefined
-  setFormData({
-    candidateName: '',
-    candidateDOB: '',
-    candidatePhone: '',
-    candidateEmail: '',
-    previousCompany: '',
-    jobExperience: '',
-    department: item ? item.department : '',
-    lastSalary: '',
-    previousPosition: '',
-    reasonForLeaving: '',
-    lastSalaryDrawn: '',
-    maritalStatus: '',
-    lastEmployerMobile: '',
-    candidatePhoto: null,
-    candidateResume: null,
-    referenceBy: '',
-    presentAddress: '',
-    aadharNo: '',
-    status: 'NeedMore'
-  });
-  setShowModal(true);
-};
+    if (item) {
+      setSelectedItem(item);
+      indentNo = item.indentNo;
+    } else {
+      indentNo = generateNextAAPIndentNumber();
+      isNewAAP = true;
+
+      setSelectedItem({
+        indentNo: indentNo,
+        post: '',
+        gender: '',
+        prefer: '',
+        numberOfPost: '',
+        competitionDate: '',
+        socialSite: '',
+        status: 'NeedMore',
+        plannedDate: '',
+        actual: '',
+        experience: ''
+      });
+    }
+
+    const candidateNo = generateCandidateNumber();
+    setGeneratedCandidateNo(candidateNo);
+
+    // Ensure all fields are properly initialized with empty strings, not undefined
+    setFormData({
+      candidateName: '',
+      candidateDOB: '',
+      candidatePhone: '',
+      candidateEmail: '',
+      previousCompany: '',
+      jobExperience: '',
+      department: item ? item.department : '',
+      lastSalary: '',
+      previousPosition: '',
+      reasonForLeaving: '',
+      lastSalaryDrawn: '',
+      maritalStatus: '',
+      lastEmployerMobile: '',
+      candidatePhoto: null,
+      candidateResume: null,
+      referenceBy: '',
+      presentAddress: '',
+      aadharNo: '',
+      status: 'NeedMore'
+    });
+    setShowModal(true);
+  };
 
   const formatDOB = (dateString) => {
     if (!dateString) return '';
-    
+
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
       return dateString; // Return as-is if not a valid date
     }
-    
+
     const day = date.getDate();
     const month = date.toLocaleString('default', { month: 'long' });
     const year = date.getFullYear().toString().slice(-2);
-    
+
     return `${day}-${month}-${year}`;
   };
 
-const handleShareClick = (item) => {
-  setSelectedItem(item);
-  // Create the share link with indent number as a query parameter
-  const shareLink = `https://sbh-find-enquiry.vercel.app/?indent=${encodeURIComponent(item.indentNo)}`;
-  
-  setShareFormData({
-    message: `Dear Recipient,\n\nPlease fill the enquiry details for candidate who is applying for the position of ${item.post}.\n\nEnquiry Form Link: ${shareLink}\n\nBest regards,\nHR Team SBH Hospital Raipur (C.G.)`,
-  });
-  
-  console.log("Share Link:", shareLink);
-  setShowShareModal(true);
-};
+  const handleShareClick = (item) => {
+    setSelectedItem(item);
+    // Create the share link with indent number as a query parameter
+    const shareLink = `https://sbh-find-enquiry.vercel.app/?indent=${encodeURIComponent(item.indentNo)}`;
 
-const handleShareSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  
-  try {
-    const documents = [{
-      name: selectedItem.candidateName,
-      serialNo: selectedItem.candidateEnquiryNo,
-      documentType: selectedItem.applyingForPost,
-      category: selectedItem.department,
-      imageUrl: selectedItem.candidatePhoto || ''
-    }];
-    
-    const URL = 'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec';
-    
-    const params = new URLSearchParams();
-    params.append('action', 'shareViaEmail');
-    params.append('recipientEmail', shareFormData.recipientEmail);
-    params.append('subject', shareFormData.subject);
-    params.append('message', shareFormData.message);
-    params.append('documents', JSON.stringify(documents));
-    
-    const response = await fetch(URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params,
+    setShareFormData({
+      message: `Dear Recipient,\n\nPlease fill the enquiry details for candidate who is applying for the position of ${item.post}.\n\nEnquiry Form Link: ${shareLink}\n\nBest regards,\nHR Team SBH Hospital Raipur (C.G.)`,
     });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to send email');
-    }
-    
-    toast.success('Details shared successfully!');
-    setShowShareModal(false);
-  } catch (error) {
-    console.error('Error sharing details:', error);
-    toast.error(`Failed to share details: ${error.message}`);
-  } finally {
-    setSubmitting(false);
-  }
-};
 
-const handleShareInputChange = (e) => {
-  const { name, value } = e.target;
-  setShareFormData(prev => ({
-    ...prev,
-    [name]: value
-  }));
-};
+    console.log("Share Link:", shareLink);
+    setShowShareModal(true);
+  };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
+  const handleShareSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
 
-  try {
-    let photoUrl = "";
-    let resumeUrl = "";
+    try {
+      const documents = [{
+        name: selectedItem.candidateName,
+        serialNo: selectedItem.candidateEnquiryNo,
+        documentType: selectedItem.applyingForPost,
+        category: selectedItem.department,
+        imageUrl: selectedItem.candidatePhoto || ''
+      }];
 
-    // Upload photo if exists
-    if (formData.candidatePhoto) {
-      setUploadingPhoto(true);
-      photoUrl = await uploadFileToGoogleDrive(
-        formData.candidatePhoto,
-        "photo"
-      );
-      setUploadingPhoto(false);
-      toast.success("Photo uploaded successfully!");
-    }
+      const URL = 'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec';
 
-    // Upload resume if exists
-    if (formData.candidateResume) {
-      setUploadingResume(true);
-      resumeUrl = await uploadFileToGoogleDrive(
-        formData.candidateResume,
-        "resume"
-      );
-      setUploadingResume(false);
-      toast.success("Resume uploaded successfully!");
-    }
+      const params = new URLSearchParams();
+      params.append('action', 'shareViaEmail');
+      params.append('recipientEmail', shareFormData.recipientEmail);
+      params.append('subject', shareFormData.subject);
+      params.append('message', shareFormData.message);
+      params.append('documents', JSON.stringify(documents));
 
-    // Create timestamp in dd/mm/yyyy hh:mm:ss format
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, "0");
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-
-    const formattedTimestamp = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-
-    const rowData = [
-      formattedTimestamp, // Column A: Timestamp
-      selectedItem.indentNo, // Column B: Indent Number
-      generatedCandidateNo, // Column C: Candidate Enquiry Number
-      selectedItem.post, // Column D: Applying For the Post
-      formData.candidateName, // Column E: Candidate Name
-      formatDOB(formData.candidateDOB), // Column F: DCB (DOB)
-      formData.candidatePhone, // Column G: Candidate Phone Number
-      formData.candidateEmail, // Column H: Candidate Email
-      formData.previousCompany || "", // Column I: Previous Company Name
-      formData.jobExperience || "", // Column J: Job Experience
-      formData.department || "", // Column K: Department (FIXED)
-      formData.previousPosition || "", // Column L: Previous Position
-      formData.reasonForLeaving || "", // Column M: Reason For Leaving (NEW)
-      formData.maritalStatus || "", // Column N: Marital Status
-      formData.lastSalaryDrawn || "", // Column O: Last Salary Drawn (NEW)
-      photoUrl, // Column P: Candidate Photo (URL)
-      "", // Column Q: Reference By
-      formData.presentAddress || "", // Column R: Present Address
-      formData.aadharNo || "", // Column S: Aadhar No
-      resumeUrl, // Column T: Candidate Resume (URL)
-    ];
-
-    console.log("Submitting to ENQUIRY sheet:", rowData);
-
-    // Submit to ENQUIRY sheet
-    const enquiryResponse = await fetch(
-      "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-      {
-        method: "POST",
+      const response = await fetch(URL, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          sheetName: "ENQUIRY",
-          action: "insert",
-          rowData: JSON.stringify(rowData),
-        }),
+        body: params,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
 
-    const enquiryResult = await enquiryResponse.json();
-    console.log("ENQUIRY response:", enquiryResult);
+      const data = await response.json();
 
-    if (!enquiryResult.success) {
-      throw new Error(enquiryResult.error || "ENQUIRY submission failed");
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to send email');
+      }
+
+      toast.success('Details shared successfully!');
+      setShowShareModal(false);
+    } catch (error) {
+      console.error('Error sharing details:', error);
+      toast.error(`Failed to share details: ${error.message}`);
+    } finally {
+      setSubmitting(false);
     }
+  };
 
-    // Only update INDENT sheet if status is Complete
-    if (formData.status === "Complete") {
-      console.log("Updating INDENT sheet for status Complete");
+  const handleShareInputChange = (e) => {
+    const { name, value } = e.target;
+    setShareFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-      // Fetch INDENT data
-      const indentFetchResponse = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch"
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      let photoUrl = "";
+      let resumeUrl = "";
+
+      // Upload photo if exists
+      if (formData.candidatePhoto) {
+        setUploadingPhoto(true);
+        photoUrl = await uploadFileToGoogleDrive(
+          formData.candidatePhoto,
+          "photo"
+        );
+        setUploadingPhoto(false);
+        toast.success("Photo uploaded successfully!");
+      }
+
+      // Upload resume if exists
+      if (formData.candidateResume) {
+        setUploadingResume(true);
+        resumeUrl = await uploadFileToGoogleDrive(
+          formData.candidateResume,
+          "resume"
+        );
+        setUploadingResume(false);
+        toast.success("Resume uploaded successfully!");
+      }
+
+      // Create timestamp in dd/mm/yyyy hh:mm:ss format
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, "0");
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+
+      const formattedTimestamp = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+
+      const rowData = [
+        formattedTimestamp, // Column A: Timestamp
+        selectedItem.indentNo, // Column B: Indent Number
+        generatedCandidateNo, // Column C: Candidate Enquiry Number
+        selectedItem.post, // Column D: Applying For the Post
+        formData.candidateName, // Column E: Candidate Name
+        formatDOB(formData.candidateDOB), // Column F: DCB (DOB)
+        formData.candidatePhone, // Column G: Candidate Phone Number
+        formData.candidateEmail, // Column H: Candidate Email
+        formData.previousCompany || "", // Column I: Previous Company Name
+        formData.jobExperience || "", // Column J: Job Experience
+        formData.department || "", // Column K: Department (FIXED)
+        formData.previousPosition || "", // Column L: Previous Position
+        formData.reasonForLeaving || "", // Column M: Reason For Leaving (NEW)
+        formData.maritalStatus || "", // Column N: Marital Status
+        formData.lastSalaryDrawn || "", // Column O: Last Salary Drawn (NEW)
+        photoUrl, // Column P: Candidate Photo (URL)
+        "", // Column Q: Reference By
+        formData.presentAddress || "", // Column R: Present Address
+        formData.aadharNo || "", // Column S: Aadhar No
+        resumeUrl, // Column T: Candidate Resume (URL)
+      ];
+
+      console.log("Submitting to ENQUIRY sheet:", rowData);
+
+      // Submit to ENQUIRY sheet
+      const enquiryResponse = await fetch(
+        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            sheetName: "ENQUIRY",
+            action: "insert",
+            rowData: JSON.stringify(rowData),
+          }),
+        }
       );
 
-      const indentData = await indentFetchResponse.json();
-      console.log("INDENT data fetched:", indentData);
+      const enquiryResult = await enquiryResponse.json();
+      console.log("ENQUIRY response:", enquiryResult);
 
-      if (!indentData.success) {
-        throw new Error(
-          "Failed to fetch INDENT data: " +
+      if (!enquiryResult.success) {
+        throw new Error(enquiryResult.error || "ENQUIRY submission failed");
+      }
+
+      // Only update INDENT sheet if status is Complete
+      if (formData.status === "Complete") {
+        console.log("Updating INDENT sheet for status Complete");
+
+        // Fetch INDENT data
+        const indentFetchResponse = await fetch(
+          "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch"
+        );
+
+        const indentData = await indentFetchResponse.json();
+        console.log("INDENT data fetched:", indentData);
+
+        if (!indentData.success) {
+          throw new Error(
+            "Failed to fetch INDENT data: " +
             (indentData.error || "Unknown error")
-        );
-      }
-
-      // Find the row index
-      let rowIndex = -1;
-      for (let i = 1; i < indentData.data.length; i++) {
-        if (indentData.data[i][1] === selectedItem.indentNo) {
-          rowIndex = i + 1; // Spreadsheet rows start at 1
-          break;
+          );
         }
-      }
 
-      if (rowIndex === -1) {
-        throw new Error(
-          `Could not find indentNo: ${selectedItem.indentNo} in INDENT sheet`
-        );
-      }
-
-      console.log("Found row index:", rowIndex);
-
-      // Get headers
-      const headers = indentData.data[5];
-      console.log("Headers:", headers);
-
-      // Find column indices
-      const getColumnIndex = (columnName) => {
-        return headers.findIndex(
-          (h) => h && h.toString().trim() === columnName
-        );
-      };
-
-      const statusIndex = getColumnIndex("Status");
-      const actual2Index = getColumnIndex("Actual 2");
-
-      console.log("Status column index:", statusIndex);
-      console.log("Actual 2 column index:", actual2Index);
-
-      // Update Status column
-      if (statusIndex !== -1) {
-        console.log("Updating Status column...");
-        const statusResponse = await fetch(
-          "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              sheetName: "INDENT",
-              action: "updateCell",
-              rowIndex: rowIndex.toString(),
-              columnIndex: (statusIndex + 1).toString(), // Convert to string
-              value: "Complete",
-            }),
+        // Find the row index
+        let rowIndex = -1;
+        for (let i = 1; i < indentData.data.length; i++) {
+          if (indentData.data[i][1] === selectedItem.indentNo) {
+            rowIndex = i + 1; // Spreadsheet rows start at 1
+            break;
           }
-        );
-
-        const statusResult = await statusResponse.json();
-        console.log("Status update result:", statusResult);
-
-        if (!statusResult.success) {
-          console.error("Status update failed:", statusResult.error);
         }
-      }
 
-      // Update Actual 2 column
-      if (actual2Index !== -1) {
-        console.log("Updating Actual 2 column...");
-        const actual2Response = await fetch(
-          "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              sheetName: "INDENT",
-              action: "updateCell",
-              rowIndex: rowIndex.toString(),
-              columnIndex: (actual2Index + 1).toString(), // Convert to string
-              value: new Date().toISOString(),
-            }),
+        if (rowIndex === -1) {
+          throw new Error(
+            `Could not find indentNo: ${selectedItem.indentNo} in INDENT sheet`
+          );
+        }
+
+        console.log("Found row index:", rowIndex);
+
+        // Get headers
+        const headers = indentData.data[5];
+        console.log("Headers:", headers);
+
+        // Find column indices
+        const getColumnIndex = (columnName) => {
+          return headers.findIndex(
+            (h) => h && h.toString().trim() === columnName
+          );
+        };
+
+        const statusIndex = getColumnIndex("Status");
+        const actual2Index = getColumnIndex("Actual 2");
+
+        console.log("Status column index:", statusIndex);
+        console.log("Actual 2 column index:", actual2Index);
+
+        // Update Status column
+        if (statusIndex !== -1) {
+          console.log("Updating Status column...");
+          const statusResponse = await fetch(
+            "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                sheetName: "INDENT",
+                action: "updateCell",
+                rowIndex: rowIndex.toString(),
+                columnIndex: (statusIndex + 1).toString(), // Convert to string
+                value: "Complete",
+              }),
+            }
+          );
+
+          const statusResult = await statusResponse.json();
+          console.log("Status update result:", statusResult);
+
+          if (!statusResult.success) {
+            console.error("Status update failed:", statusResult.error);
           }
-        );
-
-        const actual2Result = await actual2Response.json();
-        console.log("Actual 2 update result:", actual2Result);
-
-        if (!actual2Result.success) {
-          console.error("Actual 2 update failed:", actual2Result.error);
         }
+
+        // Update Actual 2 column
+        if (actual2Index !== -1) {
+          console.log("Updating Actual 2 column...");
+          const actual2Response = await fetch(
+            "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                sheetName: "INDENT",
+                action: "updateCell",
+                rowIndex: rowIndex.toString(),
+                columnIndex: (actual2Index + 1).toString(), // Convert to string
+                value: new Date().toISOString(),
+              }),
+            }
+          );
+
+          const actual2Result = await actual2Response.json();
+          console.log("Actual 2 update result:", actual2Result);
+
+          if (!actual2Result.success) {
+            console.error("Actual 2 update failed:", actual2Result.error);
+          }
+        }
+
+        toast.success("Enquiry submitted and INDENT marked as Complete!");
+      } else {
+        toast.success("Enquiry submitted successfully!");
       }
 
-      toast.success("Enquiry submitted and INDENT marked as Complete!");
-    } else {
-      toast.success("Enquiry submitted successfully!");
+      setShowModal(false);
+      fetchAllData();
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error(`Error: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+      setUploadingPhoto(false);
+      setUploadingResume(false);
     }
-
-    setShowModal(false);
-    fetchAllData();
-  } catch (error) {
-    console.error("Submission error:", error);
-    toast.error(`Error: ${error.message}`);
-  } finally {
-    setSubmitting(false);
-    setUploadingPhoto(false);
-    setUploadingResume(false);
-  }
-};
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -681,14 +683,14 @@ const handleSubmit = async (e) => {
 
   const filteredPendingData = indentData.filter(item => {
     const matchesSearch = item.post?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.indentNo?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.indentNo?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
   const filteredHistoryData = historyData.filter(item => {
     const matchesSearch = item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.candidateEnquiryNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.indentNo?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.candidateEnquiryNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.indentNo?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -716,12 +718,22 @@ const handleSubmit = async (e) => {
             />
           </div>
         </div>
-        <button
-          onClick={() => handleEnquiryClick()}
-          className="px-3 py-2 text-white bg-indigo-700 rounded-md hover:bg-opacity-90 text-sm"
-        >
-          New Enquiry
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handleEnquiryClick()}
+            className="px-3 py-2 text-white bg-indigo-700 rounded-md hover:bg-opacity-90 text-sm"
+          >
+            New Enquiry
+          </button>
+          <button
+            onClick={() => setShowQrModal(true)}
+            className="px-3 py-2 text-white bg-indigo-700 rounded-md hover:bg-opacity-90 text-sm flex items-center gap-1"
+            title="Show QR Code"
+          >
+            <QrCode size={16} />
+            QR Code
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -729,22 +741,20 @@ const handleSubmit = async (e) => {
         <div className="border-b border-gray-300 border-opacity-20">
           <nav className="flex -mb-px">
             <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                activeTab === "pending"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "pending"
+                ? "border-indigo-500 text-indigo-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
               onClick={() => setActiveTab("pending")}
             >
               <Clock size={16} className="inline mr-2" />
               Pending ({filteredPendingData.length})
             </button>
             <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                activeTab === "history"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "history"
+                ? "border-indigo-500 text-indigo-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
               onClick={() => setActiveTab("history")}
             >
               <CheckCircle size={16} className="inline mr-2" />
@@ -847,8 +857,8 @@ const handleSubmit = async (e) => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {item.competitionDate
                             ? new Date(
-                                item.competitionDate
-                              ).toLocaleDateString()
+                              item.competitionDate
+                            ).toLocaleDateString()
                             : "-"}
                         </td>
                       </tr>
@@ -1437,9 +1447,8 @@ const handleSubmit = async (e) => {
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 text-white bg-indigo-700 rounded-md hover:bg-indigo-800 flex items-center justify-center min-h-[42px] ${
-                    submitting ? "opacity-90 cursor-not-allowed" : ""
-                  }`}
+                  className={`px-4 py-2 text-white bg-indigo-700 rounded-md hover:bg-indigo-800 flex items-center justify-center min-h-[42px] ${submitting ? "opacity-90 cursor-not-allowed" : ""
+                    }`}
                   disabled={submitting}
                 >
                   {submitting ? (
@@ -1472,6 +1481,69 @@ const handleSubmit = async (e) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQrModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800">Enquiry Form QR Code</h2>
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 flex flex-col items-center space-y-4">
+              <div id="qr-code-container" className="bg-white p-4 rounded-lg border border-gray-200">
+                <QRCodeSVG
+                  value="https://qr-find-enquiry.vercel.app/"
+                  size={200}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="H"
+                  includeMargin={true}
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-200 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  const svgElement = document.querySelector('#qr-code-container svg');
+                  if (!svgElement) return;
+                  const svgData = new XMLSerializer().serializeToString(svgElement);
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 4096;
+                  canvas.height = 4096;
+                  const ctx = canvas.getContext('2d');
+                  const img = new Image();
+                  img.onload = () => {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const link = document.createElement('a');
+                    link.download = 'enquiry-form-qr.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                  };
+                  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm flex items-center gap-1"
+              >
+                <Download size={16} />
+                Download
+              </button>
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="px-4 py-2 bg-indigo-700 text-white rounded-md hover:bg-opacity-90 text-sm"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
