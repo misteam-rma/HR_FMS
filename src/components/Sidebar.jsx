@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
+import {
+  LayoutDashboard,
   FileText,
   Search,
   Phone,
@@ -48,66 +48,66 @@ const Sidebar = ({ onClose }) => {
 
   // Check if user should see Leave Management
   useEffect(() => {
-  const checkLeaveManagementAccess = async () => {
-    if (!user) return;
+    const checkLeaveManagementAccess = async () => {
+      if (!user) return;
 
-    try {
-      // Fetch employee data to check Column G
-      const response = await fetch(`https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=USER&action=fetch`);
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        const employeeData = result.data;
-        const headers = employeeData[0];
-        
-        // Find column indices
-        const usernameColIndex = headers.findIndex(h => 
-          h.toString().toLowerCase().includes('username') || 
-          h.toString().toLowerCase().includes('name')
-        );
-        const adminColIndex = headers.findIndex(h => 
-          h.toString().toLowerCase().includes('admin')
-        );
-        const leaveManagementColIndex = 6; // Column G (index 6)
-        const hodColIndex = headers.findIndex(h => 
-          h.toString().toLowerCase().includes('hod')
-        );
-        
-        // Find current user in employee data
-        const userRecord = employeeData.find(row => 
-          row[usernameColIndex] === user.Name || 
-          row[usernameColIndex] === user.Username
-        );
-        
-        if (userRecord) {
-          const isAdmin = userRecord[adminColIndex]?.toString().toLowerCase() === 'yes';
-          const hasLeaveAccess = userRecord[leaveManagementColIndex] && 
-                               userRecord[leaveManagementColIndex].toString().trim() !== '';
-          const isHOD = userRecord[hodColIndex]?.toString().toLowerCase() === 'yes';
-          
-          // Show Leave Management if:
-          // 1. User is NOT admin AND Column G has value
-          // 2. OR user is admin (admins always see it)
-          setShowLeaveManagement(isAdmin || (!isAdmin && hasLeaveAccess));
-          
-          // Show Balanced Score Card only for HOD
-          setShowBalancedScoreCard(isHOD);
+      try {
+        // Fetch employee data to check Column G
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=USER&action=fetch`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const employeeData = result.data;
+          const headers = employeeData[0];
+
+          // Find column indices
+          const usernameColIndex = headers.findIndex(h =>
+            h.toString().toLowerCase().includes('username') ||
+            h.toString().toLowerCase().includes('name')
+          );
+          const adminColIndex = headers.findIndex(h =>
+            h.toString().toLowerCase().includes('admin')
+          );
+          const leaveManagementColIndex = 6; // Column G (index 6)
+          const hodColIndex = headers.findIndex(h =>
+            h.toString().toLowerCase().includes('hod')
+          );
+
+          // Find current user in employee data
+          const userRecord = employeeData.find(row =>
+            row[usernameColIndex] === user.Name ||
+            row[usernameColIndex] === user.Username
+          );
+
+          if (userRecord) {
+            const isAdmin = userRecord[adminColIndex]?.toString().toLowerCase() === 'yes';
+            const hasLeaveAccess = userRecord[leaveManagementColIndex] &&
+              userRecord[leaveManagementColIndex].toString().trim() !== '';
+            const isHOD = userRecord[hodColIndex]?.toString().toLowerCase() === 'yes';
+
+            // Show Leave Management if:
+            // 1. User is NOT admin AND Column G has value
+            // 2. OR user is admin (admins always see it)
+            setShowLeaveManagement(isAdmin || (!isAdmin && hasLeaveAccess));
+
+            // Show Balanced Score Card only for HOD
+            setShowBalancedScoreCard(isHOD);
+          }
         }
+      } catch (error) {
+        console.error('Error checking leave management access:', error);
+        // Default to showing for admins, hiding for others if fetch fails
+        setShowLeaveManagement(user?.Admin === 'Yes');
+        setShowBalancedScoreCard(false);
       }
-    } catch (error) {
-      console.error('Error checking leave management access:', error);
-      // Default to showing for admins, hiding for others if fetch fails
-      setShowLeaveManagement(user?.Admin === 'Yes');
-      setShowBalancedScoreCard(false);
-    }
-  };
+    };
 
-  checkLeaveManagementAccess();
-}, [user]);
+    checkLeaveManagementAccess();
+  }, [user]);
 
   useEffect(() => {
     const hasSeenLanguageHint = localStorage.getItem('hasSeenLanguageHint');
-    
+
     if (!hasSeenLanguageHint && currentLang === 'en') {
       const timer = setTimeout(() => {
         setShowLanguageHint(true);
@@ -118,6 +118,10 @@ const Sidebar = ({ onClose }) => {
       setShowLanguageHint(false);
     }
   }, [currentLang]);
+
+  const hiddenScorecardUsers = ["surbhi netam", "isha shrivastava", "harsh rai", "nighat parveen", "anusuiya", "kusum", "jyoti kumbaj", "sunita", "neha", "pratima sethi", "dr .pushpa", "dr poonam", "ajay jaiswal", "mangesh sahu", "naman mishra", "kishor ot day", "AMITA, POONIYA", "satish", "narayan", "indrajeet", "dr akriti", "shraddha", "bhumika", "priyanka", "archana day"];
+  const currentUsername = (user?.Name || user?.Username || "").toLowerCase();
+  const hideBalanceScoreCard = hiddenScorecardUsers.includes(currentUsername);
 
   const adminMenuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -130,7 +134,7 @@ const Sidebar = ({ onClose }) => {
     { path: '/after-leaving-work', icon: UserMinus, label: 'After Leaving Work' },
     { path: '/employee', icon: Users, label: 'Employee' },
     { path: '/leave-management', icon: BookPlus, label: 'Leave Management' },
-    { path: '/balanceScoreCard', icon: CalendarSync, label: 'Balance Scorecard' },
+    ...(hideBalanceScoreCard ? [] : [{ path: '/balanceScoreCard', icon: CalendarSync, label: 'Balance Scorecard' }]),
     { path: '/misreport', icon: AlarmClockCheck, label: 'Delegation Score Card' },
     { path: '/company-calendar', icon: Calendar, label: 'Company Calendar' },
     { path: '/jobPoster', icon: Brain, label: 'Creative' },
@@ -141,7 +145,7 @@ const Sidebar = ({ onClose }) => {
   const employeeMenuItems = [
     { path: '/my-profile', icon: ProfileIcon, label: 'My Profile' },
     { path: '/leave-request', icon: LeaveIcon, label: 'Leave Request' },
-    { path: '/userBalanceScoreCard', icon: LeaveIcon, label: 'Balance Scorecard'},
+    ...(hideBalanceScoreCard ? [] : [{ path: '/userBalanceScoreCard', icon: LeaveIcon, label: 'Balance Scorecard' }]),
     ...(showBalancedScoreCard ? [{ path: '/misreport', icon: AlarmClockCheck, label: 'Delegation Score Card' }] : []),
     { path: '/company-calendar', icon: Calendar, label: 'Company Calendar' },
     { path: '/license', icon: Copyright, label: 'License' },
@@ -172,7 +176,7 @@ const Sidebar = ({ onClose }) => {
           </button>
         )}
       </div>
-      
+
       {/* Menu */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto scrollbar-hide">
         {menuItems.map((item) => {
@@ -181,11 +185,10 @@ const Sidebar = ({ onClose }) => {
               <div key={item.label}>
                 <button
                   onClick={item.toggle}
-                  className={`flex items-center justify-between w-full py-2.5 px-4 rounded-lg transition-colors ${
-                    item.isOpen
-                      ? 'bg-indigo-800 text-white' 
+                  className={`flex items-center justify-between w-full py-2.5 px-4 rounded-lg transition-colors ${item.isOpen
+                      ? 'bg-indigo-800 text-white'
                       : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center">
                     <item.icon className={isCollapsed ? 'mx-auto' : 'mr-3'} size={20} />
@@ -193,18 +196,17 @@ const Sidebar = ({ onClose }) => {
                   </div>
                   {!isCollapsed && (item.isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
                 </button>
-                
+
                 {item.isOpen && !isCollapsed && (
                   <div className="ml-6 mt-1 space-y-1">
                     {item.items.map((subItem) => (
-                      <NavLink 
+                      <NavLink
                         key={subItem.path}
-                        to={subItem.path} 
-                        className={({ isActive }) => 
-                          `flex items-center py-2 px-4 rounded-lg transition-colors ${
-                            isActive 
-                              ? 'bg-indigo-700 text-white' 
-                              : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
+                        to={subItem.path}
+                        className={({ isActive }) =>
+                          `flex items-center py-2 px-4 rounded-lg transition-colors ${isActive
+                            ? 'bg-indigo-700 text-white'
+                            : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
                           }`
                         }
                         onClick={() => {
@@ -220,16 +222,15 @@ const Sidebar = ({ onClose }) => {
               </div>
             );
           }
-          
+
           return (
-            <NavLink 
+            <NavLink
               key={item.path}
-              to={item.path} 
-              className={({ isActive }) => 
-                `flex items-center py-2.5 px-4 rounded-lg transition-colors ${
-                  isActive 
-                    ? 'bg-indigo-800 text-white' 
-                    : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center py-2.5 px-4 rounded-lg transition-colors ${isActive
+                  ? 'bg-indigo-800 text-white'
+                  : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
                 }`
               }
               onClick={() => {

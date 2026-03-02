@@ -6,7 +6,7 @@ import { UserDeepmalaPatil } from './UserScorecard/UserDeepmalaPatil';
 import { UserDeepuMourya } from './UserScorecard/UserDeepuMourya';
 import { UserGeetanjaliDeep } from './UserScorecard/UserGeetanjaliDeep';
 import { UserHansrajSingh } from './UserScorecard/UserHansraj';
-import { UserIshaShrivastava } from './UserScorecard/UserIshaShrivastava';
+// import { UserIshaShrivastava } from './UserScorecard/UserIshaShrivastava';
 import { UserHarshRai } from './UserScorecard/UserHarshRai';
 import { UserJharnaAmbulkar } from './UserScorecard/UserJharnaAmbulkar';
 import { UserLalitMohanBisht } from './UserScorecard/UserLalitMohanBisht';
@@ -18,7 +18,7 @@ import { UserPoorwaGajbhiye } from './UserScorecard/UserPoorwaGajbhiye';
 import { UserPratimaVarthi } from './UserScorecard/UserPratimaVarthi';
 import { UserPraveenGupta } from './UserScorecard/UserPraveenGupta';
 import { UserSumanBalaSahu } from './UserScorecard/UserSumanBalaSahu';
-import { UserSurbhiNetam } from './UserScorecard/UserSurbhiNetam';
+// import { UserSurbhiNetam } from './UserScorecard/UserSurbhiNetam';
 import { UserUmeshDhakkad } from './UserScorecard/UserUmeshDhakkad';
 import { UserSumanGoud } from './UserScorecard/UserSumanGoud';
 
@@ -31,7 +31,7 @@ export const UserBalanceScoreCard = () => {
   { id: 5, name: "Geetanjali Deep", department: "HR" },
   { id: 6, name: "Hansraj Singh", department: "Housekeeping" },
   { id: 7, name: "Harsh Rai", department: "Marketing"},
-  { id: 8, name: "Isha Shrivastava", department: "Marketing" },
+  // { id: 8, name: "Isha Shrivastava", department: "Marketing" },
   { id: 9, name: "Jharna Ambulkar", department: "Admin" },
   { id: 10, name: "Lalit Mohan Bisht", department: "Operations" },
   { id: 11, name: "Mangesh Sahu", department: "Marketing"},
@@ -43,7 +43,7 @@ export const UserBalanceScoreCard = () => {
   { id: 17, name: "Praveen Gupta", department: "IT" },
   { id: 18, name: "Suman Bala Sahu", department: "Admin" },
   { id: 19, name: "Suman Goud Kuntla", department: "VP- Operations" },
-  { id: 20, name: "Surbhi Netam", department: "Marketing" },
+  // { id: 20, name: "Surbhi Netam", department: "Marketing" },
   { id: 21, name: "Umesh Dhakkad", department: "Pharmacy" }
 ]);
 

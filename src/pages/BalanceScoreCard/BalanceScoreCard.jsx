@@ -8,7 +8,7 @@ import { DeepmalaPatil } from './Scorecard/DeepmalaPatil';
 import { DeepmalaPatilScorecardHistory } from './ScorecardHistory/DeepmalaPatilScorecardHistory'
 import { DeepuMourya } from './Scorecard/DeepuMourya';
 import { DeepuMouryaScorecardHistory } from './ScorecardHistory/DeepuMouryaScorecardHistory'
-import {GeetanjaliDeep } from './Scorecard/GeetanjaliDeep';
+import { GeetanjaliDeep } from './Scorecard/GeetanjaliDeep';
 import { GeetanjaliDeepScorecardHistory } from './ScorecardHistory/GeetanjaliDeepScorecardHistory'
 import { HansrajSingh } from './Scorecard/HansrajSingh';
 import { HansrajSinghScorecardHistory } from './ScorecardHistory/HansrajSinghScorecardHistory'
@@ -30,16 +30,16 @@ import { SumanBalaSahu } from './Scorecard/SumanBalaSahu';
 import { SumanBalaSahuScorecardHistory } from './ScorecardHistory/SumanBalaSahuScorecardHistory'
 import { UmeshDhakkad } from './Scorecard/UmeshDhakkad';
 import { UmeshDhakkadScorecardHistory } from './ScorecardHistory/UmeshDhakkadScorecardHistory'
-import { IshaShrivastava } from './Scorecard/IshaShrivastava';
-import { IshaShrivastavaScorecardHistory } from './ScorecardHistory/IshaShrivastavaScorecardHistory';
+// import { IshaShrivastava } from './Scorecard/IshaShrivastava';
+// import { IshaShrivastavaScorecardHistory } from './ScorecardHistory/IshaShrivastavaScorecardHistory';
 import { MangeshSahu } from './Scorecard/MangeshSahu';
 import { MangeshSahuScorecardHistory } from './ScorecardHistory/MangeshSahuScorecardHistory';
 import { NighatParveen } from './Scorecard/NighatParveen';
 import { NighatParveenScorecardHistory } from './ScorecardHistory/NighatParveenScorecardHistory';
 import { PannaSenani } from './Scorecard/PannaSenani';
 import { PannaSenaniScorecardHistory } from './ScorecardHistory/PannaSenaniScorecardHistory';
-import { SurbhiNetam } from './Scorecard/SurbhiNetam';
-import { SurbhiNetamScorecardHistory } from './ScorecardHistory/SurbhiNetamScorecardHistory';
+// import { SurbhiNetam } from './Scorecard/SurbhiNetam';
+// import { SurbhiNetamScorecardHistory } from './ScorecardHistory/SurbhiNetamScorecardHistory';
 import { SumanGoud } from './Scorecard/SumanGoud';
 import { SumanGoudScorecardHistory } from './ScorecardHistory/SumanGoudScorecardHistory';
 
@@ -52,7 +52,7 @@ export const BalanceScoreCard = () => {
   { id: 5, name: "Geetanjali Deep", department: "HR" },
   { id: 6, name: "Hansraj Singh", department: "Housekeeping" },
   { id: 7, name: "Harsh Rai", department: "Marketing"},
-  { id: 8, name: "Isha Shrivastava", department: "Marketing" },
+  // { id: 8, name: "Isha Shrivastava", department: "Marketing" },
   { id: 9, name: "Jharna Ambulkar", department: "Admin" },
   { id: 10, name: "Lalit Mohan Bisht", department: "Operations" },
   { id: 11, name: "Mangesh Sahu", department: "Marketing"},
@@ -64,7 +64,7 @@ export const BalanceScoreCard = () => {
   { id: 17, name: "Praveen Gupta", department: "IT" },
   { id: 18, name: "Suman Bala Sahu", department: "Admin" },
   { id: 19, name: "Suman Goud Kuntla", department: "VP- Operations" },
-  { id: 20, name: "Surbhi Netam", department: "Marketing" },
+  // { id: 20, name: "Surbhi Netam", department: "Marketing" },
   { id: 21, name: "Umesh Dhakkad", department: "Pharmacy" }
 ]);
 
