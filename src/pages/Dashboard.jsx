@@ -16,7 +16,7 @@ import {
   Users,
   UserCheck,
   UserX,
-  Clock, 
+  Clock,
   UserPlus,
   TrendingUp,
   FileText,
@@ -55,191 +55,191 @@ const Dashboard = () => {
     setEmployeeStatusData(employeeStatus);
   }, [activeEmployee, leftEmployee]);
 
-const fetchJoiningCount = async () => {
-  try {
-    const response = await fetch(
-      'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=JOINING&action=fetch'
-    );
+  const fetchJoiningCount = async () => {
+    try {
+      const response = await fetch(
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=JOINING&action=fetch'
+      );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to fetch data from JOINING sheet');
-    }
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch data from JOINING sheet');
+      }
 
-    const rawData = result.data || result;
-    if (!Array.isArray(rawData)) {
-      throw new Error('Expected array data not received');
-    }
+      const rawData = result.data || result;
+      if (!Array.isArray(rawData)) {
+        throw new Error('Expected array data not received');
+      }
 
-    // Headers are row 6 → index 5
-    const headers = rawData[5];
-    const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
+      // Headers are row 6 → index 5
+      const headers = rawData[5];
+      const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
 
-    // Find index of "Status", "Date of Joining", "Designation" and Column Y (index 24)
-    const statusIndex = headers.findIndex(
-      h => h && h.toString().trim().toLowerCase() === "status"
-    );
-    
-    const dateOfJoiningIndex = headers.findIndex(
-      h => h && h.toString().trim().toLowerCase().includes("date of joining")
-    );
+      // Find index of "Status", "Date of Joining", "Designation" and Column Y (index 24)
+      const statusIndex = headers.findIndex(
+        h => h && h.toString().trim().toLowerCase() === "status"
+      );
 
-    const designationIndex = headers.findIndex(
-      h => h && h.toString().trim().toLowerCase() === "designation"
-    );
+      const dateOfJoiningIndex = headers.findIndex(
+        h => h && h.toString().trim().toLowerCase().includes("date of joining")
+      );
 
-    const columnYIndex = 24; // Column Y index
+      const designationIndex = headers.findIndex(
+        h => h && h.toString().trim().toLowerCase() === "designation"
+      );
 
-    let activeCount = 0;
-    const monthlyHiring = {};
-    const designationCounts = {};
-    
-    // Initialize monthly hiring data for the last 6 months
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentDate = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const monthIndex = (currentDate.getMonth() - i + 12) % 12;
-      const monthYear = `${months[monthIndex]} ${currentDate.getFullYear()}`;
-      monthlyHiring[monthYear] = { hired: 0 };
-    }
+      const columnYIndex = 24; // Column Y index
 
-    // Filter out rows that have values in Column Y
-    const filteredDataRows = dataRows.filter(row => 
-      !row[columnYIndex] || row[columnYIndex].toString().trim() === ''
-    );
+      let activeCount = 0;
+      const monthlyHiring = {};
+      const designationCounts = {};
 
-    if (statusIndex !== -1) {
-      activeCount = filteredDataRows.filter(
-        row => row[statusIndex]?.toString().trim().toLowerCase() === "active"
-      ).length;
-    }
+      // Initialize monthly hiring data for the last 6 months
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const currentDate = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const monthIndex = (currentDate.getMonth() - i + 12) % 12;
+        const monthYear = `${months[monthIndex]} ${currentDate.getFullYear()}`;
+        monthlyHiring[monthYear] = { hired: 0 };
+      }
 
-    // Count hires by month if date of joining column exists
-    if (dateOfJoiningIndex !== -1) {
-      filteredDataRows.forEach(row => {
-        const dateStr = row[dateOfJoiningIndex];
-        if (dateStr) {
-          const date = parseSheetDate(dateStr);
-          if (date) {
-            const monthYear = `${months[date.getMonth()]} ${date.getFullYear()}`;
-            if (monthlyHiring[monthYear]) {
-              monthlyHiring[monthYear].hired += 1;
-            } else {
-              monthlyHiring[monthYear] = { hired: 1 };
+      // Filter out rows that have values in Column Y
+      const filteredDataRows = dataRows.filter(row =>
+        !row[columnYIndex] || row[columnYIndex].toString().trim() === ''
+      );
+
+      if (statusIndex !== -1) {
+        activeCount = filteredDataRows.filter(
+          row => row[statusIndex]?.toString().trim().toLowerCase() === "active"
+        ).length;
+      }
+
+      // Count hires by month if date of joining column exists
+      if (dateOfJoiningIndex !== -1) {
+        filteredDataRows.forEach(row => {
+          const dateStr = row[dateOfJoiningIndex];
+          if (dateStr) {
+            const date = parseSheetDate(dateStr);
+            if (date) {
+              const monthYear = `${months[date.getMonth()]} ${date.getFullYear()}`;
+              if (monthlyHiring[monthYear]) {
+                monthlyHiring[monthYear].hired += 1;
+              } else {
+                monthlyHiring[monthYear] = { hired: 1 };
+              }
             }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // Count employees by designation
-    if (designationIndex !== -1) {
+      // Count employees by designation
+      if (designationIndex !== -1) {
+        filteredDataRows.forEach(row => {
+          const designation = row[designationIndex]?.toString().trim();
+          if (designation) {
+            if (designationCounts[designation]) {
+              designationCounts[designation] += 1;
+            } else {
+              designationCounts[designation] = 1;
+            }
+          }
+        });
+
+        // Convert to array format for the chart
+        const designationArray = Object.keys(designationCounts).map(key => ({
+          designation: key,
+          employees: designationCounts[key]
+        }));
+
+        setDesignationData(designationArray);
+      }
+
+      // Update state with filtered data
+      setActiveEmployee(filteredDataRows.length);
+
+      // Return both counts and monthly hiring data
+      return {
+        total: filteredDataRows.length,
+        active: activeCount,
+        monthlyHiring
+      };
+
+    } catch (error) {
+      console.error("Error fetching joining count:", error);
+      return { total: 0, active: 0, monthlyHiring: {} };
+    }
+  };
+
+  const fetchDepartmentData = async () => {
+    try {
+      const response = await fetch(
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=JOINING&action=fetch'
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch data from JOINING sheet');
+      }
+
+      const rawData = result.data || result;
+      if (!Array.isArray(rawData)) {
+        throw new Error('Expected array data not received');
+      }
+
+      // Headers are row 6 → index 5
+      const headers = rawData[5];
+      const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
+
+      // Find index of "Department" column (Column U, index 20) and Column Y (index 24)
+      const departmentIndex = 20;
+      const columnYIndex = 24;
+
+      // Filter out rows that have values in Column Y
+      const filteredDataRows = dataRows.filter(row =>
+        !row[columnYIndex] || row[columnYIndex].toString().trim() === ''
+      );
+
+      const departmentCounts = {};
+
+      // Count employees by department
       filteredDataRows.forEach(row => {
-        const designation = row[designationIndex]?.toString().trim();
-        if (designation) {
-          if (designationCounts[designation]) {
-            designationCounts[designation] += 1;
+        const department = row[departmentIndex]?.toString().trim();
+        if (department) {
+          if (departmentCounts[department]) {
+            departmentCounts[department] += 1;
           } else {
-            designationCounts[designation] = 1;
+            departmentCounts[department] = 1;
           }
         }
       });
 
       // Convert to array format for the chart
-      const designationArray = Object.keys(designationCounts).map(key => ({
-        designation: key,
-        employees: designationCounts[key]
+      const departmentArray = Object.keys(departmentCounts).map(key => ({
+        department: key,
+        employees: departmentCounts[key]
       }));
 
-      setDesignationData(designationArray);
+      return departmentArray;
+
+    } catch (error) {
+      console.error("Error fetching department data:", error);
+      return [];
     }
-
-    // Update state with filtered data
-    setActiveEmployee(filteredDataRows.length);
-    
-    // Return both counts and monthly hiring data
-    return { 
-      total: filteredDataRows.length, 
-      active: activeCount,
-      monthlyHiring 
-    };
-
-  } catch (error) {
-    console.error("Error fetching joining count:", error);
-    return { total: 0, active: 0, monthlyHiring: {} };
-  }
-};
-
-const fetchDepartmentData = async () => {
-  try {
-    const response = await fetch(
-      'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=JOINING&action=fetch'
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to fetch data from JOINING sheet');
-    }
-
-    const rawData = result.data || result;
-    if (!Array.isArray(rawData)) {
-      throw new Error('Expected array data not received');
-    }
-
-    // Headers are row 6 → index 5
-    const headers = rawData[5];
-    const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
-
-    // Find index of "Department" column (Column U, index 20) and Column Y (index 24)
-    const departmentIndex = 20;
-    const columnYIndex = 24;
-
-    // Filter out rows that have values in Column Y
-    const filteredDataRows = dataRows.filter(row => 
-      !row[columnYIndex] || row[columnYIndex].toString().trim() === ''
-    );
-
-    const departmentCounts = {};
-
-    // Count employees by department
-    filteredDataRows.forEach(row => {
-      const department = row[departmentIndex]?.toString().trim();
-      if (department) {
-        if (departmentCounts[department]) {
-          departmentCounts[department] += 1;
-        } else {
-          departmentCounts[department] = 1;
-        }
-      }
-    });
-
-    // Convert to array format for the chart
-    const departmentArray = Object.keys(departmentCounts).map(key => ({
-      department: key,
-      employees: departmentCounts[key]
-    }));
-
-    return departmentArray;
-
-  } catch (error) {
-    console.error("Error fetching department data:", error);
-    return [];
-  }
-};
+  };
 
   const fetchLeaveCount = async () => {
     try {
       const response = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=LEAVING&action=fetch'
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=LEAVING&action=fetch'
       );
 
       if (!response.ok) {
@@ -264,7 +264,7 @@ const fetchDepartmentData = async () => {
       const now = new Date();
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
-      
+
       if (dataRows.length > 0) {
         // Use column D (index 3) for date of leaving
         thisMonthCount = dataRows.filter(row => {
@@ -284,7 +284,7 @@ const fetchDepartmentData = async () => {
       // Count leaving by month (for the chart)
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const monthlyLeaving = {};
-      
+
       // Initialize monthly leaving data for the last 6 months
       for (let i = 5; i >= 0; i--) {
         const monthIndex = (now.getMonth() - i + 12) % 12;
@@ -323,19 +323,19 @@ const fetchDepartmentData = async () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentDate = new Date();
     const result = [];
-    
+
     // Get data for the last 6 months
     for (let i = 5; i >= 0; i--) {
       const monthIndex = (currentDate.getMonth() - i + 12) % 12;
       const monthYear = `${months[monthIndex]} ${currentDate.getFullYear()}`;
-      
+
       result.push({
         month: months[monthIndex],
         hired: hiringData[monthYear]?.hired || 0,
         left: leavingData[monthYear]?.left || 0
       });
     }
-    
+
     return result;
   };
 
@@ -345,31 +345,31 @@ const fetchDepartmentData = async () => {
     return colors[index % colors.length];
   };
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [joiningResult, leavingResult, departmentResult] = await Promise.all([
-        fetchJoiningCount(),
-        fetchLeaveCount(),
-        fetchDepartmentData()
-      ]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [joiningResult, leavingResult, departmentResult] = await Promise.all([
+          fetchJoiningCount(),
+          fetchLeaveCount(),
+          fetchDepartmentData()
+        ]);
 
-      setTotalEmployee(joiningResult.total + leavingResult.total);
-      setDepartmentData(departmentResult);
+        setTotalEmployee(joiningResult.total + leavingResult.total);
+        setDepartmentData(departmentResult);
 
-      const monthlyData = prepareMonthlyHiringData(
-        joiningResult.monthlyHiring,
-        leavingResult.monthlyLeaving
-      );
+        const monthlyData = prepareMonthlyHiringData(
+          joiningResult.monthlyHiring,
+          leavingResult.monthlyLeaving
+        );
 
-      setMonthlyHiringData(monthlyData);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+        setMonthlyHiringData(monthlyData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
 
-  fetchData();
-}, []);
+    fetchData();
+  }, []);
 
   return (
     <div className="space-y-6 page-content p-6">

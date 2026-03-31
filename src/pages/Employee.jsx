@@ -34,7 +34,7 @@ const Employee = () => {
 
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=JOINING&action=fetch"
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=JOINING&action=fetch"
       );
 
       if (!response.ok) {
@@ -99,7 +99,7 @@ const Employee = () => {
         columnAA: row[26] || "",
         columnY: row[24] || "",
         unit: row[39] || "",
-        panCardNo : row[40] || "",
+        panCardNo: row[40] || "",
       }));
 
       // Filter logic: Column AQ has value AND Column AO is null/empty
@@ -125,7 +125,7 @@ const Employee = () => {
 
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=LEAVING&action=fetch"
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=LEAVING&action=fetch"
       );
 
       if (!response.ok) {
@@ -237,22 +237,20 @@ const Employee = () => {
         <div className="border-b border-gray-300 ">
           <nav className="flex -mb-px">
             <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                activeTab === "joining"
+              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "joining"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
               onClick={() => setActiveTab("joining")}
             >
               <CheckCircle size={16} className="inline mr-2" />
               Joining ({filteredJoiningData.length})
             </button>
             <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                activeTab === "leaving"
+              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "leaving"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
               onClick={() => setActiveTab("leaving")}
             >
               <Clock size={16} className="inline mr-2" />
@@ -458,7 +456,7 @@ const Employee = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-indigo-600 hover:text-indigo-800"
-                              ><ImageIcon size={20}/></a>
+                              ><ImageIcon size={20} /></a>
                             ) : (
                               "-"
                             )}

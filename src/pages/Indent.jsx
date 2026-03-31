@@ -76,7 +76,7 @@ This indent requires your attention.
     try {
       setSubmitting(true);
 
-      const response = await fetch('https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec', {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec', {
         method: 'POST',
         body: new URLSearchParams({
           action: 'shareViaEmail',
@@ -120,7 +120,7 @@ This indent requires your attention.
   const fetchDepartments = async () => {
     try {
       const response = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=Master&action=fetch'
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=Master&action=fetch'
       );
 
       const result = await response.json();
@@ -140,16 +140,7 @@ This indent requires your attention.
     }
   };
 
-  const handleCreativeClick = (item) => {
-    // Navigate to JobPoster page with indent data
-    navigate('/jobPoster', {
-      state: {
-        post: item.post,
-        experience: item.experience,
-        indentNumber: item.indentNumber
-      }
-    });
-  };
+
 
   // Social site options
   const socialSiteOptions = [
@@ -206,7 +197,7 @@ This indent requires your attention.
   const fetchIndentDataFromRow7 = async () => {
     try {
       const response = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=INDENT&action=fetch'
       );
 
       const result = await response.json();
@@ -271,7 +262,7 @@ This indent requires your attention.
   const fetchLastIndentNumber = async () => {
     try {
       const response = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=INDENT&action=fetch'
       );
 
       const result = await response.json();
@@ -445,7 +436,7 @@ This indent requires your attention.
         formData.department,
       ];
 
-      const response = await fetch('https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec', {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec', {
         method: 'POST',
         body: new URLSearchParams({
           sheetName: 'INDENT',
@@ -979,12 +970,7 @@ This indent requires your attention.
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => handleCreativeClick(item)}
-                            className="bg-blue-600 px-4 py-2 rounded-md text-white hover:bg-blue-700 transition-colors min-w-[80px]"
-                          >
-                            Creative
-                          </button>
+
                           <button
                             onClick={() => handleShareClick(item)}
                             className="bg-green-600 px-4 py-2 rounded-md text-white hover:bg-green-700 transition-colors min-w-[80px]"

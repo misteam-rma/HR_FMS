@@ -19,7 +19,7 @@ const AfterLeavingWork = () => {
     cancellationEmailBiometric: false,
     finalReleaseDate: '',
     removeBenefitEnrollment: false,
-    noDues : false,
+    noDues: false,
   });
 
   const fetchLeavingData = async () => {
@@ -29,28 +29,28 @@ const AfterLeavingWork = () => {
 
     try {
       const response = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=LEAVING&action=fetch'
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=LEAVING&action=fetch'
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch data from LEAVING sheet');
       }
-      
+
       const rawData = result.data || result;
-      
+
       if (!Array.isArray(rawData)) {
         throw new Error('Expected array data not received');
       }
 
       // Process data starting from row 7 (index 6) - skip headers
       const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
-      
+
       const processedData = dataRows.map(row => ({
         timestamp: row[0] || '',
         employeeId: row[1] || '',
@@ -59,12 +59,12 @@ const AfterLeavingWork = () => {
         mobileNo: row[4] || '',
         reasonOfLeaving: row[5] || '',
         firmName: row[6] || '',
-        fatherName: row[7] || '', 
-        dateOfJoining: row[8] || '', 
-        workingLocation: row[9] || '', 
-        designation: row[10] || '', 
-        department: row[11] || '', 
-        plannedDate: row[12] || '', 
+        fatherName: row[7] || '',
+        dateOfJoining: row[8] || '',
+        workingLocation: row[9] || '',
+        designation: row[10] || '',
+        department: row[11] || '',
+        plannedDate: row[12] || '',
         actual: row[13] || ''
       }));
 
@@ -72,12 +72,12 @@ const AfterLeavingWork = () => {
         task => task.plannedDate && !task.actual
       );
       setPendingData(pendingTasks);
-      
+
       const historyTasks = processedData.filter(
         task => task.plannedDate && task.actual
       );
       setHistoryData(historyTasks);
-     
+
     } catch (error) {
       console.error('Error fetching leaving data:', error);
       setError(error.message);
@@ -100,22 +100,22 @@ const AfterLeavingWork = () => {
       cancellationEmailBiometric: false,
       finalReleaseDate: '',
       removeBenefitEnrollment: false,
-      noDues : false
+      noDues: false
     });
-    
+
     setSelectedItem(item);
     setShowModal(true);
     setLoading(true);
 
     try {
       const fullDataResponse = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=LEAVING&action=fetch'
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=LEAVING&action=fetch'
       );
-      
+
       if (!fullDataResponse.ok) {
         throw new Error(`HTTP error! status: ${fullDataResponse.status}`);
       }
-      
+
       const fullDataResult = await fullDataResponse.json();
       const allData = fullDataResult.data || fullDataResult;
 
@@ -137,7 +137,7 @@ const AfterLeavingWork = () => {
         idx > headerRowIndex &&
         row[employeeIdIndex]?.toString().trim() === item.employeeId?.toString().trim()
       );
-      
+
       if (rowIndex === -1) {
         throw new Error(`Employee ${item.employeeId} not found in LEAVING sheet`);
       }
@@ -145,7 +145,7 @@ const AfterLeavingWork = () => {
       // Get current values from the sheet
       // Final Release Date is now at column T (index 19)
       const finalReleaseDateValue = allData[rowIndex][19] || "";
-      
+
       // Format the date for the input field (YYYY-MM-DD format)
       let formattedDate = "";
       if (finalReleaseDateValue) {
@@ -167,18 +167,18 @@ const AfterLeavingWork = () => {
       }
 
       const currentValues = {
-        resignationLetterReceived: 
+        resignationLetterReceived:
           allData[rowIndex][15]?.toString().trim().toLowerCase() === "yes",
-        resignationAcceptance: 
+        resignationAcceptance:
           allData[rowIndex][16]?.toString().trim().toLowerCase() === "yes",
-        handoverAssetsIdVisitingCard: 
+        handoverAssetsIdVisitingCard:
           allData[rowIndex][17]?.toString().trim().toLowerCase() === "yes",
-        cancellationEmailBiometric: 
+        cancellationEmailBiometric:
           allData[rowIndex][18]?.toString().trim().toLowerCase() === "yes",
         finalReleaseDate: formattedDate,
-        removeBenefitEnrollment: 
+        removeBenefitEnrollment:
           allData[rowIndex][20]?.toString().trim().toLowerCase() === "yes",
-        noDues: 
+        noDues:
           allData[rowIndex][21]?.toString().trim().toLowerCase() === "yes"
       };
 
@@ -207,190 +207,190 @@ const AfterLeavingWork = () => {
     }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setSubmitting(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setSubmitting(true);
 
-  if (!selectedItem.employeeId || !selectedItem.name) {
-    toast.error('Please fill all required fields');
-    setSubmitting(false);
-    return;
-  }
-
-  try {
-    // 1. First fetch the current data
-    const fullDataResponse = await fetch(
-      'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=LEAVING&action=fetch'
-    );
-    if (!fullDataResponse.ok) {
-      throw new Error(`HTTP error! status: ${fullDataResponse.status}`);
+    if (!selectedItem.employeeId || !selectedItem.name) {
+      toast.error('Please fill all required fields');
+      setSubmitting(false);
+      return;
     }
 
-    const fullDataResult = await fullDataResponse.json();
-    const allData = fullDataResult.data || fullDataResult;
-
-    // Find header row in LEAVING sheet
-    let headerRowIndex = allData.findIndex(row =>
-      row.some(cell => cell?.toString().trim().toLowerCase().includes('employee id'))
-    );
-    if (headerRowIndex === -1) headerRowIndex = 4;
-
-    const headers = allData[headerRowIndex].map(h => h?.toString().trim());
-
-    // Find Employee ID column index
-    const employeeIdIndex = headers.findIndex(h => h?.toLowerCase() === "employee id");
-    if (employeeIdIndex === -1) {
-      throw new Error("Could not find 'Employee ID' column");
-    }
-
-    // Find the employee row index
-    const rowIndex = allData.findIndex((row, idx) =>
-      idx > headerRowIndex &&
-      row[employeeIdIndex]?.toString().trim() === selectedItem.employeeId?.toString().trim()
-    );
-    if (rowIndex === -1) throw new Error(`Employee ${selectedItem.employeeId} not found in LEAVING sheet`);
-
-    // Create current date for actual date (Column N)
-    const now = new Date();
-    const currentDateFormatted = now.getFullYear() + '-' + 
-                                String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                                String(now.getDate()).padStart(2, '0');
-    
-    // Check if all conditions are met
-    const allConditionsMet = 
-      formData.resignationLetterReceived &&
-      formData.resignationAcceptance &&
-      formData.handoverAssetsIdVisitingCard &&
-      formData.cancellationEmailBiometric &&
-      formData.removeBenefitEnrollment &&
-      formData.noDues &&
-      formData.finalReleaseDate;
-
-    const updatePromises = [];
-
-    // Only update actual date (Column N) if all conditions are met
-    if (allConditionsMet) {
-      updatePromises.push(
-        fetch(
-          "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              sheetName: "LEAVING",
-              action: "updateCell",
-              rowIndex: (rowIndex + 1).toString(),
-              columnIndex: "14", // Column N (Actual date)
-              value: currentDateFormatted, // Send as YYYY-MM-DD format
-            }).toString(),
-          }
-        )
+    try {
+      // 1. First fetch the current data
+      const fullDataResponse = await fetch(
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=LEAVING&action=fetch'
       );
-    }
+      if (!fullDataResponse.ok) {
+        throw new Error(`HTTP error! status: ${fullDataResponse.status}`);
+      }
 
-    // Update Final Release Date (Column T) - always update if provided
-    if (formData.finalReleaseDate) {
-      updatePromises.push(
-        fetch(
-          "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              sheetName: "LEAVING",
-              action: "updateCell",
-              rowIndex: (rowIndex + 1).toString(),
-              columnIndex: "20", // Column T (Final Release Date)
-              value: formData.finalReleaseDate, // Send as YYYY-MM-DD format
-            }).toString(),
-          }
-        )
+      const fullDataResult = await fullDataResponse.json();
+      const allData = fullDataResult.data || fullDataResult;
+
+      // Find header row in LEAVING sheet
+      let headerRowIndex = allData.findIndex(row =>
+        row.some(cell => cell?.toString().trim().toLowerCase().includes('employee id'))
       );
-    }
+      if (headerRowIndex === -1) headerRowIndex = 4;
 
-    // Update checklist columns (these remain as Yes/No strings)
-    const fields = [
-      { value: formData.resignationLetterReceived ? "Yes" : "No", offset: 15 },
-      { value: formData.resignationAcceptance ? "Yes" : "No", offset: 16 },
-      { value: formData.handoverAssetsIdVisitingCard ? "Yes" : "No", offset: 17 },
-      { value: formData.cancellationEmailBiometric ? "Yes" : "No", offset: 18 },
-      { value: formData.removeBenefitEnrollment ? "Yes" : "No", offset: 20 },
-      { value: formData.noDues ? "Yes" : "No", offset: 21 }
-    ];
+      const headers = allData[headerRowIndex].map(h => h?.toString().trim());
 
-    // Add all other field updates
-    fields.forEach((field) => {
-      updatePromises.push(
-        fetch(
-          "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              sheetName: "LEAVING",
-              action: "updateCell",
-              rowIndex: (rowIndex + 1).toString(),
-              columnIndex: (field.offset + 1).toString(),
-              value: field.value,
-            }).toString(),
-          }
-        )
+      // Find Employee ID column index
+      const employeeIdIndex = headers.findIndex(h => h?.toLowerCase() === "employee id");
+      if (employeeIdIndex === -1) {
+        throw new Error("Could not find 'Employee ID' column");
+      }
+
+      // Find the employee row index
+      const rowIndex = allData.findIndex((row, idx) =>
+        idx > headerRowIndex &&
+        row[employeeIdIndex]?.toString().trim() === selectedItem.employeeId?.toString().trim()
       );
-    });
+      if (rowIndex === -1) throw new Error(`Employee ${selectedItem.employeeId} not found in LEAVING sheet`);
 
-    const responses = await Promise.all(updatePromises);
-    const results = await Promise.all(responses.map((r) => r.json()));
+      // Create current date for actual date (Column N)
+      const now = new Date();
+      const currentDateFormatted = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0');
 
-    const hasError = results.some((result) => !result.success);
-    if (hasError) {
-      console.error("Some cell updates failed:", results);
-      throw new Error("Some cell updates failed");
+      // Check if all conditions are met
+      const allConditionsMet =
+        formData.resignationLetterReceived &&
+        formData.resignationAcceptance &&
+        formData.handoverAssetsIdVisitingCard &&
+        formData.cancellationEmailBiometric &&
+        formData.removeBenefitEnrollment &&
+        formData.noDues &&
+        formData.finalReleaseDate;
+
+      const updatePromises = [];
+
+      // Only update actual date (Column N) if all conditions are met
+      if (allConditionsMet) {
+        updatePromises.push(
+          fetch(
+            "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                sheetName: "LEAVING",
+                action: "updateCell",
+                rowIndex: (rowIndex + 1).toString(),
+                columnIndex: "14", // Column N (Actual date)
+                value: currentDateFormatted, // Send as YYYY-MM-DD format
+              }).toString(),
+            }
+          )
+        );
+      }
+
+      // Update Final Release Date (Column T) - always update if provided
+      if (formData.finalReleaseDate) {
+        updatePromises.push(
+          fetch(
+            "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                sheetName: "LEAVING",
+                action: "updateCell",
+                rowIndex: (rowIndex + 1).toString(),
+                columnIndex: "20", // Column T (Final Release Date)
+                value: formData.finalReleaseDate, // Send as YYYY-MM-DD format
+              }).toString(),
+            }
+          )
+        );
+      }
+
+      // Update checklist columns (these remain as Yes/No strings)
+      const fields = [
+        { value: formData.resignationLetterReceived ? "Yes" : "No", offset: 15 },
+        { value: formData.resignationAcceptance ? "Yes" : "No", offset: 16 },
+        { value: formData.handoverAssetsIdVisitingCard ? "Yes" : "No", offset: 17 },
+        { value: formData.cancellationEmailBiometric ? "Yes" : "No", offset: 18 },
+        { value: formData.removeBenefitEnrollment ? "Yes" : "No", offset: 20 },
+        { value: formData.noDues ? "Yes" : "No", offset: 21 }
+      ];
+
+      // Add all other field updates
+      fields.forEach((field) => {
+        updatePromises.push(
+          fetch(
+            "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                sheetName: "LEAVING",
+                action: "updateCell",
+                rowIndex: (rowIndex + 1).toString(),
+                columnIndex: (field.offset + 1).toString(),
+                value: field.value,
+              }).toString(),
+            }
+          )
+        );
+      });
+
+      const responses = await Promise.all(updatePromises);
+      const results = await Promise.all(responses.map((r) => r.json()));
+
+      const hasError = results.some((result) => !result.success);
+      if (hasError) {
+        console.error("Some cell updates failed:", results);
+        throw new Error("Some cell updates failed");
+      }
+
+      if (allConditionsMet) {
+        toast.success("All conditions met! Actual date updated successfully.");
+      } else {
+        toast.success(
+          "Conditions updated successfully. Actual date will be updated when all conditions are met."
+        );
+      }
+
+      setShowModal(false);
+      fetchLeavingData();
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error(`Update failed: ${error.message}`);
+    } finally {
+      setLoading(false);
+      setSubmitting(false);
     }
-
-    if (allConditionsMet) {
-      toast.success("All conditions met! Actual date updated successfully.");
-    } else {
-      toast.success(
-        "Conditions updated successfully. Actual date will be updated when all conditions are met."
-      );
-    }
-
-    setShowModal(false);
-    fetchLeavingData();
-  } catch (error) {
-    console.error('Update error:', error);
-    toast.error(`Update failed: ${error.message}`);
-  } finally {
-    setLoading(false);
-    setSubmitting(false);
-  }
-};
+  };
 
   const formatDOB = (dateString) => {
     if (!dateString) return '';
-    
+
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
       return dateString; // Return as-is if not a valid date
     }
-    
+
     const day = date.getDate();
     const month = date.getMonth();
     const year = date.getFullYear();
-    
+
     return `${day}/${month}/${year}`;
   };
 
   const filteredPendingData = pendingData.filter(item => {
     const matchesSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.employeeId?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.employeeId?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -447,7 +447,7 @@ const handleSubmit = async (e) => {
                   <tr>
                     <td colSpan="7" className="px-6 py-12 text-center">
                       <p className="text-red-500">Error: {error}</p>
-                      <button 
+                      <button
                         onClick={fetchLeavingData}
                         className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                       >
@@ -526,7 +526,7 @@ const handleSubmit = async (e) => {
 
               <div className="space-y-3">
                 <h4 className="text-md font-medium text-gray-700">Checklist Items</h4>
-                
+
                 {[
                   { key: 'resignationLetterReceived', label: 'Resignation Letter Received' },
                   { key: 'resignationAcceptance', label: 'Resignation Acceptance' },
@@ -571,17 +571,16 @@ const handleSubmit = async (e) => {
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 min-h-[42px] flex items-center justify-center ${
-                    submitting ? 'opacity-75 cursor-not-allowed' : ''
-                  }`}
+                  className={`px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 min-h-[42px] flex items-center justify-center ${submitting ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
                   disabled={submitting}
                 >
                   {submitting ? (
                     <div className="flex items-center">
-                      <svg 
-                        className="animate-spin h-4 w-4 text-white mr-2" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        fill="none" 
+                      <svg
+                        className="animate-spin h-4 w-4 text-white mr-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
                         viewBox="0 0 24 24"
                       >
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

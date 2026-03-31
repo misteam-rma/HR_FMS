@@ -36,7 +36,6 @@ const Sidebar = ({ onClose }) => {
   const [currentLang, setCurrentLang] = useState('en');
   const [showLanguageHint, setShowLanguageHint] = useState(false);
   const [showLeaveManagement, setShowLeaveManagement] = useState(false);
-  const [showBalancedScoreCard, setShowBalancedScoreCard] = useState(false);
 
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : null;
@@ -53,7 +52,7 @@ const Sidebar = ({ onClose }) => {
 
       try {
         // Fetch employee data to check Column G
-        const response = await fetch(`https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=USER&action=fetch`);
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=USER&action=fetch`);
         const result = await response.json();
 
         if (result.success && result.data) {
@@ -89,16 +88,12 @@ const Sidebar = ({ onClose }) => {
             // 1. User is NOT admin AND Column G has value
             // 2. OR user is admin (admins always see it)
             setShowLeaveManagement(isAdmin || (!isAdmin && hasLeaveAccess));
-
-            // Show Balanced Score Card only for HOD
-            setShowBalancedScoreCard(isHOD);
           }
         }
       } catch (error) {
         console.error('Error checking leave management access:', error);
         // Default to showing for admins, hiding for others if fetch fails
         setShowLeaveManagement(user?.Admin === 'Yes');
-        setShowBalancedScoreCard(false);
       }
     };
 
@@ -119,9 +114,7 @@ const Sidebar = ({ onClose }) => {
     }
   }, [currentLang]);
 
-  const hiddenScorecardUsers = ["surbhi netam", "isha shrivastava", "harsh rai", "nighat parveen", "anusuiya", "kusum", "jyoti kumbaj", "sunita", "neha", "pratima sethi", "dr .pushpa", "dr poonam", "ajay jaiswal", "mangesh sahu", "naman mishra", "kishor ot day", "AMITA, POONIYA", "satish", "narayan", "indrajeet", "dr akriti", "shraddha", "bhumika", "priyanka", "archana day"];
-  const currentUsername = (user?.Name || user?.Username || "").toLowerCase();
-  const hideBalanceScoreCard = hiddenScorecardUsers.includes(currentUsername);
+
 
   const adminMenuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -134,19 +127,13 @@ const Sidebar = ({ onClose }) => {
     { path: '/after-leaving-work', icon: UserMinus, label: 'After Leaving Work' },
     { path: '/employee', icon: Users, label: 'Employee' },
     { path: '/leave-management', icon: BookPlus, label: 'Leave Management' },
-    ...(hideBalanceScoreCard ? [] : [{ path: '/balanceScoreCard', icon: CalendarSync, label: 'Balance Scorecard' }]),
-    { path: '/misreport', icon: AlarmClockCheck, label: 'Delegation Score Card' },
     { path: '/company-calendar', icon: Calendar, label: 'Company Calendar' },
-    { path: '/jobPoster', icon: Brain, label: 'Creative' },
-    { path: '/hrPolicy', icon: NotepadText, label: 'HR Policy' },
     { path: '/license', icon: AlarmClockCheck, label: 'License' },
   ];
 
   const employeeMenuItems = [
     { path: '/my-profile', icon: ProfileIcon, label: 'My Profile' },
     { path: '/leave-request', icon: LeaveIcon, label: 'Leave Request' },
-    ...(hideBalanceScoreCard ? [] : [{ path: '/userBalanceScoreCard', icon: LeaveIcon, label: 'Balance Scorecard' }]),
-    ...(showBalancedScoreCard ? [{ path: '/misreport', icon: AlarmClockCheck, label: 'Delegation Score Card' }] : []),
     { path: '/company-calendar', icon: Calendar, label: 'Company Calendar' },
     { path: '/license', icon: Copyright, label: 'License' },
   ];
@@ -186,8 +173,8 @@ const Sidebar = ({ onClose }) => {
                 <button
                   onClick={item.toggle}
                   className={`flex items-center justify-between w-full py-2.5 px-4 rounded-lg transition-colors ${item.isOpen
-                      ? 'bg-indigo-800 text-white'
-                      : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
+                    ? 'bg-indigo-800 text-white'
+                    : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
                     }`}
                 >
                   <div className="flex items-center">

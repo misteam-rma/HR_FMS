@@ -42,14 +42,14 @@ const LeaveManagement = () => {
 
   const calculateLeaveStats = () => {
     const currentYear = new Date().getFullYear();
-    
+
     // Filter leaves based on selected employee and approved status
     const relevantLeaves =
       selectedEmployee === "all"
         ? approvedLeaves
         : approvedLeaves.filter(
-            (leave) => leave.employeeName === selectedEmployee
-          );
+          (leave) => leave.employeeName === selectedEmployee
+        );
 
     // Debug: Log what we're working with
     console.log(`Calculating stats for ${selectedEmployee === "all" ? "all employees" : selectedEmployee}`);
@@ -68,49 +68,49 @@ const LeaveManagement = () => {
         // Parse the date
         const startDateParts = leave.startDate?.split('/');
         if (!startDateParts || startDateParts.length !== 3) return;
-        
+
         const leaveYear = parseInt(startDateParts[2]);
         if (isNaN(leaveYear) || leaveYear !== currentYear) return;
 
         // Get leave type (lowercase and trimmed)
         const leaveType = leave.leaveType ? leave.leaveType.toLowerCase().trim() : "";
         const leaveDays = leave.leaveDays ? parseInt(leave.leaveDays) : 0;
-        
+
         if (isNaN(leaveDays) || leaveDays <= 0) return;
 
         // Debug log for each leave
         console.log(`Processing: ${leave.employeeName} - Type: "${leaveType}", Days: ${leaveDays}, Year: ${leaveYear}`);
 
         // Check for casual leave (various formats)
-        if (leaveType.includes("casual") || 
-            leaveType === "casual leave" || 
-            leaveType === "casual" ||
-            leaveType === "cl") {
+        if (leaveType.includes("casual") ||
+          leaveType === "casual leave" ||
+          leaveType === "casual" ||
+          leaveType === "cl") {
           casualLeaveTaken += leaveDays;
           console.log(`Added to Casual: ${leaveDays} days (${leaveType})`);
         }
         // Check for earned leave (various formats)
-        else if (leaveType.includes("earned") || 
-                 leaveType === "earned leave" || 
-                 leaveType === "earned" ||
-                 leaveType === "el") {
+        else if (leaveType.includes("earned") ||
+          leaveType === "earned leave" ||
+          leaveType === "earned" ||
+          leaveType === "el") {
           earnedLeaveTaken += leaveDays;
           console.log(`Added to Earned: ${leaveDays} days (${leaveType})`);
         }
         // Check for sick leave (various formats)
-        else if (leaveType.includes("sick") || 
-                 leaveType === "sick leave" || 
-                 leaveType === "sick" ||
-                 leaveType === "sl") {
+        else if (leaveType.includes("sick") ||
+          leaveType === "sick leave" ||
+          leaveType === "sick" ||
+          leaveType === "sl") {
           sickLeaveTaken += leaveDays;
           console.log(`Added to Sick: ${leaveDays} days (${leaveType})`);
         }
         // Check for restricted holiday (various formats)
-        else if (leaveType.includes("restricted") || 
-                 leaveType === "restricted holiday" || 
-                 leaveType === "restricted" ||
-                 leaveType === "rh" ||
-                 leaveType.includes("restricted holiday")) {
+        else if (leaveType.includes("restricted") ||
+          leaveType === "restricted holiday" ||
+          leaveType === "restricted" ||
+          leaveType === "rh" ||
+          leaveType.includes("restricted holiday")) {
           restrictedHolidayTaken += leaveDays;
           console.log(`Added to Restricted Holiday: ${leaveDays} days (${leaveType})`);
         }
@@ -151,7 +151,7 @@ const LeaveManagement = () => {
   const fetchHodNames = async () => {
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=Master&action=fetch"
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=Master&action=fetch"
       );
 
       if (!response.ok) {
@@ -229,89 +229,89 @@ const LeaveManagement = () => {
 
   // Fetch employees from JOINING sheet
   // Fetch employees from JOINING sheet
-const fetchEmployees = async () => {
-  try {
-    // Using a different approach - add timestamp to prevent caching issues
-    const timestamp = new Date().getTime();
-    const url = `https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=JOINING&action=fetch&t=${timestamp}`;
-    
-    console.log("Fetching employees from:", url);
-
-    // Use fetch with mode 'cors' and handle CORS errors gracefully
-    const response = await fetch(url, {
-      method: 'GET',
-      mode: 'cors', // Try with cors mode
-      cache: 'no-cache', // Don't cache
-      headers: {
-        'Accept': 'application/json',
-      }
-    });
-
-    if (!response.ok) {
-      // Try alternative approach if the first fails
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const text = await response.text();
-    console.log("Raw response:", text.substring(0, 500)); // Log first 500 chars
-
-    let result;
+  const fetchEmployees = async () => {
     try {
-      result = JSON.parse(text);
-    } catch (parseError) {
-      console.error("Failed to parse JSON:", parseError);
-      throw new Error("Invalid JSON response from server");
+      // Using a different approach - add timestamp to prevent caching issues
+      const timestamp = new Date().getTime();
+      const url = `https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=JOINING&action=fetch&t=${timestamp}`;
+
+      console.log("Fetching employees from:", url);
+
+      // Use fetch with mode 'cors' and handle CORS errors gracefully
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors', // Try with cors mode
+        cache: 'no-cache', // Don't cache
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        // Try alternative approach if the first fails
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const text = await response.text();
+      console.log("Raw response:", text.substring(0, 500)); // Log first 500 chars
+
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (parseError) {
+        console.error("Failed to parse JSON:", parseError);
+        throw new Error("Invalid JSON response from server");
+      }
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch employee data");
+      }
+
+      const rawData = result.data || result;
+
+      if (!Array.isArray(rawData)) {
+        throw new Error("Expected array data not received");
+      }
+
+      // Data starts from row 7 (index 6)
+      const employeeData = rawData
+        .slice(6)
+        .map((row, index) => ({
+          id: row[1] || "", // Column B (Employee ID)
+          name: row[2] || "", // Column E (Employee Name)
+          department: row[20] || "", // Column U (Department)
+          columnY: row[24] || "", // Column Y (index 24)
+          rowIndex: index + 7, // Actual row number in sheet
+        }))
+        .filter(
+          (emp) => emp.name && emp.id && !emp.columnY // Only include employees where Column Y is empty
+        );
+
+      console.log(`Loaded ${employeeData.length} employees`);
+      setEmployees(employeeData);
+
+    } catch (error) {
+      console.error("Error fetching employee data:", error);
+
+      // Fallback to static data if fetch fails
+      toast.error(`Failed to load employee data. Using offline mode.`);
+
+      // Set default/fallback employee data
+      const fallbackEmployees = [
+        { id: "EMP001", name: "John Doe", department: "IT" },
+        { id: "EMP002", name: "Jane Smith", department: "HR" },
+        { id: "EMP003", name: "Bob Johnson", department: "Finance" },
+        { id: "EMP004", name: "Alice Brown", department: "Operations" },
+      ];
+
+      setEmployees(fallbackEmployees);
     }
-
-    if (!result.success) {
-      throw new Error(result.error || "Failed to fetch employee data");
-    }
-
-    const rawData = result.data || result;
-
-    if (!Array.isArray(rawData)) {
-      throw new Error("Expected array data not received");
-    }
-
-    // Data starts from row 7 (index 6)
-    const employeeData = rawData
-      .slice(6)
-      .map((row, index) => ({
-        id: row[1] || "", // Column B (Employee ID)
-        name: row[2] || "", // Column E (Employee Name)
-        department: row[20] || "", // Column U (Department)
-        columnY: row[24] || "", // Column Y (index 24)
-        rowIndex: index + 7, // Actual row number in sheet
-      }))
-      .filter(
-        (emp) => emp.name && emp.id && !emp.columnY // Only include employees where Column Y is empty
-      );
-
-    console.log(`Loaded ${employeeData.length} employees`);
-    setEmployees(employeeData);
-    
-  } catch (error) {
-    console.error("Error fetching employee data:", error);
-    
-    // Fallback to static data if fetch fails
-    toast.error(`Failed to load employee data. Using offline mode.`);
-    
-    // Set default/fallback employee data
-    const fallbackEmployees = [
-      { id: "EMP001", name: "John Doe", department: "IT" },
-      { id: "EMP002", name: "Jane Smith", department: "HR" },
-      { id: "EMP003", name: "Bob Johnson", department: "Finance" },
-      { id: "EMP004", name: "Alice Brown", department: "Operations" },
-    ];
-    
-    setEmployees(fallbackEmployees);
-  }
-};
+  };
 
   // Handle employee selection
   const handleEmployeeChange = (selectedName) => {
     const selectedEmployee = employees.find((emp) => emp.name === selectedName);
-    
+
     if (selectedEmployee) {
       setFormData((prev) => ({
         ...prev,
@@ -374,323 +374,322 @@ const fetchEmployees = async () => {
   };
 
   const formatDOB = (dateString) => {
-  if (!dateString) return "";
+    if (!dateString) return "";
 
-  // If date is already in MM/DD/YYYY format, return as-is
-  if (dateString.includes("/")) {
-    const parts = dateString.split("/");
-    if (parts.length === 3) {
-      const month = parseInt(parts[0]);
-      const day = parseInt(parts[1]);
-      const year = parseInt(parts[2]);
-      
-      // Check if it's already in MM/DD/YYYY format (month should be <= 12, day <= 31)
-      if (month <= 12 && day <= 31 && parts[2].length === 4) {
-        // Ensure proper format MM/DD/YYYY
-        return `${month}/${day}/${year}`;
-      }
-      // Check if it's in DD/MM/YYYY format and needs conversion
-      else if (day <= 12 && month <= 31 && parts[2].length === 4) {
-        // Convert from DD/MM/YYYY to MM/DD/YYYY
-        return `${day}/${month}/${year}`;
+    // If date is already in MM/DD/YYYY format, return as-is
+    if (dateString.includes("/")) {
+      const parts = dateString.split("/");
+      if (parts.length === 3) {
+        const month = parseInt(parts[0]);
+        const day = parseInt(parts[1]);
+        const year = parseInt(parts[2]);
+
+        // Check if it's already in MM/DD/YYYY format (month should be <= 12, day <= 31)
+        if (month <= 12 && day <= 31 && parts[2].length === 4) {
+          // Ensure proper format MM/DD/YYYY
+          return `${month}/${day}/${year}`;
+        }
+        // Check if it's in DD/MM/YYYY format and needs conversion
+        else if (day <= 12 && month <= 31 && parts[2].length === 4) {
+          // Convert from DD/MM/YYYY to MM/DD/YYYY
+          return `${day}/${month}/${year}`;
+        }
       }
     }
-  }
 
-  // Convert from YYYY-MM-DD (date input format) to MM/DD/YYYY
-  if (dateString.includes("-")) {
-    const [year, month, day] = dateString.split("-");
-    return `${parseInt(month)}/${parseInt(day)}/${year}`;
-  }
+    // Convert from YYYY-MM-DD (date input format) to MM/DD/YYYY
+    if (dateString.includes("-")) {
+      const [year, month, day] = dateString.split("-");
+      return `${parseInt(month)}/${parseInt(day)}/${year}`;
+    }
 
-  return dateString;
-};
+    return dateString;
+  };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (
-    !formData.employeeName ||
-    !formData.leaveType ||
-    !formData.fromDate ||
-    !formData.toDate ||
-    !formData.reason ||
-    !formData.hodName
-  ) {
-    toast.error("Please fill all required fields");
-    return;
-  }
-
-  try {
-    setSubmitting(true);
-    const now = new Date();
-
-    // Format timestamp as DD/MM/YYYY HH:MM:SS (don't change this)
-    const day = String(now.getDate()).padStart(2, "0");
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-    const formattedTimestamp = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-
-    const rowData = [
-      formattedTimestamp, // Timestamp in DD/MM/YYYY HH:MM:SS format
-      "", // Serial number (empty for auto-increment)
-      formData.employeeId, // Employee ID - index 2
-      formData.employeeName, // Employee Name - index 3
-      formatDOB(formData.fromDate), // Leave Date Start - in MM/DD/YYYY format
-      formatDOB(formData.toDate), // Leave Date End - in MM/DD/YYYY format
-      formData.reason, // Reason (Column G, index 6)
-      "Pending", // Status (Column H, index 7)
-      formData.leaveType, // Leave Type (Column I, index 8)
-      formData.hodName, // HOD Name (Column J, index 9)
-      formData.department, // Department (Column K, index 10)
-      formData.substitute, // Substitute (Column L, index 11)
-      calculateDays(formData.fromDate, formData.toDate), // Leave Days (Column M, index 12)
-    ];
-
-    console.log("Submitting leave request with dates:", {
-      fromDate: formData.fromDate,
-      toDate: formData.toDate,
-      formattedFrom: rowData[4],
-      formattedTo: rowData[5],
-      timestamp: rowData[0]
-    });
-
-    const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-      {
-        method: "POST",
-        body: new URLSearchParams({
-          sheetName: "Leave Management",
-          action: "insert",
-          rowData: JSON.stringify(rowData),
-        }),
-      }
-    );
-
-    const result = await response.json();
-
-    if (result.success) {
-      toast.success("Leave Request submitted successfully!");
-      setFormData({
-        employeeId: "",
-        employeeName: "",
-        department: "",
-        hodName: "",
-        substitute: "",
-        leaveDays: "",
-        leaveType: "",
-        fromDate: "",
-        toDate: "",
-        reason: "",
-      });
-      setShowModal(false);
-      // Refresh the data
-      fetchLeaveData();
-    } else {
-      toast.error("Failed to insert: " + (result.error || "Unknown error"));
+    if (
+      !formData.employeeName ||
+      !formData.leaveType ||
+      !formData.fromDate ||
+      !formData.toDate ||
+      !formData.reason ||
+      !formData.hodName
+    ) {
+      toast.error("Please fill all required fields");
+      return;
     }
-  } catch (error) {
-    console.error("Insert error:", error);
-    toast.error("Something went wrong!");
-  } finally {
-    setSubmitting(false);
-  }
-};
+
+    try {
+      setSubmitting(true);
+      const now = new Date();
+
+      // Format timestamp as DD/MM/YYYY HH:MM:SS (don't change this)
+      const day = String(now.getDate()).padStart(2, "0");
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      const formattedTimestamp = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+
+      const rowData = [
+        formattedTimestamp, // Timestamp in DD/MM/YYYY HH:MM:SS format
+        "", // Serial number (empty for auto-increment)
+        formData.employeeId, // Employee ID - index 2
+        formData.employeeName, // Employee Name - index 3
+        formatDOB(formData.fromDate), // Leave Date Start - in MM/DD/YYYY format
+        formatDOB(formData.toDate), // Leave Date End - in MM/DD/YYYY format
+        formData.reason, // Reason (Column G, index 6)
+        "Pending", // Status (Column H, index 7)
+        formData.leaveType, // Leave Type (Column I, index 8)
+        formData.hodName, // HOD Name (Column J, index 9)
+        formData.department, // Department (Column K, index 10)
+        formData.substitute, // Substitute (Column L, index 11)
+        calculateDays(formData.fromDate, formData.toDate), // Leave Days (Column M, index 12)
+      ];
+
+      console.log("Submitting leave request with dates:", {
+        fromDate: formData.fromDate,
+        toDate: formData.toDate,
+        formattedFrom: rowData[4],
+        formattedTo: rowData[5],
+        timestamp: rowData[0]
+      });
+
+      const response = await fetch(
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+        {
+          method: "POST",
+          body: new URLSearchParams({
+            sheetName: "Leave Management",
+            action: "insert",
+            rowData: JSON.stringify(rowData),
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Leave Request submitted successfully!");
+        setFormData({
+          employeeId: "",
+          employeeName: "",
+          department: "",
+          hodName: "",
+          substitute: "",
+          leaveDays: "",
+          leaveType: "",
+          fromDate: "",
+          toDate: "",
+          reason: "",
+        });
+        setShowModal(false);
+        // Refresh the data
+        fetchLeaveData();
+      } else {
+        toast.error("Failed to insert: " + (result.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Insert error:", error);
+      toast.error("Something went wrong!");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleLeaveAction = async (action) => {
-  if (!selectedRow) {
-    toast.error("Please select a leave request");
-    return;
-  }
-
-  setActionInProgress(action);
-  setLoading(true);
-
-  try {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, "0");
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const year = today.getFullYear();
-    const formattedDate = `${day}/${month}/${year}`;
-
-    // Prepare the update payload
-    const updateData = {
-      sheetName: "Leave Management",
-      action: "updateCell",
-      rowIndex: selectedRow.rowIndex,
-    };
-
-    // Update Column A (timestamp)
-    const timestampPayload = {
-      ...updateData,
-      columnIndex: 1,
-      value: formattedDate
-    };
-
-    const timestampResponse = await fetch(
-      "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams(timestampPayload).toString(),
-      }
-    );
-
-    const timestampResult = await timestampResponse.json();
-    if (!timestampResult.success) {
-      throw new Error("Failed to update timestamp");
+    if (!selectedRow) {
+      toast.error("Please select a leave request");
+      return;
     }
 
-    let newStartDate = selectedRow.startDate;
-    let newEndDate = selectedRow.endDate;
+    setActionInProgress(action);
+    setLoading(true);
 
-    // Update Column E (start date) if changed
-    if (editableDates.from && editableDates.from !== selectedRow.startDate) {
-      newStartDate = formatDOB(editableDates.from);
-      const startDatePayload = {
-        ...updateData,
-        columnIndex: 5,
-        value: newStartDate
+    try {
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, "0");
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const year = today.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      // Prepare the update payload
+      const updateData = {
+        sheetName: "Leave Management",
+        action: "updateCell",
+        rowIndex: selectedRow.rowIndex,
       };
 
-      const startDateResponse = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+      // Update Column A (timestamp)
+      const timestampPayload = {
+        ...updateData,
+        columnIndex: 1,
+        value: formattedDate
+      };
+
+      const timestampResponse = await fetch(
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams(startDatePayload).toString(),
+          body: new URLSearchParams(timestampPayload).toString(),
         }
       );
 
-      const startDateResult = await startDateResponse.json();
-      if (!startDateResult.success) {
-        throw new Error("Failed to update start date");
+      const timestampResult = await timestampResponse.json();
+      if (!timestampResult.success) {
+        throw new Error("Failed to update timestamp");
       }
-    }
 
-    // Update Column F (end date) if changed
-    if (editableDates.to && editableDates.to !== selectedRow.endDate) {
-      newEndDate = formatDOB(editableDates.to);
-      const endDatePayload = {
-        ...updateData,
-        columnIndex: 6,
-        value: newEndDate
-      };
+      let newStartDate = selectedRow.startDate;
+      let newEndDate = selectedRow.endDate;
 
-      const endDateResponse = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams(endDatePayload).toString(),
+      // Update Column E (start date) if changed
+      if (editableDates.from && editableDates.from !== selectedRow.startDate) {
+        newStartDate = formatDOB(editableDates.from);
+        const startDatePayload = {
+          ...updateData,
+          columnIndex: 5,
+          value: newStartDate
+        };
+
+        const startDateResponse = await fetch(
+          "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams(startDatePayload).toString(),
+          }
+        );
+
+        const startDateResult = await startDateResponse.json();
+        if (!startDateResult.success) {
+          throw new Error("Failed to update start date");
         }
-      );
-
-      const endDateResult = await endDateResponse.json();
-      if (!endDateResult.success) {
-        throw new Error("Failed to update end date");
       }
-    }
 
-    // Update Column M (leave days) if dates were changed
-    if ((editableDates.from && editableDates.from !== selectedRow.startDate) || 
+      // Update Column F (end date) if changed
+      if (editableDates.to && editableDates.to !== selectedRow.endDate) {
+        newEndDate = formatDOB(editableDates.to);
+        const endDatePayload = {
+          ...updateData,
+          columnIndex: 6,
+          value: newEndDate
+        };
+
+        const endDateResponse = await fetch(
+          "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams(endDatePayload).toString(),
+          }
+        );
+
+        const endDateResult = await endDateResponse.json();
+        if (!endDateResult.success) {
+          throw new Error("Failed to update end date");
+        }
+      }
+
+      // Update Column M (leave days) if dates were changed
+      if ((editableDates.from && editableDates.from !== selectedRow.startDate) ||
         (editableDates.to && editableDates.to !== selectedRow.endDate)) {
-      
-      // Parse dates for calculation
-      let startDate, endDate;
-      
-      // Parse start date
-      if (newStartDate.includes("/")) {
-        const [month, day, year] = newStartDate.split("/").map(Number);
-        startDate = new Date(year, month - 1, day);
-      } else {
-        startDate = new Date(newStartDate);
+
+        // Parse dates for calculation
+        let startDate, endDate;
+
+        // Parse start date
+        if (newStartDate.includes("/")) {
+          const [month, day, year] = newStartDate.split("/").map(Number);
+          startDate = new Date(year, month - 1, day);
+        } else {
+          startDate = new Date(newStartDate);
+        }
+
+        // Parse end date
+        if (newEndDate.includes("/")) {
+          const [month, day, year] = newEndDate.split("/").map(Number);
+          endDate = new Date(year, month - 1, day);
+        } else {
+          endDate = new Date(newEndDate);
+        }
+
+        // Calculate new leave days
+        const diffTime = endDate - startDate;
+        const newLeaveDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        const leaveDaysPayload = {
+          ...updateData,
+          columnIndex: 13,
+          value: newLeaveDays.toString()
+        };
+
+        const leaveDaysResponse = await fetch(
+          "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams(leaveDaysPayload).toString(),
+          }
+        );
+
+        const leaveDaysResult = await leaveDaysResponse.json();
+        if (!leaveDaysResult.success) {
+          throw new Error("Failed to update leave days");
+        }
       }
-      
-      // Parse end date
-      if (newEndDate.includes("/")) {
-        const [month, day, year] = newEndDate.split("/").map(Number);
-        endDate = new Date(year, month - 1, day);
-      } else {
-        endDate = new Date(newEndDate);
-      }
-      
-      // Calculate new leave days
-      const diffTime = endDate - startDate;
-      const newLeaveDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      
-      const leaveDaysPayload = {
+
+      // Update Column H (status)
+      const statusPayload = {
         ...updateData,
-        columnIndex: 13,
-        value: newLeaveDays.toString()
+        columnIndex: 8,
+        value: action === "accept" ? "approved" : "rejected"
       };
 
-      const leaveDaysResponse = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+      const statusResponse = await fetch(
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams(leaveDaysPayload).toString(),
+          body: new URLSearchParams(statusPayload).toString(),
         }
       );
 
-      const leaveDaysResult = await leaveDaysResponse.json();
-      if (!leaveDaysResult.success) {
-        throw new Error("Failed to update leave days");
+      const statusResult = await statusResponse.json();
+      if (!statusResult.success) {
+        throw new Error("Failed to update status");
       }
+
+      toast.success(
+        `Leave ${action === "accept" ? "approved" : "rejected"} for ${selectedRow.employeeName || "employee"
+        }`
+      );
+      fetchLeaveData();
+      setSelectedRow(null);
+      setEditableDates({ from: "", to: "" });
+
+    } catch (error) {
+      console.error("Update error:", error);
+      toast.error(`Failed to ${action} leave: ${error.message}`);
+    } finally {
+      setLoading(false);
+      setActionInProgress(null);
     }
-
-    // Update Column H (status)
-    const statusPayload = {
-      ...updateData,
-      columnIndex: 8,
-      value: action === "accept" ? "approved" : "rejected"
-    };
-
-    const statusResponse = await fetch(
-      "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams(statusPayload).toString(),
-      }
-    );
-
-    const statusResult = await statusResponse.json();
-    if (!statusResult.success) {
-      throw new Error("Failed to update status");
-    }
-
-    toast.success(
-      `Leave ${action === "accept" ? "approved" : "rejected"} for ${
-        selectedRow.employeeName || "employee"
-      }`
-    );
-    fetchLeaveData();
-    setSelectedRow(null);
-    setEditableDates({ from: "", to: "" });
-
-  } catch (error) {
-    console.error("Update error:", error);
-    toast.error(`Failed to ${action} leave: ${error.message}`);
-  } finally {
-    setLoading(false);
-    setActionInProgress(null);
-  }
-};
+  };
 
   const fetchLeaveData = async () => {
     setLoading(true);
@@ -699,7 +698,7 @@ const fetchEmployees = async () => {
 
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=Leave Management&action=fetch"
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=Leave Management&action=fetch"
       );
 
       if (!response.ok) {
@@ -766,33 +765,33 @@ const fetchEmployees = async () => {
   };
 
   const formatDate = (dateString) => {
-  if (!dateString) return "-";
-  
-  // If it's in MM/DD/YYYY format, return as-is
-  if (dateString.includes("/")) {
-    const parts = dateString.split("/");
-    if (parts.length === 3 && parts[0] <= 12 && parts[2].length === 4) {
-      // It's already in MM/DD/YYYY format
-      return `${parts[0]}/${parts[1]}/${parts[2]}`;
+    if (!dateString) return "-";
+
+    // If it's in MM/DD/YYYY format, return as-is
+    if (dateString.includes("/")) {
+      const parts = dateString.split("/");
+      if (parts.length === 3 && parts[0] <= 12 && parts[2].length === 4) {
+        // It's already in MM/DD/YYYY format
+        return `${parts[0]}/${parts[1]}/${parts[2]}`;
+      }
+      // If it's in DD/MM/YYYY, convert to MM/DD/YYYY for display
+      else if (parts.length === 3 && parts[1] <= 12 && parts[2].length === 4) {
+        return `${parts[1]}/${parts[0]}/${parts[2]}`;
+      }
     }
-    // If it's in DD/MM/YYYY, convert to MM/DD/YYYY for display
-    else if (parts.length === 3 && parts[1] <= 12 && parts[2].length === 4) {
-      return `${parts[1]}/${parts[0]}/${parts[2]}`;
+
+    // Fallback for other date formats
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
     }
-  }
-  
-  // Fallback for other date formats
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) {
-    return dateString;
-  }
-  
-  // Format as MM/DD/YYYY
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${month}/${day}/${year}`;
-};
+
+    // Format as MM/DD/YYYY
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
 
   const filteredPendingLeaves = pendingLeaves.filter((item) => {
     const matchesSearch =
@@ -829,201 +828,273 @@ const fetchEmployees = async () => {
   ];
 
   const renderPendingLeavesTable = () => (
-  <table className="min-w-full divide-y divide-white">
-    <thead className="bg-gray-100">
-      <tr>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Select
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Employee ID
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Name
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          From
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          To
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Days
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Reason
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Leave Type
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          HOD Name
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Actions
-        </th>
-      </tr>
-    </thead>
-    <tbody className="divide-y divide-white">
-      {filteredPendingLeaves.length > 0 ? (
-        filteredPendingLeaves.map((item, index) => (
-          <tr key={index} className="hover:bg-white">
-            <td className="px-6 py-4 whitespace-nowrap">
-              <input
-                type="checkbox"
-                checked={selectedRow?.serialNo === item.serialNo}
-                onChange={() => handleCheckboxChange(item.serialNo, item)}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.employeeId}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.employeeName}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {selectedRow?.serialNo === item.serialNo ? (
+    <table className="min-w-full divide-y divide-white">
+      <thead className="bg-gray-100">
+        <tr>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Select
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Employee ID
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Name
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            From
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            To
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Days
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Reason
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Leave Type
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            HOD Name
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-white">
+        {filteredPendingLeaves.length > 0 ? (
+          filteredPendingLeaves.map((item, index) => (
+            <tr key={index} className="hover:bg-white">
+              <td className="px-6 py-4 whitespace-nowrap">
                 <input
-                  type="date"
-                  value={editableDates.from}
-                  onChange={(e) => handleDateChange("from", e.target.value)}
-                  className="border rounded p-1 text-sm"
+                  type="checkbox"
+                  checked={selectedRow?.serialNo === item.serialNo}
+                  onChange={() => handleCheckboxChange(item.serialNo, item)}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 />
-              ) : (
-                formatDate(item.startDate)
-              )}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {selectedRow?.serialNo === item.serialNo ? (
-                <input
-                  type="date"
-                  value={editableDates.to}
-                  onChange={(e) => handleDateChange("to", e.target.value)}
-                  className="border rounded p-1 text-sm"
-                />
-              ) : (
-                formatDate(item.endDate)
-              )}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.leaveDays} {/* Display leaveDays from Column M */}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.remark}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.leaveType}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.hodName}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleLeaveAction("accept")}
-                  disabled={
-                    !selectedRow ||
-                    selectedRow.serialNo !== item.serialNo ||
-                    loading
-                  }
-                  className={`px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 min-h-[42px] flex items-center justify-center ${
-                    !selectedRow ||
-                    selectedRow.serialNo !== item.serialNo ||
-                    loading
-                      ? "opacity-75 cursor-not-allowed"
-                      : ""
-                  }`}
-                >
-                  {loading &&
-                  selectedRow?.serialNo === item.serialNo &&
-                  actionInProgress === "accept" ? (
-                    <div className="flex items-center">
-                      <svg
-                        className="animate-spin h-4 w-4 text-white mr-2"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span>Accepting...</span>
-                    </div>
-                  ) : (
-                    "Accept"
-                  )}
-                </button>
-                <button
-                  onClick={() => handleLeaveAction("rejected")}
-                  disabled={
-                    selectedRow?.serialNo !== item.serialNo || loading
-                  }
-                  className={`px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 min-h-[42px] flex items-center justify-center ${
-                    selectedRow?.serialNo !== item.serialNo ||
-                    (loading && actionInProgress === "accept")
-                      ? "opacity-75 cursor-not-allowed"
-                      : ""
-                  }`}
-                >
-                  {loading &&
-                  selectedRow?.serialNo === item.serialNo &&
-                  actionInProgress === "rejected" ? (
-                    <div className="flex items-center">
-                      <svg
-                        className="animate-spin h-4 w-4 text-white mr-2"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span>Rejecting...</span>
-                    </div>
-                  ) : (
-                    "Reject"
-                  )}
-                </button>
-              </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {item.employeeId}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {item.employeeName}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {selectedRow?.serialNo === item.serialNo ? (
+                  <input
+                    type="date"
+                    value={editableDates.from}
+                    onChange={(e) => handleDateChange("from", e.target.value)}
+                    className="border rounded p-1 text-sm"
+                  />
+                ) : (
+                  formatDate(item.startDate)
+                )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {selectedRow?.serialNo === item.serialNo ? (
+                  <input
+                    type="date"
+                    value={editableDates.to}
+                    onChange={(e) => handleDateChange("to", e.target.value)}
+                    className="border rounded p-1 text-sm"
+                  />
+                ) : (
+                  formatDate(item.endDate)
+                )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {item.leaveDays} {/* Display leaveDays from Column M */}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {item.remark}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {item.leaveType}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {item.hodName}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleLeaveAction("accept")}
+                    disabled={
+                      !selectedRow ||
+                      selectedRow.serialNo !== item.serialNo ||
+                      loading
+                    }
+                    className={`px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 min-h-[42px] flex items-center justify-center ${!selectedRow ||
+                        selectedRow.serialNo !== item.serialNo ||
+                        loading
+                        ? "opacity-75 cursor-not-allowed"
+                        : ""
+                      }`}
+                  >
+                    {loading &&
+                      selectedRow?.serialNo === item.serialNo &&
+                      actionInProgress === "accept" ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin h-4 w-4 text-white mr-2"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        <span>Accepting...</span>
+                      </div>
+                    ) : (
+                      "Accept"
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleLeaveAction("rejected")}
+                    disabled={
+                      selectedRow?.serialNo !== item.serialNo || loading
+                    }
+                    className={`px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 min-h-[42px] flex items-center justify-center ${selectedRow?.serialNo !== item.serialNo ||
+                        (loading && actionInProgress === "accept")
+                        ? "opacity-75 cursor-not-allowed"
+                        : ""
+                      }`}
+                  >
+                    {loading &&
+                      selectedRow?.serialNo === item.serialNo &&
+                      actionInProgress === "rejected" ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin h-4 w-4 text-white mr-2"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        <span>Rejecting...</span>
+                      </div>
+                    ) : (
+                      "Reject"
+                    )}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan="9" className="px-6 py-12 text-center">
+              <p className="text-gray-500">No pending leave requests found.</p>
             </td>
           </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="9" className="px-6 py-12 text-center">
-            <p className="text-gray-500">No pending leave requests found.</p>
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-);
+        )}
+      </tbody>
+    </table>
+  );
 
   const renderApprovedLeavesTable = () => (
-  <>
+    <>
+      <table className="min-w-full divide-y divide-white">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Employee ID
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Name
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              From
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              To
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Days
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Reason
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Leave Type
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              HOD Name
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-white">
+          {filteredApprovedLeaves.length > 0 ? (
+            filteredApprovedLeaves.map((item, index) => (
+              <tr key={index} className="hover:bg-white">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {item.employeeId}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {item.employeeName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(item.startDate)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(item.endDate)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {item.leaveDays} {/* Display leaveDays from Column M */}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {item.remark}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {item.leaveType}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {item.hodName}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="7" className="px-6 py-12 text-center">
+                <p className="text-gray-500">
+                  No approved leave requests found.
+                </p>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </>
+  );
+
+  const renderRejectedLeavesTable = () => (
     <table className="min-w-full divide-y divide-white">
       <thead className="bg-gray-100">
         <tr>
@@ -1054,8 +1125,8 @@ const fetchEmployees = async () => {
         </tr>
       </thead>
       <tbody className="divide-y divide-white">
-        {filteredApprovedLeaves.length > 0 ? (
-          filteredApprovedLeaves.map((item, index) => (
+        {filteredRejectedLeaves.length > 0 ? (
+          filteredRejectedLeaves.map((item, index) => (
             <tr key={index} className="hover:bg-white">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {item.employeeId}
@@ -1086,87 +1157,13 @@ const fetchEmployees = async () => {
         ) : (
           <tr>
             <td colSpan="7" className="px-6 py-12 text-center">
-              <p className="text-gray-500">
-                No approved leave requests found.
-              </p>
+              <p className="text-gray-500">No rejected leave requests found.</p>
             </td>
           </tr>
         )}
       </tbody>
     </table>
-  </>
-);
-
-  const renderRejectedLeavesTable = () => (
-  <table className="min-w-full divide-y divide-white">
-    <thead className="bg-gray-100">
-      <tr>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Employee ID
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Name
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          From
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          To
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Days
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Reason
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Leave Type
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          HOD Name
-        </th>
-      </tr>
-    </thead>
-    <tbody className="divide-y divide-white">
-      {filteredRejectedLeaves.length > 0 ? (
-        filteredRejectedLeaves.map((item, index) => (
-          <tr key={index} className="hover:bg-white">
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.employeeId}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.employeeName}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {formatDate(item.startDate)}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {formatDate(item.endDate)}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.leaveDays} {/* Display leaveDays from Column M */}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.remark}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.leaveType}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.hodName}
-            </td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="7" className="px-6 py-12 text-center">
-            <p className="text-gray-500">No rejected leave requests found.</p>
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-);
+  );
 
   const renderTable = () => {
     switch (activeTab) {
@@ -1353,31 +1350,28 @@ const fetchEmployees = async () => {
           <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab("pending")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                activeTab === "pending"
+              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "pending"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
             >
               Pending Leaves ({pendingLeaves.length})
             </button>
             <button
               onClick={() => setActiveTab("approved")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                activeTab === "approved"
+              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "approved"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
             >
               Approved Leaves ({approvedLeaves.length})
             </button>
             <button
               onClick={() => setActiveTab("rejected")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                activeTab === "rejected"
+              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "rejected"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
             >
               Rejected Leaves ({rejectedLeaves.length})
             </button>
@@ -1606,9 +1600,8 @@ const fetchEmployees = async () => {
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 min-h-[42px] flex items-center justify-center ${
-                    submitting ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
+                  className={`px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 min-h-[42px] flex items-center justify-center ${submitting ? "opacity-75 cursor-not-allowed" : ""
+                    }`}
                   disabled={submitting}
                 >
                   {submitting ? (

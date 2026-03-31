@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search} from 'lucide-react';
+import { Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const LeaveApproval = () => {
@@ -26,8 +26,8 @@ const LeaveApproval = () => {
       selectedEmployee === "all"
         ? approvedLeaves
         : approvedLeaves.filter(
-            (leave) => leave.employeeName === selectedEmployee
-          );
+          (leave) => leave.employeeName === selectedEmployee
+        );
 
     // Calculate approved leaves for current year
     const casualLeaveTaken = relevantLeaves
@@ -113,28 +113,28 @@ const LeaveApproval = () => {
     fetchLeaveData();
   }, []);
 
-const handleCheckboxChange = (leaveId, rowData) => {
-  if (selectedRow?.serialNo === leaveId) {
-    setSelectedRow(null);
-    setEditableDates({ from: "", to: "" });
-  } else {
-    // Convert MM/DD/YYYY to YYYY-MM-DD for date input
-    const formatForInput = (dateStr) => {
-      if (!dateStr) return "";
-      if (dateStr.includes("/")) {
-        const [month, day, year] = dateStr.split("/");
-        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-      }
-      return dateStr;
-    };
+  const handleCheckboxChange = (leaveId, rowData) => {
+    if (selectedRow?.serialNo === leaveId) {
+      setSelectedRow(null);
+      setEditableDates({ from: "", to: "" });
+    } else {
+      // Convert MM/DD/YYYY to YYYY-MM-DD for date input
+      const formatForInput = (dateStr) => {
+        if (!dateStr) return "";
+        if (dateStr.includes("/")) {
+          const [month, day, year] = dateStr.split("/");
+          return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        }
+        return dateStr;
+      };
 
-    setSelectedRow(rowData);
-    setEditableDates({
-      from: formatForInput(rowData.startDate),
-      to: formatForInput(rowData.endDate),
-    });
-  }
-};
+      setSelectedRow(rowData);
+      setEditableDates({
+        from: formatForInput(rowData.startDate),
+        to: formatForInput(rowData.endDate),
+      });
+    }
+  };
 
   const handleDateChange = (field, value) => {
     setEditableDates((prev) => ({
@@ -171,201 +171,200 @@ const handleCheckboxChange = (leaveId, rowData) => {
     return diffDays;
   };
 
-const formatDOB = (dateString) => {
-  if (!dateString) return "";
+  const formatDOB = (dateString) => {
+    if (!dateString) return "";
 
-  // If it's already in MM/DD/YYYY format, return as-is
-  if (dateString.includes("/") && dateString.split("/")[0].length <= 2) {
-    const parts = dateString.split("/");
-    if (parts.length === 3) {
-      const [first, second, third] = parts;
-      // Check if it's already in MM/DD/YYYY format (first part <= 12)
-      if (first <= 12 && second <= 31) {
-        return dateString;
-      }
-      // If it's in DD/MM/YYYY format, convert to MM/DD/YYYY
-      if (second <= 12 && first <= 31) {
-        return `${second.padStart(2, "0")}/${first.padStart(2, "0")}/${third}`;
+    // If it's already in MM/DD/YYYY format, return as-is
+    if (dateString.includes("/") && dateString.split("/")[0].length <= 2) {
+      const parts = dateString.split("/");
+      if (parts.length === 3) {
+        const [first, second, third] = parts;
+        // Check if it's already in MM/DD/YYYY format (first part <= 12)
+        if (first <= 12 && second <= 31) {
+          return dateString;
+        }
+        // If it's in DD/MM/YYYY format, convert to MM/DD/YYYY
+        if (second <= 12 && first <= 31) {
+          return `${second.padStart(2, "0")}/${first.padStart(2, "0")}/${third}`;
+        }
       }
     }
-  }
 
-  // Convert from YYYY-MM-DD to MM/DD/YYYY
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) {
-    return dateString; // Return as-is if not a valid date
-  }
-
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const day = date.getDate().toString().padStart(2, "0");
-  const year = date.getFullYear();
-
-  return `${month}/${day}/${year}`;
-};
-
-const handleLeaveAction = async (action) => {
-  if (!selectedRow) {
-    toast.error("Please select a leave request");
-    return;
-  }
-
-  setActionInProgress(action);
-  setLoading(true);
-
-  try {
-    const fullDataResponse = await fetch(
-      "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=Leave Management&action=fetch"
-    );
-
-    if (!fullDataResponse.ok) {
-      throw new Error(`HTTP error! status: ${fullDataResponse.status}`);
+    // Convert from YYYY-MM-DD to MM/DD/YYYY
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString; // Return as-is if not a valid date
     }
 
-    const fullDataResult = await fullDataResponse.json();
-    const allData = fullDataResult.data || fullDataResult;
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const year = date.getFullYear();
 
-    // Find the row index by matching Column B (serial number) and Column C (employee ID)
-    const rowIndex = allData.findIndex(
-      (row, idx) =>
-        idx > 0 && // Skip header row
-        row[1]?.toString().trim() ===
+    return `${month}/${day}/${year}`;
+  };
+
+  const handleLeaveAction = async (action) => {
+    if (!selectedRow) {
+      toast.error("Please select a leave request");
+      return;
+    }
+
+    setActionInProgress(action);
+    setLoading(true);
+
+    try {
+      const fullDataResponse = await fetch(
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=Leave Management&action=fetch"
+      );
+
+      if (!fullDataResponse.ok) {
+        throw new Error(`HTTP error! status: ${fullDataResponse.status}`);
+      }
+
+      const fullDataResult = await fullDataResponse.json();
+      const allData = fullDataResult.data || fullDataResult;
+
+      // Find the row index by matching Column B (serial number) and Column C (employee ID)
+      const rowIndex = allData.findIndex(
+        (row, idx) =>
+          idx > 0 && // Skip header row
+          row[1]?.toString().trim() ===
           selectedRow.serialNo?.toString().trim() &&
-        row[2]?.toString().trim() ===
+          row[2]?.toString().trim() ===
           selectedRow.employeeId?.toString().trim()
-    );
-
-    if (rowIndex === -1) {
-      throw new Error(
-        `Leave request not found for employee ${selectedRow.employeeId}`
       );
-    }
 
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, "0");
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const year = today.getFullYear();
-    const formattedDate = `${day}/${month}/${year}`;
-
-    // Prepare only the columns we want to update
-    const updateData = {
-      sheetName: "Leave Management",
-      action: "updateCell", // Change to updateCell action
-      rowIndex: rowIndex + 1, // Add 1 because Google Sheets rows are 1-indexed
-    };
-
-    // Update Column A (timestamp)
-    const timestampPayload = {
-      ...updateData,
-      columnIndex: 1, // Column A
-      value: formattedDate
-    };
-
-    const timestampResponse = await fetch(
-      "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams(timestampPayload).toString(),
+      if (rowIndex === -1) {
+        throw new Error(
+          `Leave request not found for employee ${selectedRow.employeeId}`
+        );
       }
-    );
 
-    const timestampResult = await timestampResponse.json();
-    if (!timestampResult.success) {
-      throw new Error("Failed to update timestamp");
-    }
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, "0");
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const year = today.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
 
-    // Update Column E (start date) if changed
-    if (editableDates.from && editableDates.from !== selectedRow.startDate) {
-      const startDatePayload = {
-        ...updateData,
-        columnIndex: 5, // Column E
-        value: formatDOB(editableDates.from)
+      // Prepare only the columns we want to update
+      const updateData = {
+        sheetName: "Leave Management",
+        action: "updateCell", // Change to updateCell action
+        rowIndex: rowIndex + 1, // Add 1 because Google Sheets rows are 1-indexed
       };
 
-      const startDateResponse = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+      // Update Column A (timestamp)
+      const timestampPayload = {
+        ...updateData,
+        columnIndex: 1, // Column A
+        value: formattedDate
+      };
+
+      const timestampResponse = await fetch(
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams(startDatePayload).toString(),
+          body: new URLSearchParams(timestampPayload).toString(),
         }
       );
 
-      const startDateResult = await startDateResponse.json();
-      if (!startDateResult.success) {
-        throw new Error("Failed to update start date");
+      const timestampResult = await timestampResponse.json();
+      if (!timestampResult.success) {
+        throw new Error("Failed to update timestamp");
       }
-    }
 
-    // Update Column F (end date) if changed
-    if (editableDates.to && editableDates.to !== selectedRow.endDate) {
-      const endDatePayload = {
+      // Update Column E (start date) if changed
+      if (editableDates.from && editableDates.from !== selectedRow.startDate) {
+        const startDatePayload = {
+          ...updateData,
+          columnIndex: 5, // Column E
+          value: formatDOB(editableDates.from)
+        };
+
+        const startDateResponse = await fetch(
+          "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams(startDatePayload).toString(),
+          }
+        );
+
+        const startDateResult = await startDateResponse.json();
+        if (!startDateResult.success) {
+          throw new Error("Failed to update start date");
+        }
+      }
+
+      // Update Column F (end date) if changed
+      if (editableDates.to && editableDates.to !== selectedRow.endDate) {
+        const endDatePayload = {
+          ...updateData,
+          columnIndex: 6, // Column F
+          value: formatDOB(editableDates.to)
+        };
+
+        const endDateResponse = await fetch(
+          "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams(endDatePayload).toString(),
+          }
+        );
+
+        const endDateResult = await endDateResponse.json();
+        if (!endDateResult.success) {
+          throw new Error("Failed to update end date");
+        }
+      }
+
+      // Update Column M (HOD approval status)
+      const approvalPayload = {
         ...updateData,
-        columnIndex: 6, // Column F
-        value: formatDOB(editableDates.to)
+        columnIndex: 13, // Column M
+        value: action === "accept" ? "approved" : "rejected"
       };
 
-      const endDateResponse = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+      const approvalResponse = await fetch(
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams(endDatePayload).toString(),
+          body: new URLSearchParams(approvalPayload).toString(),
         }
       );
 
-      const endDateResult = await endDateResponse.json();
-      if (!endDateResult.success) {
-        throw new Error("Failed to update end date");
+      const approvalResult = await approvalResponse.json();
+      if (!approvalResult.success) {
+        throw new Error("Failed to update approval status");
       }
+
+      toast.success(
+        `Leave ${action === "accept" ? "approved" : "rejected"} for ${selectedRow.employeeName || "employee"
+        }`
+      );
+      fetchLeaveData();
+      setSelectedRow(null);
+      setEditableDates({ from: "", to: "" });
+
+    } catch (error) {
+      console.error("Update error:", error);
+      toast.error(`Failed to ${action} leave: ${error.message}`);
+    } finally {
+      setLoading(false);
+      setActionInProgress(null);
     }
-
-    // Update Column M (HOD approval status)
-    const approvalPayload = {
-      ...updateData,
-      columnIndex: 13, // Column M
-      value: action === "accept" ? "approved" : "rejected"
-    };
-
-    const approvalResponse = await fetch(
-      "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams(approvalPayload).toString(),
-      }
-    );
-
-    const approvalResult = await approvalResponse.json();
-    if (!approvalResult.success) {
-      throw new Error("Failed to update approval status");
-    }
-
-    toast.success(
-      `Leave ${action === "accept" ? "approved" : "rejected"} for ${
-        selectedRow.employeeName || "employee"
-      }`
-    );
-    fetchLeaveData();
-    setSelectedRow(null);
-    setEditableDates({ from: "", to: "" });
-
-  } catch (error) {
-    console.error("Update error:", error);
-    toast.error(`Failed to ${action} leave: ${error.message}`);
-  } finally {
-    setLoading(false);
-    setActionInProgress(null);
-  }
-};
+  };
 
   const fetchLeaveData = async () => {
     setLoading(true);
@@ -374,7 +373,7 @@ const handleLeaveAction = async (action) => {
 
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=Leave Management&action=fetch"
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=Leave Management&action=fetch"
       );
 
       if (!response.ok) {
@@ -418,14 +417,14 @@ const handleLeaveAction = async (action) => {
           (leave) => leave.hodApproval?.toString().toLowerCase() === "pending"
         )
       );
-      
+
       // Filter leaves where HOD approval is approved
       setApprovedLeaves(
         processedData.filter(
           (leave) => leave.hodApproval?.toString().toLowerCase() === "approved"
         )
       );
-      
+
       // Filter leaves where HOD approval is rejected
       setRejectedLeaves(
         processedData.filter(
@@ -442,22 +441,22 @@ const handleLeaveAction = async (action) => {
     }
   };
 
-const formatDate = (dateString) => {
-  if (!dateString) return "-";
-  
-  // Handle MM/DD/YYYY format and convert to DD/MM/YYYY
-  if (dateString.includes("/")) {
-    const parts = dateString.split("/");
-    if (parts.length === 3) {
-      const [month, day, year] = parts;
-      return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+
+    // Handle MM/DD/YYYY format and convert to DD/MM/YYYY
+    if (dateString.includes("/")) {
+      const parts = dateString.split("/");
+      if (parts.length === 3) {
+        const [month, day, year] = parts;
+        return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+      }
     }
-  }
-  
-  // Fallback for other date formats
-  const date = new Date(dateString);
-  return isNaN(date.getTime()) ? dateString : date.toLocaleDateString();
-};
+
+    // Fallback for other date formats
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? dateString : date.toLocaleDateString();
+  };
 
   const filteredPendingLeaves = pendingLeaves.filter((item) => {
     const matchesSearch =
@@ -593,17 +592,16 @@ const formatDate = (dateString) => {
                       selectedRow.serialNo !== item.serialNo ||
                       loading
                     }
-                    className={`px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 min-h-[42px] flex items-center justify-center ${
-                      !selectedRow ||
-                      selectedRow.serialNo !== item.serialNo ||
-                      loading
+                    className={`px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 min-h-[42px] flex items-center justify-center ${!selectedRow ||
+                        selectedRow.serialNo !== item.serialNo ||
+                        loading
                         ? "opacity-75 cursor-not-allowed"
                         : ""
-                    }`}
+                      }`}
                   >
                     {loading &&
-                    selectedRow?.serialNo === item.serialNo &&
-                    actionInProgress === "accept" ? (
+                      selectedRow?.serialNo === item.serialNo &&
+                      actionInProgress === "accept" ? (
                       <div className="flex items-center">
                         <svg
                           className="animate-spin h-4 w-4 text-white mr-2"
@@ -636,16 +634,15 @@ const formatDate = (dateString) => {
                     disabled={
                       selectedRow?.serialNo !== item.serialNo || loading
                     }
-                    className={`px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 min-h-[42px] flex items-center justify-center ${
-                      selectedRow?.serialNo !== item.serialNo ||
-                      (loading && actionInProgress === "accept")
+                    className={`px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 min-h-[42px] flex items-center justify-center ${selectedRow?.serialNo !== item.serialNo ||
+                        (loading && actionInProgress === "accept")
                         ? "opacity-75 cursor-not-allowed"
                         : ""
-                    }`}
+                      }`}
                   >
                     {loading &&
-                    selectedRow?.serialNo === item.serialNo &&
-                    actionInProgress === "rejected" ? (
+                      selectedRow?.serialNo === item.serialNo &&
+                      actionInProgress === "rejected" ? (
                       <div className="flex items-center">
                         <svg
                           className="animate-spin h-4 w-4 text-white mr-2"
@@ -892,7 +889,7 @@ const formatDate = (dateString) => {
             />
           </div>
         </div>
-        
+
         {/* Employee Filter for All Tabs */}
         <div className="flex items-center gap-4">
           <label htmlFor="employeeFilter" className="text-sm font-medium text-gray-700">
@@ -919,31 +916,28 @@ const formatDate = (dateString) => {
           <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab("pending")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                activeTab === "pending"
+              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "pending"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
             >
               Pending HOD Approval ({pendingLeaves.length})
             </button>
             <button
               onClick={() => setActiveTab("approved")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                activeTab === "approved"
+              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "approved"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
             >
               HOD Approved Leaves ({approvedLeaves.length})
             </button>
             <button
               onClick={() => setActiveTab("rejected")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                activeTab === "rejected"
+              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === "rejected"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
             >
               HOD Rejected Leaves ({rejectedLeaves.length})
             </button>

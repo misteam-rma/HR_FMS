@@ -15,28 +15,28 @@ const Joining = () => {
   const [followUpData, setFollowUpData] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-const [shareFormData, setShareFormData] = useState({
-  recipientName: '',
-  recipientEmail: '',
-  subject: 'Candidate Joining Details',
-  message: 'Please find the candidate joining details attached below.',
-});
+  const [shareFormData, setShareFormData] = useState({
+    recipientName: '',
+    recipientEmail: '',
+    subject: 'Candidate Joining Details',
+    message: 'Please find the candidate joining details attached below.',
+  });
   const [formData, setFormData] = useState({
     candidateSays: '',
     status: '',
     nextDate: ''
   });
   const [joiningFormData, setJoiningFormData] = useState({
-  joiningId: '',
-  nameAsPerAadhar: '',
-  fatherName: '',
+    joiningId: '',
+    nameAsPerAadhar: '',
+    fatherName: '',
     dateOfJoining: '',
     joiningPlace: '',
     designation: '',
     salary: '',
     aadharFrontPhoto: null,
     aadharBackPhoto: null,
-    panCardNumber : '',
+    panCardNumber: '',
     candidatePhoto: null,
     currentAddress: '',
     addressAsPerAadhar: '',
@@ -70,48 +70,48 @@ const [shareFormData, setShareFormData] = useState({
   });
 
   function handleEmailShare(params) {
-  try {
-    console.log("Handling email share with params:", JSON.stringify({
-      recipientEmail: params.recipientEmail,
-      subject: params.subject,
-      message: params.message ? params.message.substring(0, 100) + "..." : "empty",
-      hasDocuments: !!params.documents
-    }));
-    
-    // Validate required parameters
-    if (!params.recipientEmail || !params.subject || !params.message) {
-      throw new Error("Missing required email parameters: recipientEmail, subject, or message");
-    }
-    
-    // Parse documents if provided
-    var documents = [];
-    if (params.documents) {
-      try {
-        documents = JSON.parse(params.documents);
-      } catch (e) {
-        console.warn("Failed to parse documents:", e);
+    try {
+      console.log("Handling email share with params:", JSON.stringify({
+        recipientEmail: params.recipientEmail,
+        subject: params.subject,
+        message: params.message ? params.message.substring(0, 100) + "..." : "empty",
+        hasDocuments: !!params.documents
+      }));
+
+      // Validate required parameters
+      if (!params.recipientEmail || !params.subject || !params.message) {
+        throw new Error("Missing required email parameters: recipientEmail, subject, or message");
       }
-    }
-    
-    // Prepare email content with HTML formatting
-    var emailSubject = params.subject;
-    var htmlBody = `
+
+      // Parse documents if provided
+      var documents = [];
+      if (params.documents) {
+        try {
+          documents = JSON.parse(params.documents);
+        } catch (e) {
+          console.warn("Failed to parse documents:", e);
+        }
+      }
+
+      // Prepare email content with HTML formatting
+      var emailSubject = params.subject;
+      var htmlBody = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
         <p>${params.message.replace(/\n/g, '<br>')}</p>
     `;
-    
-    // Add document details to email body if available
-    if (documents.length > 0) {
-      htmlBody += `
+
+      // Add document details to email body if available
+      if (documents.length > 0) {
+        htmlBody += `
         <h3 style="color: #333; border-bottom: 2px solid #4f46e5; padding-bottom: 5px;">
           Candidate Details:
         </h3>
         <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
       `;
-      
-      for (var i = 0; i < documents.length; i++) {
-        var doc = documents[i];
-        htmlBody += `
+
+        for (var i = 0; i < documents.length; i++) {
+          var doc = documents[i];
+          htmlBody += `
           <tr>
             <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background-color: #f9f9f9;">Candidate Name:</td>
             <td style="padding: 8px; border: 1px solid #ddd;">${doc.name || 'N/A'}</td>
@@ -129,9 +129,9 @@ const [shareFormData, setShareFormData] = useState({
             <td style="padding: 8px; border: 1px solid #ddd;">${doc.category || 'N/A'}</td>
           </tr>
         `;
-        
-        if (doc.imageUrl) {
-          htmlBody += `
+
+          if (doc.imageUrl) {
+            htmlBody += `
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background-color: #f9f9f9;">Photo:</td>
               <td style="padding: 8px; border: 1px solid #ddd;">
@@ -139,16 +139,16 @@ const [shareFormData, setShareFormData] = useState({
               </td>
             </tr>
           `;
+          }
+
+          htmlBody += `<tr><td colspan="2" style="padding: 10px; background-color: #f0f0f0;"></td></tr>`;
         }
-        
-        htmlBody += `<tr><td colspan="2" style="padding: 10px; background-color: #f0f0f0;"></td></tr>`;
+
+        htmlBody += `</table>`;
       }
-      
-      htmlBody += `</table>`;
-    }
-    
-    // Add fixed Google.com link
-    htmlBody += `
+
+      // Add fixed Google.com link
+      htmlBody += `
       <h3 style="color: #333; border-bottom: 2px solid #4f46e5; padding-bottom: 5px;">
         Useful Links:
       </h3>
@@ -163,245 +163,245 @@ const [shareFormData, setShareFormData] = useState({
       </p>
       </div>
     `;
-    
-    // Plain text version for email clients that don't support HTML
-    var plainBody = params.message + "\n\n";
-    if (documents.length > 0) {
-      plainBody += "Candidate Details:\n";
-      plainBody += "==================\n\n";
-      for (var i = 0; i < documents.length; i++) {
-        var doc = documents[i];
-        plainBody += `Candidate Name: ${doc.name || 'N/A'}\n`;
-        plainBody += `Enquiry No: ${doc.serialNo || 'N/A'}\n`;
-        plainBody += `Position: ${doc.documentType || 'N/A'}\n`;
-        plainBody += `Department: ${doc.category || 'N/A'}\n`;
-        if (doc.imageUrl) {
-          plainBody += `Photo: ${doc.imageUrl}\n`;
+
+      // Plain text version for email clients that don't support HTML
+      var plainBody = params.message + "\n\n";
+      if (documents.length > 0) {
+        plainBody += "Candidate Details:\n";
+        plainBody += "==================\n\n";
+        for (var i = 0; i < documents.length; i++) {
+          var doc = documents[i];
+          plainBody += `Candidate Name: ${doc.name || 'N/A'}\n`;
+          plainBody += `Enquiry No: ${doc.serialNo || 'N/A'}\n`;
+          plainBody += `Position: ${doc.documentType || 'N/A'}\n`;
+          plainBody += `Department: ${doc.category || 'N/A'}\n`;
+          if (doc.imageUrl) {
+            plainBody += `Photo: ${doc.imageUrl}\n`;
+          }
+          plainBody += "\n";
         }
-        plainBody += "\n";
       }
-    }
-    plainBody += "\nUseful Links:\n";
-    plainBody += "=============\n";
-    plainBody += "Google.com: https://www.google.com\n\n";
-    plainBody += "This email was sent via Joining Management System.";
-    
-    // Send the email
-    MailApp.sendEmail({
-      to: params.recipientEmail,
-      subject: emailSubject,
-      body: plainBody,
-      htmlBody: htmlBody
-    });
-    
-    console.log("Email sent successfully to:", params.recipientEmail);
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      success: true,
-      message: "Email sent successfully to " + params.recipientEmail
-    })).setMimeType(ContentService.MimeType.JSON);
-    
-  } catch (error) {
-    console.error("Error sending email:", error);
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      error: "Failed to send email: " + error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
+      plainBody += "\nUseful Links:\n";
+      plainBody += "=============\n";
+      plainBody += "Google.com: https://www.google.com\n\n";
+      plainBody += "This email was sent via Joining Management System.";
 
-const handleShareClick = (item) => {
-  setSelectedItem(item);
-  // Create the share link with enquiry number
-  const shareLink = `https://sbh-hr-joining-form.vercel.app/?enquiry=${item.candidateEnquiryNo || ''}`;
-  
-  setShareFormData({
-    recipientName: item.candidateName || '', // Auto-fill from Column E
-    recipientEmail: item.candidateEmail || '', // Auto-fill from Column H
-    subject: 'Candidate Joining Details - ' + item.candidateName,
-    message: `Dear Recipient,\n\nPlease find the joining details for candidate ${item.candidateName} who is applying for the position of ${item.applyingForPost}.\n\nCandidate Details:\n- Name: ${item.candidateName}\n- Position: ${item.applyingForPost}\n- Department: ${item.department}\n- Phone: ${item.candidatePhone}\n- Email: ${item.candidateEmail}\n- Candidate Enquiry Number: ${item.candidateEnquiryNo}\n\nJoining Form Link: ${shareLink}\n\nBest regards,\nHR Team`,
-  });
-  
-  // Log the share link to console
-  console.log("Share Link:", shareLink);
-  
-  setShowShareModal(true);
-};
-
-const handleShareSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  
-  try {
-    const documents = [{
-      name: selectedItem.candidateName,
-      serialNo: selectedItem.candidateEnquiryNo,
-      documentType: selectedItem.applyingForPost,
-      category: selectedItem.department,
-      imageUrl: selectedItem.candidatePhoto || ''
-    }];
-    
-    const URL = 'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec';
-    
-    const params = new URLSearchParams();
-    params.append('action', 'shareViaEmail');
-    params.append('recipientEmail', shareFormData.recipientEmail);
-    params.append('subject', shareFormData.subject);
-    params.append('message', shareFormData.message);
-    params.append('documents', JSON.stringify(documents));
-    
-    const response = await fetch(URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params,
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to send email');
-    }
-    
-    toast.success('Details shared successfully!');
-    setShowShareModal(false);
-  } catch (error) {
-    console.error('Error sharing details:', error);
-    toast.error(`Failed to share details: ${error.message}`);
-  } finally {
-    setSubmitting(false);
-  }
-};
-
-const handleShareInputChange = (e) => {
-  const { name, value } = e.target;
-  setShareFormData(prev => ({
-    ...prev,
-    [name]: value
-  }));
-};
-
-const fetchJoiningData = async () => {
-  setLoading(true);
-  setTableLoading(true);
-  setError(null);
-
-  try {
-    const [enquiryResponse, followUpResponse] = await Promise.all([
-      fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=ENQUIRY&action=fetch"
-      ),
-      fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=Follow - Up&action=fetch"
-      ),
-    ]);
-
-    if (!enquiryResponse.ok || !followUpResponse.ok) {
-      throw new Error(
-        `HTTP error! status: ${enquiryResponse.status} or ${followUpResponse.status}`
-      );
-    }
-
-    const [enquiryResult, followUpResult] = await Promise.all([
-      enquiryResponse.json(),
-      followUpResponse.json(),
-    ]);
-
-    if (
-      !enquiryResult.success ||
-      !enquiryResult.data ||
-      enquiryResult.data.length < 7
-    ) {
-      throw new Error(
-        enquiryResult.error || "Not enough rows in enquiry sheet data"
-      );
-    }
-
-    // Process enquiry data
-    const enquiryHeaders = enquiryResult.data[5].map((h) => h.trim());
-    const enquiryDataFromRow7 = enquiryResult.data.slice(6);
-    
-
-    const getIndex = (headerName) =>
-      enquiryHeaders.findIndex((h) => h === headerName);
-
-    const departmentIndex = getIndex("Department");
-     const abIndex = 27; // Column AB index (0-based index 27)
-
-    const processedEnquiryData = enquiryDataFromRow7
-      .map((row) => ({
-        id: row[getIndex("Timestamp")],
-        indentNo: row[getIndex("Indent Number")],
-        candidateEnquiryNo: row[getIndex("Candidate Enquiry Number")],
-        applyingForPost: row[getIndex("Applying For the Post")],
-         department: row[departmentIndex] || "",
-        candidateName: row[getIndex("Candidate Name")],
-        candidateDOB: row[getIndex("DOB")],
-        candidatePhone: row[getIndex("Candidate Phone Number")],
-        candidateEmail: row[getIndex("Candidate Email")],
-        previousCompany: row[getIndex("Previous Company Name")],
-        jobExperience: row[getIndex("Job Experience")] || "",
-        lastSalary: row[getIndex("Last Salary Drawn")] || "",
-        previousPosition: row[getIndex("Previous Position")] || "",
-        reasonForLeaving:
-          row[getIndex("Reason Of Leaving Previous Company")] || "",
-        maritalStatus: row[getIndex("Marital Status")] || "",
-        lastEmployerMobile: row[getIndex("Last Employer Mobile Number")] || "",
-        candidatePhoto: row[getIndex("Candidate Photo")] || "",
-        candidateResume: row[19] || "",
-        referenceBy: row[getIndex("Reference By")] || "",
-        presentAddress: row[getIndex("Present Address")] || "",
-        aadharNo: row[getIndex("Aadhar Number")] || "",
-        designation: row[getIndex("Applying For the Post")] || "",
-        actualDate: row[26] || "", // Column AA (index 26) - Actual date
-        joiningDate: row[abIndex] || "" // Column AB (index 27)
-      }))
-      // Filter out items with null/empty values in Column AA
-      .filter(item => item.actualDate && item.actualDate.trim() !== "")
-      // Filter out items with non-null values in Column AB
-      .filter(item => !item.joiningDate || item.joiningDate.trim() === "");
-      
-      
-
-    // Process follow-up data for filtering
-    if (followUpResult.success && followUpResult.data) {
-      const rawFollowUpData = followUpResult.data || followUpResult;
-      const followUpRows = Array.isArray(rawFollowUpData[0])
-        ? rawFollowUpData.slice(1)
-        : rawFollowUpData;
-
-      const processedFollowUpData = followUpRows.map((row) => ({
-        enquiryNo: row[1] || "", // Column B (index 1) - Enquiry No
-        status: row[2] || "", // Column C (index 2) - Status
-      }));
-
-      setFollowUpData(processedFollowUpData);
-      
-      // Filter data to show only items with "Joining" status in follow-up sheet
-      const joiningItems = processedEnquiryData.filter(item => {
-        const hasJoiningStatus = processedFollowUpData.some(followUp => 
-          followUp.enquiryNo === item.candidateEnquiryNo && 
-          followUp.status === 'Joining'
-        );
-        return hasJoiningStatus;
+      // Send the email
+      MailApp.sendEmail({
+        to: params.recipientEmail,
+        subject: emailSubject,
+        body: plainBody,
+        htmlBody: htmlBody
       });
-      
-      setJoiningData(joiningItems);
+
+      console.log("Email sent successfully to:", params.recipientEmail);
+
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        message: "Email sent successfully to " + params.recipientEmail
+      })).setMimeType(ContentService.MimeType.JSON);
+
+    } catch (error) {
+      console.error("Error sending email:", error);
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: "Failed to send email: " + error.toString()
+      })).setMimeType(ContentService.MimeType.JSON);
     }
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    setError(error.message);
-    toast.error("Failed to fetch data");
-  } finally {
-    setLoading(false);
-    setTableLoading(false);
   }
-};
+
+  const handleShareClick = (item) => {
+    setSelectedItem(item);
+    // Create the share link with enquiry number
+    const shareLink = `https://sbh-hr-joining-form.vercel.app/?enquiry=${item.candidateEnquiryNo || ''}`;
+
+    setShareFormData({
+      recipientName: item.candidateName || '', // Auto-fill from Column E
+      recipientEmail: item.candidateEmail || '', // Auto-fill from Column H
+      subject: 'Candidate Joining Details - ' + item.candidateName,
+      message: `Dear Recipient,\n\nPlease find the joining details for candidate ${item.candidateName} who is applying for the position of ${item.applyingForPost}.\n\nCandidate Details:\n- Name: ${item.candidateName}\n- Position: ${item.applyingForPost}\n- Department: ${item.department}\n- Phone: ${item.candidatePhone}\n- Email: ${item.candidateEmail}\n- Candidate Enquiry Number: ${item.candidateEnquiryNo}\n\nJoining Form Link: ${shareLink}\n\nBest regards,\nHR Team`,
+    });
+
+    // Log the share link to console
+    console.log("Share Link:", shareLink);
+
+    setShowShareModal(true);
+  };
+
+  const handleShareSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const documents = [{
+        name: selectedItem.candidateName,
+        serialNo: selectedItem.candidateEnquiryNo,
+        documentType: selectedItem.applyingForPost,
+        category: selectedItem.department,
+        imageUrl: selectedItem.candidatePhoto || ''
+      }];
+
+      const URL = 'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec';
+
+      const params = new URLSearchParams();
+      params.append('action', 'shareViaEmail');
+      params.append('recipientEmail', shareFormData.recipientEmail);
+      params.append('subject', shareFormData.subject);
+      params.append('message', shareFormData.message);
+      params.append('documents', JSON.stringify(documents));
+
+      const response = await fetch(URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to send email');
+      }
+
+      toast.success('Details shared successfully!');
+      setShowShareModal(false);
+    } catch (error) {
+      console.error('Error sharing details:', error);
+      toast.error(`Failed to share details: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleShareInputChange = (e) => {
+    const { name, value } = e.target;
+    setShareFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const fetchJoiningData = async () => {
+    setLoading(true);
+    setTableLoading(true);
+    setError(null);
+
+    try {
+      const [enquiryResponse, followUpResponse] = await Promise.all([
+        fetch(
+          "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=ENQUIRY&action=fetch"
+        ),
+        fetch(
+          "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=Follow - Up&action=fetch"
+        ),
+      ]);
+
+      if (!enquiryResponse.ok || !followUpResponse.ok) {
+        throw new Error(
+          `HTTP error! status: ${enquiryResponse.status} or ${followUpResponse.status}`
+        );
+      }
+
+      const [enquiryResult, followUpResult] = await Promise.all([
+        enquiryResponse.json(),
+        followUpResponse.json(),
+      ]);
+
+      if (
+        !enquiryResult.success ||
+        !enquiryResult.data ||
+        enquiryResult.data.length < 7
+      ) {
+        throw new Error(
+          enquiryResult.error || "Not enough rows in enquiry sheet data"
+        );
+      }
+
+      // Process enquiry data
+      const enquiryHeaders = enquiryResult.data[5].map((h) => h.trim());
+      const enquiryDataFromRow7 = enquiryResult.data.slice(6);
+
+
+      const getIndex = (headerName) =>
+        enquiryHeaders.findIndex((h) => h === headerName);
+
+      const departmentIndex = getIndex("Department");
+      const abIndex = 27; // Column AB index (0-based index 27)
+
+      const processedEnquiryData = enquiryDataFromRow7
+        .map((row) => ({
+          id: row[getIndex("Timestamp")],
+          indentNo: row[getIndex("Indent Number")],
+          candidateEnquiryNo: row[getIndex("Candidate Enquiry Number")],
+          applyingForPost: row[getIndex("Applying For the Post")],
+          department: row[departmentIndex] || "",
+          candidateName: row[getIndex("Candidate Name")],
+          candidateDOB: row[getIndex("DOB")],
+          candidatePhone: row[getIndex("Candidate Phone Number")],
+          candidateEmail: row[getIndex("Candidate Email")],
+          previousCompany: row[getIndex("Previous Company Name")],
+          jobExperience: row[getIndex("Job Experience")] || "",
+          lastSalary: row[getIndex("Last Salary Drawn")] || "",
+          previousPosition: row[getIndex("Previous Position")] || "",
+          reasonForLeaving:
+            row[getIndex("Reason Of Leaving Previous Company")] || "",
+          maritalStatus: row[getIndex("Marital Status")] || "",
+          lastEmployerMobile: row[getIndex("Last Employer Mobile Number")] || "",
+          candidatePhoto: row[getIndex("Candidate Photo")] || "",
+          candidateResume: row[19] || "",
+          referenceBy: row[getIndex("Reference By")] || "",
+          presentAddress: row[getIndex("Present Address")] || "",
+          aadharNo: row[getIndex("Aadhar Number")] || "",
+          designation: row[getIndex("Applying For the Post")] || "",
+          actualDate: row[26] || "", // Column AA (index 26) - Actual date
+          joiningDate: row[abIndex] || "" // Column AB (index 27)
+        }))
+        // Filter out items with null/empty values in Column AA
+        .filter(item => item.actualDate && item.actualDate.trim() !== "")
+        // Filter out items with non-null values in Column AB
+        .filter(item => !item.joiningDate || item.joiningDate.trim() === "");
+
+
+
+      // Process follow-up data for filtering
+      if (followUpResult.success && followUpResult.data) {
+        const rawFollowUpData = followUpResult.data || followUpResult;
+        const followUpRows = Array.isArray(rawFollowUpData[0])
+          ? rawFollowUpData.slice(1)
+          : rawFollowUpData;
+
+        const processedFollowUpData = followUpRows.map((row) => ({
+          enquiryNo: row[1] || "", // Column B (index 1) - Enquiry No
+          status: row[2] || "", // Column C (index 2) - Status
+        }));
+
+        setFollowUpData(processedFollowUpData);
+
+        // Filter data to show only items with "Joining" status in follow-up sheet
+        const joiningItems = processedEnquiryData.filter(item => {
+          const hasJoiningStatus = processedFollowUpData.some(followUp =>
+            followUp.enquiryNo === item.candidateEnquiryNo &&
+            followUp.status === 'Joining'
+          );
+          return hasJoiningStatus;
+        });
+
+        setJoiningData(joiningItems);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(error.message);
+      toast.error("Failed to fetch data");
+    } finally {
+      setLoading(false);
+      setTableLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchJoiningData();
@@ -413,11 +413,11 @@ const fetchJoiningData = async () => {
   };
 
   const handleJoiningClick = (item) => {
-  setSelectedItem(item);
-  setJoiningFormData({
-    joiningId: '', // Initialize with empty value
-    nameAsPerAadhar: item.candidateName || '',
-    fatherName: '',
+    setSelectedItem(item);
+    setJoiningFormData({
+      joiningId: '', // Initialize with empty value
+      nameAsPerAadhar: item.candidateName || '',
+      fatherName: '',
       dateOfJoining: '',
       joiningPlace: '',
       designation: item.designation || '',
@@ -461,9 +461,9 @@ const fetchJoiningData = async () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    
+
     let date;
-    
+
     if (dateString instanceof Date) {
       date = dateString;
     } else if (typeof dateString === 'string') {
@@ -476,93 +476,93 @@ const fetchJoiningData = async () => {
         date = new Date(dateString);
       }
     }
-    
+
     if (!date || isNaN(date.getTime())) {
       return dateString || '';
     }
-    
+
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    
+
     return `${day}/${month}/${year}`;
   };
 
-const formatDOB = (dateString) => {
-  if (!dateString) return '';
-  
-  // If it's already in dd/mm/yyyy format, return as is
-  if (typeof dateString === 'string' && dateString.includes('/')) {
-    const parts = dateString.split('/');
-    if (parts.length === 3) {
-      // Check if it's already in dd/mm/yyyy format
-      const day = parseInt(parts[0]);
-      const month = parseInt(parts[1]);
-      
-      if (day > 0 && day <= 31 && month > 0 && month <= 12) {
-        // If day is greater than 12, it's likely dd/mm/yyyy format
-        if (day > 12) {
-          return dateString; // Return as is (dd/mm/yyyy)
-        }
-        // If month is greater than 12, it's likely mm/dd/yyyy format
-        else if (month > 12) {
-          return `${parts[1]}/${parts[0]}/${parts[2]}`; // Swap day and month
-        }
-      }
-    }
-  }
-  
-  // For other cases, try to parse as Date object
-  let date = new Date(dateString);
-  if (isNaN(date.getTime())) {
-    return dateString; // Return original if can't parse
-  }
-  
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  
-  return `${day}/${month}/${year}`;
-};
+  const formatDOB = (dateString) => {
+    if (!dateString) return '';
 
-// Add a function to format date for storage (mm/dd/yyyy)
-const formatDateForStorage = (dateString) => {
-  if (!dateString) return '';
-  
-  // If it's in dd/mm/yyyy format, convert to mm/dd/yyyy
-  if (typeof dateString === 'string' && dateString.includes('/')) {
-    const parts = dateString.split('/');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0]);
-      const month = parseInt(parts[1]);
-      
-      // If it's already in dd/mm/yyyy format, swap day and month
-      if (day > 0 && day <= 31 && month > 0 && month <= 12 && day > 12) {
-        return `${parts[1]}/${parts[0]}/${parts[2]}`;
+    // If it's already in dd/mm/yyyy format, return as is
+    if (typeof dateString === 'string' && dateString.includes('/')) {
+      const parts = dateString.split('/');
+      if (parts.length === 3) {
+        // Check if it's already in dd/mm/yyyy format
+        const day = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+
+        if (day > 0 && day <= 31 && month > 0 && month <= 12) {
+          // If day is greater than 12, it's likely dd/mm/yyyy format
+          if (day > 12) {
+            return dateString; // Return as is (dd/mm/yyyy)
+          }
+          // If month is greater than 12, it's likely mm/dd/yyyy format
+          else if (month > 12) {
+            return `${parts[1]}/${parts[0]}/${parts[2]}`; // Swap day and month
+          }
+        }
       }
     }
-  }
-  
-  // For other cases, try to parse as Date object
-  let date = new Date(dateString);
-  if (isNaN(date.getTime())) {
-    return dateString;
-  }
-  
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  
-  return `${month}/${day}/${year}`;
-};
+
+    // For other cases, try to parse as Date object
+    let date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString; // Return original if can't parse
+    }
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
+  // Add a function to format date for storage (mm/dd/yyyy)
+  const formatDateForStorage = (dateString) => {
+    if (!dateString) return '';
+
+    // If it's in dd/mm/yyyy format, convert to mm/dd/yyyy
+    if (typeof dateString === 'string' && dateString.includes('/')) {
+      const parts = dateString.split('/');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+
+        // If it's already in dd/mm/yyyy format, swap day and month
+        if (day > 0 && day <= 31 && month > 0 && month <= 12 && day > 12) {
+          return `${parts[1]}/${parts[0]}/${parts[2]}`;
+        }
+      }
+    }
+
+    // For other cases, try to parse as Date object
+    let date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${month}/${day}/${year}`;
+  };
 
   const handleJoiningInputChange = (e) => {
-  const { name, value } = e.target;
-  setJoiningFormData(prev => ({
-    ...prev,
-    [name]: value
-  }));
-};
+    const { name, value } = e.target;
+    setJoiningFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleFileChange = (e, fieldName) => {
     const file = e.target.files[0];
@@ -575,7 +575,7 @@ const formatDateForStorage = (dateString) => {
   };
 
   const postToJoiningSheet = async (rowData) => {
-    const URL = 'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec';
+    const URL = 'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec';
 
     try {
       console.log('Attempting to post:', {
@@ -637,7 +637,7 @@ const formatDateForStorage = (dateString) => {
       params.append('folderId', folderId);
 
       const response = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec',
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec',
         {
           method: 'POST',
           headers: {
@@ -652,7 +652,7 @@ const formatDateForStorage = (dateString) => {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'File upload failed');
       }
@@ -665,171 +665,171 @@ const formatDateForStorage = (dateString) => {
     }
   };
 
-const updateEnquirySheet = async (enquiryNo, timestamp) => {
-  const URL = 'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec';
+  const updateEnquirySheet = async (enquiryNo, timestamp) => {
+    const URL = 'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec';
 
-  try {
-    const params = new URLSearchParams();
-    params.append('sheetName', 'ENQUIRY');
-    params.append('action', 'updateEnquiryColumn');
-    params.append('enquiryNo', enquiryNo);
-    params.append('timestamp', timestamp);
+    try {
+      const params = new URLSearchParams();
+      params.append('sheetName', 'ENQUIRY');
+      params.append('action', 'updateEnquiryColumn');
+      params.append('enquiryNo', enquiryNo);
+      params.append('timestamp', timestamp);
 
-    const response = await fetch(URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params,
-    });
+      const response = await fetch(URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params,
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.success;
-  } catch (error) {
-    console.error('Error updating enquiry sheet:', error);
-    throw new Error(`Failed to update enquiry sheet: ${error.message}`);
-  }
-};
-
-const handleJoiningSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  
-  try {
-    // Upload only the required files
-    const uploadPromises = {};
-    const fileFields = [
-      'aadharFrontPhoto',
-      'bankPassbookPhoto',
-      'salarySlip' 
-    ];
-
-    for (const field of fileFields) {
-      if (joiningFormData[field]) {
-        uploadPromises[field] = uploadFileToDrive(joiningFormData[field]);
-      } else {
-        uploadPromises[field] = Promise.resolve('');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
+
+      const data = await response.json();
+      return data.success;
+    } catch (error) {
+      console.error('Error updating enquiry sheet:', error);
+      throw new Error(`Failed to update enquiry sheet: ${error.message}`);
     }
+  };
 
-    // Wait for all uploads to complete
-    const uploadedUrls = await Promise.all(
-      Object.values(uploadPromises).map(promise => 
-        promise.catch(error => {
-          console.error('Upload failed:', error);
-          return ''; // Return empty string if upload fails
-        })
-      )
-    );
+  const handleJoiningSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
 
-    // Map uploaded URLs to their respective fields
-    const fileUrls = {};
-    Object.keys(uploadPromises).forEach((field, index) => {
-      fileUrls[field] = uploadedUrls[index];
-    });
+    try {
+      // Upload only the required files
+      const uploadPromises = {};
+      const fileFields = [
+        'aadharFrontPhoto',
+        'bankPassbookPhoto',
+        'salarySlip'
+      ];
 
-     const now = new Date();
-    const formattedTimestamp = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-    
-    const formatDateForStorage = (dateString) => {
-      if (!dateString) return '';
-      
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const year = date.getFullYear();
-      
-      return `${month}/${day}/${year}`;
-    };
-    
-    // Format DOB for storage (mm/dd/yyyy)
-    const formatDOBForStorage = (dateString) => {
-      if (!dateString) return '';
-      
-      // If it's in dd/mm/yyyy format, convert to mm/dd/yyyy
-      if (typeof dateString === 'string' && dateString.includes('/')) {
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-          return `${parts[1]}/${parts[0]}/${parts[2]}`;
+      for (const field of fileFields) {
+        if (joiningFormData[field]) {
+          uploadPromises[field] = uploadFileToDrive(joiningFormData[field]);
+        } else {
+          uploadPromises[field] = Promise.resolve('');
         }
       }
-      
-      // For other cases, try to parse as Date object
-      let date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return dateString;
-      }
-      
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const year = date.getFullYear();
-      
-      return `${month}/${day}/${year}`;
-    };
-    
-    // Create an array with all column values in order
-    const rowData = [];
-    
-    // Assign values directly to array indices according to specified columns
-    rowData[0] = formattedTimestamp;           // Column A: Timestamp
-    rowData[1] = "";
-    rowData[2] = selectedItem.candidateName;   // Column C: Name As Per Aadhar
-    rowData[3] = joiningFormData.fatherName;   // Column D: Father Name
-    rowData[4] = formatDateForStorage(joiningFormData.dateOfJoining); // Column E: Date Of Joining (mm/dd/yyyy)
-    rowData[5] = selectedItem.designation || selectedItem.applyingForPost; // Column F: Designation
-    rowData[6] = fileUrls.aadharFrontPhoto;    // Column G: Aadhar card
-    rowData[7] = selectedItem.candidatePhoto;  // Column H: Candidate Photo
-    rowData[8] = selectedItem.presentAddress;  // Column I: Current Address
-    rowData[9] = formatDOBForStorage(selectedItem.candidateDOB); // Column J: Date Of Birth (mm/dd/yyyy)
-    rowData[10] = joiningFormData.gender;      // Column K: Gender
-    rowData[11] = selectedItem.candidatePhone; // Column L: Mobile No.
-    rowData[12] = joiningFormData.familyMobileNo; // Column M: Family Mobile Number
-    rowData[13] = joiningFormData.relationshipWithFamily; // Column N: Relationship With Family
-    rowData[14] = joiningFormData.currentBankAc; // Column O: Current Account No
-    rowData[15] = joiningFormData.ifscCode;    // Column P: IFSC Code
-    rowData[16] = joiningFormData.branchName;  // Column Q: Branch Name
-    rowData[17] = fileUrls.bankPassbookPhoto;  // Column R: Photo Of Front Bank Passbook
-    rowData[18] = selectedItem.candidateEmail; // Column S: Candidate Email
-    rowData[19] = joiningFormData.highestQualification; // Column T: Highest Qualification
-    rowData[20] = selectedItem.department || '';  // Column U: Department
-    rowData[21] = joiningFormData.equipment;   // Column V: Equipment
-    rowData[22] = selectedItem.aadharNo;       // Column W: Aadhar Number
-    rowData[23] = selectedItem.candidateResume; // Column X: Candidate Resume
-    rowData[24] = "";
-    rowData[25] = "";
-    rowData[26] = selectedItem.actualDate || formattedTimestamp; // Column AA: Actual Date
-    rowData[38] = fileUrls.salarySlip || "";    // Column AM: Last Salary Slip
-    rowData[40] = joiningFormData.panCardNumber || ""; // Column AO: PAN Card Number - Add this line
 
-    await postToJoiningSheet(rowData);
+      // Wait for all uploads to complete
+      const uploadedUrls = await Promise.all(
+        Object.values(uploadPromises).map(promise =>
+          promise.catch(error => {
+            console.error('Upload failed:', error);
+            return ''; // Return empty string if upload fails
+          })
+        )
+      );
 
-    // Update ENQUIRY sheet Column AB with the timestamp
-    await updateEnquirySheet(selectedItem.candidateEnquiryNo, formattedTimestamp);
+      // Map uploaded URLs to their respective fields
+      const fileUrls = {};
+      Object.keys(uploadPromises).forEach((field, index) => {
+        fileUrls[field] = uploadedUrls[index];
+      });
 
-    console.log("Joining Form Data:", rowData);
+      const now = new Date();
+      const formattedTimestamp = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
 
-    toast.success('Employee added successfully!');
-    setShowJoiningModal(false);
-    setSelectedItem(null);
-    fetchJoiningData();
-  } catch (error) {
-    console.error('Error submitting joining form:', error);
-    toast.error(`Failed to submit joining form: ${error.message}`);
-  } finally {
-    setSubmitting(false);
-  }
-};
+      const formatDateForStorage = (dateString) => {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = date.getFullYear();
+
+        return `${month}/${day}/${year}`;
+      };
+
+      // Format DOB for storage (mm/dd/yyyy)
+      const formatDOBForStorage = (dateString) => {
+        if (!dateString) return '';
+
+        // If it's in dd/mm/yyyy format, convert to mm/dd/yyyy
+        if (typeof dateString === 'string' && dateString.includes('/')) {
+          const parts = dateString.split('/');
+          if (parts.length === 3) {
+            return `${parts[1]}/${parts[0]}/${parts[2]}`;
+          }
+        }
+
+        // For other cases, try to parse as Date object
+        let date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+          return dateString;
+        }
+
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = date.getFullYear();
+
+        return `${month}/${day}/${year}`;
+      };
+
+      // Create an array with all column values in order
+      const rowData = [];
+
+      // Assign values directly to array indices according to specified columns
+      rowData[0] = formattedTimestamp;           // Column A: Timestamp
+      rowData[1] = "";
+      rowData[2] = selectedItem.candidateName;   // Column C: Name As Per Aadhar
+      rowData[3] = joiningFormData.fatherName;   // Column D: Father Name
+      rowData[4] = formatDateForStorage(joiningFormData.dateOfJoining); // Column E: Date Of Joining (mm/dd/yyyy)
+      rowData[5] = selectedItem.designation || selectedItem.applyingForPost; // Column F: Designation
+      rowData[6] = fileUrls.aadharFrontPhoto;    // Column G: Aadhar card
+      rowData[7] = selectedItem.candidatePhoto;  // Column H: Candidate Photo
+      rowData[8] = selectedItem.presentAddress;  // Column I: Current Address
+      rowData[9] = formatDOBForStorage(selectedItem.candidateDOB); // Column J: Date Of Birth (mm/dd/yyyy)
+      rowData[10] = joiningFormData.gender;      // Column K: Gender
+      rowData[11] = selectedItem.candidatePhone; // Column L: Mobile No.
+      rowData[12] = joiningFormData.familyMobileNo; // Column M: Family Mobile Number
+      rowData[13] = joiningFormData.relationshipWithFamily; // Column N: Relationship With Family
+      rowData[14] = joiningFormData.currentBankAc; // Column O: Current Account No
+      rowData[15] = joiningFormData.ifscCode;    // Column P: IFSC Code
+      rowData[16] = joiningFormData.branchName;  // Column Q: Branch Name
+      rowData[17] = fileUrls.bankPassbookPhoto;  // Column R: Photo Of Front Bank Passbook
+      rowData[18] = selectedItem.candidateEmail; // Column S: Candidate Email
+      rowData[19] = joiningFormData.highestQualification; // Column T: Highest Qualification
+      rowData[20] = selectedItem.department || '';  // Column U: Department
+      rowData[21] = joiningFormData.equipment;   // Column V: Equipment
+      rowData[22] = selectedItem.aadharNo;       // Column W: Aadhar Number
+      rowData[23] = selectedItem.candidateResume; // Column X: Candidate Resume
+      rowData[24] = "";
+      rowData[25] = "";
+      rowData[26] = selectedItem.actualDate || formattedTimestamp; // Column AA: Actual Date
+      rowData[38] = fileUrls.salarySlip || "";    // Column AM: Last Salary Slip
+      rowData[40] = joiningFormData.panCardNumber || ""; // Column AO: PAN Card Number - Add this line
+
+      await postToJoiningSheet(rowData);
+
+      // Update ENQUIRY sheet Column AB with the timestamp
+      await updateEnquirySheet(selectedItem.candidateEnquiryNo, formattedTimestamp);
+
+      console.log("Joining Form Data:", rowData);
+
+      toast.success('Employee added successfully!');
+      setShowJoiningModal(false);
+      setSelectedItem(null);
+      fetchJoiningData();
+    } catch (error) {
+      console.error('Error submitting joining form:', error);
+      toast.error(`Failed to submit joining form: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const filteredJoiningData = joiningData.filter(item => {
     const matchesSearch = item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.applyingForPost?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.candidatePhone?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.applyingForPost?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.candidatePhone?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -863,11 +863,10 @@ const handleJoiningSubmit = async (e) => {
         <div className="border-b border-gray-300 border-opacity-20">
           <nav className="flex -mb-px">
             <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${
-                activeTab === "pending"
+              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "pending"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
               onClick={() => setActiveTab("pending")}
             >
               <Clock size={16} className="inline mr-2" />
@@ -1396,9 +1395,8 @@ const handleJoiningSubmit = async (e) => {
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 text-white bg-indigo-700 rounded-md hover:bg-indigo-800 flex items-center justify-center min-h-[42px] ${
-                    submitting ? "opacity-90 cursor-not-allowed" : ""
-                  }`}
+                  className={`px-4 py-2 text-white bg-indigo-700 rounded-md hover:bg-indigo-800 flex items-center justify-center min-h-[42px] ${submitting ? "opacity-90 cursor-not-allowed" : ""
+                    }`}
                   disabled={submitting}
                 >
                   {submitting ? (
@@ -1534,9 +1532,8 @@ const handleJoiningSubmit = async (e) => {
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 text-white bg-indigo-700 rounded-md hover:bg-indigo-800 flex items-center justify-center min-h-[42px] ${
-                    submitting ? "opacity-90 cursor-not-allowed" : ""
-                  }`}
+                  className={`px-4 py-2 text-white bg-indigo-700 rounded-md hover:bg-indigo-800 flex items-center justify-center min-h-[42px] ${submitting ? "opacity-90 cursor-not-allowed" : ""
+                    }`}
                   disabled={submitting}
                 >
                   {submitting ? (

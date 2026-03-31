@@ -13,28 +13,28 @@ const CompanyCalendar = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=CompanyCalendar&action=fetch'
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=CompanyCalendar&action=fetch'
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch calendar data');
       }
-      
+
       const rawData = result.data || result;
-      
+
       if (!Array.isArray(rawData)) {
         throw new Error('Expected array data not received');
       }
 
       // Skip header row and map to structured data
       const dataRows = rawData.length > 1 ? rawData.slice(1) : [];
-      
+
       const processedData = dataRows
         .map((row, index) => {
           // Format date to YYYY-MM-DD for consistency
@@ -97,17 +97,17 @@ const CompanyCalendar = () => {
     const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
-    
+
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day);
     }
-    
+
     return days;
   };
 
@@ -137,10 +137,10 @@ const CompanyCalendar = () => {
   const days = getDaysInMonth(currentDate);
   const today = new Date();
   const isToday = (day) => {
-    return day && 
-           currentDate.getFullYear() === today.getFullYear() &&
-           currentDate.getMonth() === today.getMonth() &&
-           day === today.getDate();
+    return day &&
+      currentDate.getFullYear() === today.getFullYear() &&
+      currentDate.getMonth() === today.getMonth() &&
+      day === today.getDate();
   };
 
   // Filter upcoming events (from today onwards)
@@ -208,9 +208,8 @@ const CompanyCalendar = () => {
                 return (
                   <div
                     key={index}
-                    className={`min-h-[80px] p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 ${
-                      isToday(day) ? 'bg-indigo-50 border-indigo-200' : ''
-                    }`}
+                    className={`min-h-[80px] p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 ${isToday(day) ? 'bg-indigo-50 border-indigo-200' : ''
+                      }`}
                     onClick={() => setSelectedDate(day)}
                   >
                     {day && (

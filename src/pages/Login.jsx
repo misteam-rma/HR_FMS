@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, FileText, Eye, EyeOff } from 'lucide-react'; // Added Eye and EyeOff icons
+import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUsers } from "@fortawesome/free-solid-svg-icons";
+import logo from '../Assets/RMAALL.png';
+import officeBg from '../Assets/office-bg.png';
 
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=USER&action=fetch';
-const LEAVING_API_URL = 'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=LEAVING&action=fetch';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=USER&action=fetch';
+const LEAVING_API_URL = 'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=LEAVING&action=fetch';
 
 localStorage.removeItem('hasSeenLanguageHint');
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // Added state for password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
@@ -102,120 +102,135 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-100 via-purple-100 to-white">
-      <div className="max-w-md w-full p-8 rounded-2xl shadow-xl border border-white/20 bg-white/60 backdrop-blur-lg space-y-8 transition-transform hover:scale-[1.01] duration-200">
+    <div className="min-h-screen w-full flex flex-col md:flex-row font-sans overflow-hidden">
+      {/* Left Section: Image and Content */}
+      <div className="relative md:w-5/12 lg:w-4/12 hidden md:flex flex-col items-start justify-center p-12 overflow-hidden text-white">
+        {/* Background Image with Overlay */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center transition-transform hover:scale-105 duration-[20s]"
+          style={{ backgroundImage: `url(${officeBg})` }}
+        />
+        <div className="absolute inset-0 z-10 bg-indigo-900/70 backdrop-blur-[1px]" />
         
-        {/* Logo Section */}
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <div className="h-16 w-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-              <FontAwesomeIcon icon={faUsers} className="text-white h-8 w-8" />
-            </div>
-          </div>
-          <h2 
-            className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight" 
-            style={{ fontFamily: 'Poppins, sans-serif' }}
-          >
-            HR FMS
-          </h2>
-          <p 
-            className="text-sm text-black" 
-            style={{ fontFamily: 'Poppins, sans-serif' }}
-          >
-            Human Resource & File Management System
+        {/* Branding Content */}
+        <div className="relative z-20 space-y-6 animate-in fade-in slide-in-from-left duration-700">
+          <h1 className="text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight">
+            Manage your workforce <br /> efficient<span className="text-blue-400">ly.</span>
+          </h1>
+          <p className="text-lg text-blue-500 font-medium max-w-sm opacity-90 leading-relaxed">
+            Streamline human resources and file management with our powerful, intuitive system designed for modern businesses.
           </p>
         </div>
         
-        {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-5">
-            
-            {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-blue-700 mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="appearance-none w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm bg-white/70 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all sm:text-sm"
-                  placeholder="Enter your username"
-                />
-              </div>
-            </div>
-            
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-blue-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"} // Toggle between text and password
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm bg-white/70 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all sm:text-sm"
-                  placeholder="Enter your password"
-                />
-                {/* Eye icon button */}
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                  onClick={togglePasswordVisibility}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </div>
+        {/* Subtle decorative line */}
+        <div className="absolute bottom-12 left-12 w-24 h-1 bg-blue-500/50 rounded-full z-20" />
+      </div>
+
+      {/* Right Section: Login Form */}
+      <div className="flex-1 bg-white flex flex-col items-center justify-center p-6 md:p-12 relative">
+        <div className="w-full max-w-sm space-y-12">
+          
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img 
+              src={logo} 
+              alt="Rahul Mishra & Associates" 
+              className="h-20 w-auto object-contain transition-opacity duration-500" 
+            />
           </div>
 
-          {/* Submit Button */}
-          <div>
-            <button
-              type="submit"
-              className={`w-full flex justify-center py-3 px-4 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-md hover:shadow-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
-                submitting ? 'opacity-75 cursor-not-allowed' : ''
-              }`}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <div className="flex items-center">
-                  <svg 
-                    className="animate-spin h-4 w-4 text-white mr-2" 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24"
-                  >
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Signing in...</span>
+          {/* Form */}
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              {/* Username Input */}
+              <div className="space-y-2">
+                <label htmlFor="username" className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                  Username
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white transition-all shadow-sm group-hover:bg-gray-100"
+                    placeholder="Enter your username"
+                  />
                 </div>
-              ) : 'Sign in'}
-            </button>
+              </div>
+
+              {/* Password Input */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                  Password
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-600">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white transition-all shadow-sm group-hover:bg-gray-100"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-600 transition-colors"
+                    onClick={togglePasswordVisibility}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Login Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`w-full py-4 px-6 text-sm font-bold bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100/50 hover:bg-indigo-700 hover:shadow-indigo-200/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 transition-all active:scale-[0.98] ${
+                  submitting ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
+              >
+                {submitting ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Authenticating...</span>
+                  </div>
+                ) : 'Sign in Securely'}
+              </button>
+            </div>
+          </form>
+
+          {/* Footer */}
+          <div className="pt-10 text-center">
+            <p className="text-xs text-gray-400 font-medium">
+              Powered By <span className="text-indigo-600 hover:underline cursor-pointer">Botivate</span>
+            </p>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
 };
 
 export default Login;
+

@@ -58,7 +58,7 @@ const FindEnquiry = () => {
     try {
       // Fetch INDENT data
       const indentResponse = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch'
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=INDENT&action=fetch'
       );
 
       if (!indentResponse.ok) {
@@ -101,7 +101,7 @@ const FindEnquiry = () => {
 
         // Fetch ENQUIRY data to check for completed recruitments
         const enquiryResponse = await fetch(
-          'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=ENQUIRY&action=fetch'
+          'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=ENQUIRY&action=fetch'
         );
 
         if (!enquiryResponse.ok) {
@@ -267,7 +267,7 @@ const FindEnquiry = () => {
       const base64Data = await fileToBase64(file);
 
       const response = await fetch(
-        'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec',
+        'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec',
         {
           method: 'POST',
           headers: {
@@ -397,7 +397,7 @@ const FindEnquiry = () => {
         imageUrl: selectedItem.candidatePhoto || ''
       }];
 
-      const URL = 'https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec';
+      const URL = 'https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec';
 
       const params = new URLSearchParams();
       params.append('action', 'shareViaEmail');
@@ -510,7 +510,7 @@ const FindEnquiry = () => {
 
       // Submit to ENQUIRY sheet
       const enquiryResponse = await fetch(
-        "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
         {
           method: "POST",
           headers: {
@@ -537,7 +537,7 @@ const FindEnquiry = () => {
 
         // Fetch INDENT data
         const indentFetchResponse = await fetch(
-          "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec?sheet=INDENT&action=fetch"
+          "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=INDENT&action=fetch"
         );
 
         const indentData = await indentFetchResponse.json();
@@ -588,7 +588,7 @@ const FindEnquiry = () => {
         if (statusIndex !== -1) {
           console.log("Updating Status column...");
           const statusResponse = await fetch(
-            "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+            "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
             {
               method: "POST",
               headers: {
@@ -616,7 +616,7 @@ const FindEnquiry = () => {
         if (actual2Index !== -1) {
           console.log("Updating Actual 2 column...");
           const actual2Response = await fetch(
-            "https://script.google.com/macros/s/AKfycbwZ96aXBp4sNGMzHjLf1iq98Pj1u6agtAb02Qv2KvdYYf7bzqrXAxWRxJ2LJIXVyN453g/exec",
+            "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec",
             {
               method: "POST",
               headers: {
@@ -725,14 +725,14 @@ const FindEnquiry = () => {
           >
             New Enquiry
           </button>
-          <button
+          {/* <button
             onClick={() => setShowQrModal(true)}
             className="px-3 py-2 text-white bg-indigo-700 rounded-md hover:bg-opacity-90 text-sm flex items-center gap-1"
             title="Show QR Code"
           >
             <QrCode size={16} />
             QR Code
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -827,13 +827,13 @@ const FindEnquiry = () => {
                             >
                               Enquiry
                             </button>
-                            <button
+                            {/* <button
                               onClick={() => handleShareClick(item)}
                               className="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-opacity-90 text-sm min-w-[80px] flex items-center justify-center"
                             >
                               <Share size={14} className="mr-1" />
                               Share
-                            </button>
+                            </button> */}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

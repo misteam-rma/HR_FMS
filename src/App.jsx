@@ -23,14 +23,13 @@ import LeaveManagement from './pages/LeaveManagement';
 // import Attendancedaily from './pages/Attendancedaily';
 // import Report from './pages/Report';
 // import Payroll from './pages/Payroll';
-import MisReport from './pages/MisReport';
+// import MisReport from './pages/MisReport';
 import Joining from './pages/Joining';
 import License from './pages/License';
-import JobPoster from './pages/JobPoster';
+// import JobPoster from './pages/JobPoster';
 import LeaveApproval from './pages/LeaveApproval';
-import HrPolicy from './pages/HrPolicy';
-import { BalanceScoreCard } from './pages/BalanceScoreCard/BalanceScoreCard';
-import { UserBalanceScoreCard } from './pages/BalanceScoreCard/UserBalanceScoreCard';
+// import { BalanceScoreCard } from './pages/BalanceScoreCard/BalanceScoreCard';
+// import { UserBalanceScoreCard } from './pages/BalanceScoreCard/UserBalanceScoreCard';
 // import GatePass from './pages/GatePass';
 // import GatePassRequest from './pages/GatePassRequest';
 
@@ -69,13 +68,13 @@ function App() {
               {/* <Route path="attendancedaily" element={<Attendancedaily />} /> */}
               {/* <Route path="report" element={<Report />} /> */}
               {/* <Route path="payroll" element={<Payroll />} /> */}
-              <Route path="misreport" element={<MisReport />} />
+              {/* <Route path="misreport" element={<MisReport />} />
               <Route path='balanceScoreCard' element={<BalanceScoreCard />} />
-              <Route path='userBalanceScoreCard' element={<UserBalanceScoreCard />} />
+              <Route path='userBalanceScoreCard' element={<UserBalanceScoreCard />} /> */}
               <Route path="license" element={<License/>} />
-              <Route path="jobPoster" element={<JobPoster/>} />
+              {/* <Route path="jobPoster" element={<JobPoster/>} /> */}
               <Route path='leaveApproval' element={<LeaveApproval/>} />
-              <Route path='hrPolicy' element={<HrPolicy/>} />
+              {/* <Route path='hrPolicy' element={<HrPolicy/>} /> */}
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
