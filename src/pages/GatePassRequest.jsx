@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Search, X, Plus, ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const GatePassRequest = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -743,16 +742,10 @@ const GatePassRequest = () => {
         <div className="p-6">
           <div className="overflow-x-auto">
             {tableLoading ? (
-              <div className="px-6 py-12 text-center">
-                <div className="flex justify-center flex-col items-center">
-                  <div className="w-6 h-6 border-4 border-indigo-500 border-dashed rounded-full animate-spin mb-2"></div>
-                  <span className="text-gray-600 text-sm">
-                    {loading
-                      ? "Processing request..."
-                      : "Loading gate pass data..."}
-                  </span>
-                </div>
-              </div>
+              <LoadingSpinner
+                message={loading ? "Processing request..." : "Loading gate pass data..."}
+                minHeight="300px"
+              />
             ) : error ? (
               <div className="px-6 py-12 text-center">
                 <p className="text-red-500">Error: {error}</p>

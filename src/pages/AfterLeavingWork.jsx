@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const AfterLeavingWork = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -436,11 +437,8 @@ const AfterLeavingWork = () => {
               <tbody className="divide-y divide-white">
                 {tableLoading ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
-                      <div className="flex justify-center flex-col items-center">
-                        <div className="w-6 h-6 border-4 border-indigo-500 border-dashed rounded-full animate-spin mb-2"></div>
-                        <span className="text-gray-600 text-sm">Loading pending calls...</span>
-                      </div>
+                    <td colSpan="8" className="px-6 py-1">
+                      <LoadingSpinner message="Scanning off-boarding tasks..." minHeight="300px" />
                     </td>
                   </tr>
                 ) : error ? (

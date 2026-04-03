@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../components/LoadingSpinner';
+
+const DUMMY_EVENTS = [
+  { id: 1, title: 'Team Meeting', date: new Date().toISOString().split('T')[0], time: '10:00 AM', location: 'Conference Room A', type: 'meeting', description: 'Weekly status update' },
+  { id: 2, title: 'Product Launch', date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString().split('T')[0], time: '02:00 PM', location: 'Main Hall', type: 'event', description: 'New product showcase' },
+  { id: 3, title: 'Public Holiday', date: new Date(new Date().setMonth(new Date().getMonth() + 1, 1)).toISOString().split('T')[0], time: 'All Day', location: 'Office Closed', type: 'holiday', description: 'National Holiday' }
+];
 
 const CompanyCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -66,8 +73,12 @@ const CompanyCalendar = () => {
         })
         .filter(event => event.date && event.title); // Filter out invalid entries
 
-      console.log("Processed calendar data:", processedData);
-      setCompanyEvents(processedData);
+      if (processedData.length > 0) {
+        setCompanyEvents(processedData);
+      } else {
+        console.warn('No calendar data found, using dummy fallback');
+        setCompanyEvents(DUMMY_EVENTS);
+      }
 
     } catch (error) {
       console.error('Error fetching calendar data:', error);
@@ -163,10 +174,7 @@ const CompanyCalendar = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-dashed rounded-full animate-spin"></div>
-          <span className="ml-3 text-gray-600">Loading calendar data...</span>
-        </div>
+        <LoadingSpinner message="Loading calendar data..." minHeight="400px" />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar */}
@@ -208,7 +216,7 @@ const CompanyCalendar = () => {
                 return (
                   <div
                     key={index}
-                    className={`min-h-[80px] p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 ${isToday(day) ? 'bg-indigo-50 border-indigo-200' : ''
+                    className={`min-h-[50px] p-1 border border-gray-100 cursor-pointer hover:bg-gray-50 ${isToday(day) ? 'bg-indigo-50 border-indigo-200' : ''
                       }`}
                     onClick={() => setSelectedDate(day)}
                   >

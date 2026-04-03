@@ -22,21 +22,14 @@ import {
   ChevronUp,
   NotebookPen,
   BookPlus,
-  Brain,
-  NotepadText,
-  CalendarSync
+  Settings,
+  Bell,
+  Clock
 } from 'lucide-react';
-import useAuthStore from '../store/authStore';
 
-const Sidebar = ({ onClose }) => {
-  // const { logout, user } = useAuthStore();
+const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
-  const [attendanceOpen, setAttendanceOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState('en');
-  const [showLanguageHint, setShowLanguageHint] = useState(false);
   const [showLeaveManagement, setShowLeaveManagement] = useState(false);
-
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : null;
 
@@ -45,76 +38,31 @@ const Sidebar = ({ onClose }) => {
     navigate('/login', { replace: true });
   };
 
-  // Check if user should see Leave Management
   useEffect(() => {
     const checkLeaveManagementAccess = async () => {
       if (!user) return;
-
       try {
-        // Fetch employee data to check Column G
         const response = await fetch(`https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=USER&action=fetch`);
         const result = await response.json();
-
         if (result.success && result.data) {
           const employeeData = result.data;
           const headers = employeeData[0];
-
-          // Find column indices
-          const usernameColIndex = headers.findIndex(h =>
-            h.toString().toLowerCase().includes('username') ||
-            h.toString().toLowerCase().includes('name')
-          );
-          const adminColIndex = headers.findIndex(h =>
-            h.toString().toLowerCase().includes('admin')
-          );
-          const leaveManagementColIndex = 6; // Column G (index 6)
-          const hodColIndex = headers.findIndex(h =>
-            h.toString().toLowerCase().includes('hod')
-          );
-
-          // Find current user in employee data
-          const userRecord = employeeData.find(row =>
-            row[usernameColIndex] === user.Name ||
-            row[usernameColIndex] === user.Username
-          );
-
+          const usernameColIndex = headers.findIndex(h => h.toString().toLowerCase().includes('username') || h.toString().toLowerCase().includes('name'));
+          const adminColIndex = headers.findIndex(h => h.toString().toLowerCase().includes('admin'));
+          const leaveManagementColIndex = 6; 
+          const userRecord = employeeData.find(row => row[usernameColIndex] === user.Name || row[usernameColIndex] === user.Username);
           if (userRecord) {
             const isAdmin = userRecord[adminColIndex]?.toString().toLowerCase() === 'yes';
-            const hasLeaveAccess = userRecord[leaveManagementColIndex] &&
-              userRecord[leaveManagementColIndex].toString().trim() !== '';
-            const isHOD = userRecord[hodColIndex]?.toString().toLowerCase() === 'yes';
-
-            // Show Leave Management if:
-            // 1. User is NOT admin AND Column G has value
-            // 2. OR user is admin (admins always see it)
+            const hasLeaveAccess = userRecord[leaveManagementColIndex] && userRecord[leaveManagementColIndex].toString().trim() !== '';
             setShowLeaveManagement(isAdmin || (!isAdmin && hasLeaveAccess));
           }
         }
       } catch (error) {
-        console.error('Error checking leave management access:', error);
-        // Default to showing for admins, hiding for others if fetch fails
         setShowLeaveManagement(user?.Admin === 'Yes');
       }
     };
-
     checkLeaveManagementAccess();
   }, [user]);
-
-  useEffect(() => {
-    const hasSeenLanguageHint = localStorage.getItem('hasSeenLanguageHint');
-
-    if (!hasSeenLanguageHint && currentLang === 'en') {
-      const timer = setTimeout(() => {
-        setShowLanguageHint(true);
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    } else {
-      setShowLanguageHint(false);
-    }
-  }, [currentLang]);
-
-
 
   const adminMenuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -122,192 +70,94 @@ const Sidebar = ({ onClose }) => {
     { path: '/find-enquiry', icon: Search, label: 'Find Enquiry' },
     { path: '/call-tracker', icon: Phone, label: 'Call Tracker' },
     { path: '/joining', icon: NotebookPen, label: 'Joining' },
-    { path: '/after-joining-work', icon: UserCheck, label: 'After Joining Work' },
+    { path: '/after-joining-work', icon: UserCheck, label: 'After Joining' },
     { path: '/leaving', icon: UserX, label: 'Leaving' },
-    { path: '/after-leaving-work', icon: UserMinus, label: 'After Leaving Work' },
+    { path: '/after-leaving-work', icon: UserMinus, label: 'After Leaving' },
     { path: '/employee', icon: Users, label: 'Employee' },
-    { path: '/leave-management', icon: BookPlus, label: 'Leave Management' },
-    { path: '/company-calendar', icon: Calendar, label: 'Company Calendar' },
+    { path: '/admin-attendance', icon: AlarmClockCheck, label: 'Attendance Dashboard' },
+    { path: '/leave-management', icon: BookPlus, label: 'Leave Mgmt' },
+    { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: AlarmClockCheck, label: 'License' },
   ];
 
   const employeeMenuItems = [
     { path: '/my-profile', icon: ProfileIcon, label: 'My Profile' },
+    { path: '/attendance-form', icon: UserCheck, label: 'Mark Attendance' },
+    { path: '/my-attendance', icon: Clock, label: 'My Attendance' },
     { path: '/leave-request', icon: LeaveIcon, label: 'Leave Request' },
-    { path: '/company-calendar', icon: Calendar, label: 'Company Calendar' },
+    { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: Copyright, label: 'License' },
   ];
 
   const menuItems = user?.Admin === 'Yes' ? adminMenuItems : employeeMenuItems;
 
-  const SidebarContent = ({ onClose, isCollapsed = false }) => (
-    <div className={`flex flex-col h-full ${isCollapsed ? 'w-16' : 'w-64'} bg-indigo-900 text-white`}>
-      {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-indigo-800">
-        {!isCollapsed && (
-          <h1 className="text-xl font-bold flex items-center gap-2 text-white">
-            <Users size={24} />
-            <span>HRMS</span>
-            {user?.role === 'employee' && (
-              <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">Employee</span>
-            )}
-          </h1>
-        )}
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-          >
-            <span className="sr-only">Close sidebar</span>
-            <X className="h-6 w-6" />
-          </button>
-        )}
-      </div>
-
-      {/* Menu */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto scrollbar-hide">
-        {menuItems.map((item) => {
-          if (item.type === 'dropdown') {
-            return (
-              <div key={item.label}>
-                <button
-                  onClick={item.toggle}
-                  className={`flex items-center justify-between w-full py-2.5 px-4 rounded-lg transition-colors ${item.isOpen
-                    ? 'bg-indigo-800 text-white'
-                    : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
-                    }`}
-                >
-                  <div className="flex items-center">
-                    <item.icon className={isCollapsed ? 'mx-auto' : 'mr-3'} size={20} />
-                    {!isCollapsed && <span>{item.label}</span>}
-                  </div>
-                  {!isCollapsed && (item.isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
-                </button>
-
-                {item.isOpen && !isCollapsed && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    {item.items.map((subItem) => (
-                      <NavLink
-                        key={subItem.path}
-                        to={subItem.path}
-                        className={({ isActive }) =>
-                          `flex items-center py-2 px-4 rounded-lg transition-colors ${isActive
-                            ? 'bg-indigo-700 text-white'
-                            : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
-                          }`
-                        }
-                        onClick={() => {
-                          onClose?.();
-                          setIsOpen(false);
-                        }}
-                      >
-                        <span>{subItem.label}</span>
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center py-2.5 px-4 rounded-lg transition-colors ${isActive
-                  ? 'bg-indigo-800 text-white'
-                  : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
-                }`
-              }
-              onClick={() => {
-                onClose?.();
-                setIsOpen(false);
-              }}
-            >
-              <item.icon className={isCollapsed ? 'mx-auto' : 'mr-3'} size={20} />
-              {!isCollapsed && <span>{item.label}</span>}
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      {/* Footer - Always visible */}
-      <div className="p-4 border-t border-white border-opacity-20">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="flex items-center space-x-2 cursor-pointer">
-            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
-              <User size={20} className="text-indigo-600" />
-            </div>
-            {/* Show user info in mobile view regardless of collapsed state */}
-            <div className={`${isCollapsed ? 'hidden' : 'block'} md:block`}>
-              <p className="text-sm font-medium text-white">{user?.Name || user?.Username || 'Guest'}</p>
-              <p className="text-xs text-white">{user?.Admin === 'Yes' ? 'Admin' : 'User'}</p>
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={() => {
-            handleLogout();
-            onClose?.();
-            setIsOpen(false);
-          }}
-          className="flex items-center py-2.5 px-4 rounded-lg text-white opacity-80 hover:bg-white hover:bg-opacity-10 hover:opacity-100 cursor-pointer transition-colors w-full"
-        >
-          <LogOutIcon className={isCollapsed ? 'mx-auto' : 'mr-3'} size={20} />
-          {!isCollapsed && <span>Logout</span>}
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <>
-      {/* Mobile menu button - visible only on mobile */}
-      <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-indigo-900 text-white rounded-md shadow-md"
-        onClick={() => setIsOpen(true)}
-      >
-        <Menu size={24} />
-      </button>
-
-      {/* Tablet menu button - visible on tablet (hidden on mobile and desktop) */}
-      <button
-        className="hidden md:block lg:hidden fixed top-4 left-4 z-50 p-2 bg-indigo-900 text-white rounded-md shadow-md"
-        onClick={() => setIsOpen(true)}
-      >
-        <Menu size={24} />
-      </button>
-
-      {/* Desktop Sidebar - full width on desktop */}
-      <div className="hidden lg:block fixed left-0 top-0 h-full">
-        <SidebarContent />
-      </div>
-
-      {/* Tablet Sidebar - collapsible */}
-      <div className={`hidden md:block lg:hidden fixed inset-0 z-40 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50"
-          onClick={() => setIsOpen(false)}
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+          onClick={onClose}
         />
-        <div className={`fixed left-0 top-0 h-full z-50 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
-          <SidebarContent onClose={() => setIsOpen(false)} />
-        </div>
-      </div>
+      )}
 
-      {/* Mobile Sidebar - collapsible */}
-      <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50"
-          onClick={() => setIsOpen(false)}
-        />
-        <div className={`fixed left-0 top-0 h-full z-50 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
-          <SidebarContent onClose={() => setIsOpen(false)} />
-        </div>
-      </div>
+      {/* Sidebar */}
+      <aside className={`fixed top-0 left-0 h-full w-56 bg-[#0f172a] text-slate-300 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full">
+          {/* Logo Section */}
+          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Users size={20} className="text-white" />
+              </div>
+              <span className="text-xl font-bold text-white tracking-tight">HR Connect</span>
+            </div>
+            <button onClick={onClose} className="lg:hidden p-2 hover:bg-slate-800 rounded-lg">
+              <X size={20} />
+            </button>
+          </div>
 
-      {/* Add padding to main content when sidebar is open on desktop */}
-      <div className="lg:pl-64"></div>
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-hide">
+            {menuItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onClose}
+                className={({ isActive }) => `
+                  flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group
+                  ${isActive 
+                    ? 'bg-blue-600/10 text-blue-400 border-l-4 border-blue-600' 
+                    : 'hover:bg-slate-800 hover:text-white border-l-4 border-transparent'}
+                `}
+              >
+                <item.icon size={20} className="group-hover:scale-110 transition-transform" />
+                <span className="font-medium">{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* User Profile Section */}
+          <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+            <div className="flex items-center gap-3 px-2 mb-4">
+              <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border-2 border-slate-600">
+                <User size={20} className="text-slate-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{user?.Name || 'Guest User'}</p>
+                <p className="text-xs text-slate-400 truncate">{user?.Admin === 'Yes' ? 'Administrator' : 'Employee'}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+            >
+              <LogOutIcon size={20} />
+              <span className="font-medium">Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </aside>
     </>
   );
 };

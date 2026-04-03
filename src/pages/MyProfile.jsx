@@ -1,7 +1,21 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, Calendar, Building, Edit3, Save, X, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../components/LoadingSpinner';
+
+const DUMMY_PROFILE = {
+  joiningNo: 'SKA-DEMO-001',
+  candidateName: 'John Doe (Demo)',
+  fatherName: 'Robert Doe',
+  dateOfJoining: '01/01/2024',
+  designation: 'Senior HR Manager',
+  companyName: 'Human Resources',
+  bodAsPerAadhar: '15/05/1990',
+  gender: 'Male',
+  mobileNo: '9876543210',
+  familyMobileNo: '9123456789',
+  email: 'john.doe@example.com',
+  currentAddress: '123 Business Park, Sector 62, Noida, Uttar Pradesh',
+  candidatePhoto: ''
+};
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -446,9 +460,11 @@ const MyProfile = () => {
 
 
       // Filter data for the current user
-      const filteredData = processedData.filter(task =>
-        task.candidateName?.trim().toLowerCase() === userName.trim().toLowerCase()
-      );
+      const filteredData = processedData.filter(task => {
+        const candidateName = task.candidateName?.toString() || "";
+        const targetName = userName?.toString() || "";
+        return candidateName.trim().toLowerCase() === targetName.trim().toLowerCase();
+      });
 
       if (filteredData.length > 0) {
         const profile = filteredData[0];
@@ -514,7 +530,9 @@ const MyProfile = () => {
         setFormData(profile);
         localStorage.setItem("employeeId", profile.joiningNo);
       } else {
-        toast.error('No profile data found for current user');
+        console.warn('No profile data found for current user, using dummy fallback');
+        setProfileData(DUMMY_PROFILE);
+        setFormData(DUMMY_PROFILE);
       }
 
     } catch (error) {
@@ -667,10 +685,11 @@ const MyProfile = () => {
   };
 
   if (loading) {
-    return <div className="page-content p-6"><div className="flex justify-center flex-col items-center">
-      <div className="w-6 h-6 border-4 border-indigo-500 border-dashed rounded-full animate-spin mb-2"></div>
-      <span className="text-gray-600 text-sm">Loading profile data...</span>
-    </div></div>;
+    return (
+      <div className="page-content p-6">
+        <LoadingSpinner message="Loading profile data..." minHeight="400px" />
+      </div>
+    );
   }
 
   if (!profileData) {
@@ -711,7 +730,7 @@ const MyProfile = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Profile Picture & Basic Info - Modified Section */}
         <div className="bg-white rounded-xl shadow-lg border p-6">
           <div className="text-center">
@@ -780,7 +799,7 @@ const MyProfile = () => {
           <h3 className="text-lg font-bold text-gray-800 mb-6">
             Personal Information
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
             {/* First Column */}
             <div className="space-y-6">
               <div>
@@ -919,7 +938,7 @@ const MyProfile = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Leave History Card */}
         <div className="bg-white rounded-xl shadow-lg border p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-6">

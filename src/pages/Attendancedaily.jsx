@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
 import { Search, Download } from 'lucide-react';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Attendancedaily = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,7 +82,6 @@ const Attendancedaily = () => {
 
   // Filter data based on search term and date range
   const filteredData = attendanceData.filter(item => {
-    // Text search filter - now includes additional columns
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.empIdCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,25 +90,30 @@ const Attendancedaily = () => {
       item.day.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.companyName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Date range filter
     let matchesDateRange = true;
     if (startDate || endDate) {
       const itemDate = new Date(item.date);
-
       if (startDate) {
         const start = new Date(startDate);
         if (itemDate < start) matchesDateRange = false;
       }
-
       if (endDate && matchesDateRange) {
         const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); // Include the entire end date
+        end.setHours(23, 59, 59, 999);
         if (itemDate > end) matchesDateRange = false;
       }
     }
-
     return matchesSearch && matchesDateRange;
   });
+
+  const getStatusColor = (status) => {
+    const s = status.toLowerCase();
+    if (s.includes('present') || s === 'p') return 'emerald';
+    if (s.includes('absent') || s === 'a') return 'rose';
+    if (s.includes('late')) return 'amber';
+    if (s.includes('holiday')) return 'indigo';
+    return 'gray';
+  };
 
   // Download CSV function
   const downloadCSV = () => {
@@ -151,152 +155,165 @@ const Attendancedaily = () => {
   };
 
   return (
-    <div className="space-y-6 ml-50 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Attendance Records Daily</h1>
+    <div className="space-y-3 md:pb-4 mb-4 font-outfit">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Daily Attendance</h1>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Real-time punch and shift logs</p>
+        </div>
+        <button
+          onClick={downloadCSV}
+          disabled={filteredData.length === 0}
+          className={`inline-flex items-center px-4 py-2 rounded-md text-[11px] font-bold uppercase tracking-widest shadow-sm transition-all ${
+            filteredData.length === 0
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+              : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
+          }`}
+        >
+          <Download size={14} className="mr-1.5" />
+          Export CSV
+        </button>
       </div>
 
-      {/* Filters Section */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search Bar */}
-          <div className="flex-1">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-            </div>
-          </div>
-
-          {/* Date Range Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-              <input
-                type="date"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-              <input
-                type="date"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Download Button */}
-          <div className="flex items-end">
-            <button
-              onClick={downloadCSV}
-              disabled={filteredData.length === 0}
-              className={`flex items-center px-4 py-2 rounded-lg ${filteredData.length === 0
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
-            >
-              <Download size={18} className="mr-2" />
-              Download
-            </button>
+      {/* Filter Bar */}
+      <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search name, ID, company..."
+            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-xs sm:text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-gray-50/50 border border-gray-200 rounded-md px-2 py-1 gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="bg-transparent text-[10px] font-bold text-gray-600 focus:outline-none uppercase"
+            />
+            <span className="text-[9px] font-bold text-gray-300 tracking-tighter">TO</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="bg-transparent text-[10px] font-bold text-gray-600 focus:outline-none uppercase"
+            />
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emp ID Code</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Holiday (Yes/No)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Working Day (Yes/No)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N-Holiday</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">In Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Out Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Working Hours</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Late Minutes</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Early Out</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overtime Hours</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Punch Miss</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {tableLoading ? (
-                  <tr>
-                    <td colSpan="20" className="px-6 py-12 text-center">
-                      <div className="flex justify-center flex-col items-center">
-                        <div className="w-6 h-6 border-4 border-indigo-500 border-dashed rounded-full animate-spin mb-2"></div>
-                        <span className="text-gray-600 text-sm">Loading attendance data...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan="20" className="px-6 py-12 text-center">
-                      <p className="text-red-500">Error: {error}</p>
-                      <button
-                        onClick={fetchAttendanceData}
-                        className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                      >
-                        Retry
-                      </button>
-                    </td>
-                  </tr>
-                ) : filteredData.length > 0 ? (
-                  filteredData.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.year}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.monthName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.day}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.companyName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.empIdCode}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.designation}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.holiday}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.workingDay}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.nHoliday}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.status}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.inTime}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.outTime}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.workingHours}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.lateMinutes}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.earlyOut}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.overtimeHours}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.punchMiss}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.remarks}</td>
+      {/* Content Area */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
+          <h2 className="text-[10px] font-bold text-gray-800 uppercase tracking-widest">Attendance Daily Log</h2>
+          <span className="text-[9px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded border border-gray-100 uppercase">
+            {filteredData.length} records found
+          </span>
+        </div>
+
+        <div className="overflow-x-auto no-scrollbar">
+          {tableLoading ? (
+            <LoadingSpinner message="Hydrating attendance data..." minHeight="300px" />
+          ) : error ? (
+             <div className="px-6 py-12 text-center">
+              <p className="text-rose-500 text-xs font-bold mb-2 uppercase">Sync Error: {error}</p>
+              <button onClick={fetchAttendanceData} className="px-4 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded text-[10px] font-bold uppercase tracking-widest shadow-sm">Restart Sync</button>
+            </div>
+          ) : (
+            <>
+              {/* Desktop View */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-100">
+                  <thead className="bg-gray-50/50 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Punch IN/OUT</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Hrs</th>
+                      <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Remark</th>
                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 bg-white">
+                    {filteredData.length > 0 ? (
+                      filteredData.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50/50 transition-colors group">
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            <p className="text-xs font-bold text-gray-800 uppercase leading-none">{item.date}</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase mt-1 tracking-tighter">{item.day}</p>
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            <p className="text-xs font-bold text-gray-800 mb-0.5">{item.name}</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">{item.empIdCode} | {item.designation}</p>
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                             <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-medium text-gray-600">{item.inTime || '--:--'}</span>
+                              <span className="text-gray-300">→</span>
+                              <span className="text-[11px] font-medium text-gray-600">{item.outTime || '--:--'}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{item.workingHours}H</span>
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-center">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-sm bg-${getStatusColor(item.status)}-100 text-${getStatusColor(item.status)}-700`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            <p className="text-[10px] text-gray-400 font-medium max-w-[150px] truncate italic">{item.remarks || '-'}</p>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="6" className="px-4 py-12 text-center text-gray-400 text-[10px] font-bold uppercase">No attendance logs match filters.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile View */}
+              <div className="md:hidden divide-y divide-gray-100">
+                {filteredData.length > 0 ? (
+                  filteredData.map((item, index) => (
+                    <div key={index} className="p-3 space-y-2">
+                       <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">{item.date}</p>
+                          <p className="text-xs font-bold text-gray-800 leading-tight">{item.name}</p>
+                          <p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5 tracking-tighter">{item.empIdCode} | {item.designation}</p>
+                        </div>
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-${getStatusColor(item.status)}-100 text-${getStatusColor(item.status)}-700`}>
+                          {item.status}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 bg-gray-50/50 p-2 rounded border border-gray-100">
+                        <div className="space-y-0.5">
+                          <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Entry/Exit</p>
+                          <p className="text-[10px] font-bold text-gray-700">{item.inTime || '-'} → {item.outTime || '-'}</p>
+                        </div>
+                        <div className="text-right space-y-0.5 border-l border-gray-200 pl-2">
+                          <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Work Duration</p>
+                          <p className="text-[10px] font-bold text-indigo-600">{item.workingHours} HRS</p>
+                        </div>
+                      </div>
+
+                      {item.remarks && <p className="text-[9px] text-gray-400 italic px-1">{item.remarks}</p>}
+                    </div>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan="20" className="px-6 py-12 text-center">
-                      <p className="text-gray-500">No attendance records found.</p>
-                    </td>
-                  </tr>
+                  <div className="p-8 text-center text-gray-400 text-[10px] font-bold uppercase">Target records not found.</div>
                 )}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

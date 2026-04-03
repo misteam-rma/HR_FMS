@@ -31,12 +31,13 @@ import LeaveApproval from './pages/LeaveApproval';
 // import { BalanceScoreCard } from './pages/BalanceScoreCard/BalanceScoreCard';
 // import { UserBalanceScoreCard } from './pages/BalanceScoreCard/UserBalanceScoreCard';
 // import GatePass from './pages/GatePass';
-// import GatePassRequest from './pages/GatePassRequest';
+import AttendanceForm from './pages/AttendanceForm';
+import AdminAttendance from './pages/AdminAttendance';
 
 function App() {
   return (
     <div className="gradient-bg min-h-screen">
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Toaster position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -58,13 +59,14 @@ function App() {
             <Route path="employee" element={<Employee />} />
             <Route path="my-profile" element={<MyProfile />} />
             <Route path="my-attendance" element={<MyAttendance />} />
+            <Route path="attendance-form" element={<AttendanceForm />} />
             <Route path="leave-request" element={<LeaveRequest />} />
             {/* <Route path="my-salary" element={<MySalary />} /> */}
             <Route path="company-calendar" element={<CompanyCalendar />} />
              <Route path="leave-management" element={<LeaveManagement />} />
              {/* <Route path="gate-pass" element={<GatePass />} /> */}
              {/* <Route path="gate-pass-request" element={<GatePassRequest />} /> */}
-              {/* <Route path="attendance" element={<Attendance />} /> */}
+              <Route path="admin-attendance" element={<AdminAttendance />} />
               {/* <Route path="attendancedaily" element={<Attendancedaily />} /> */}
               {/* <Route path="report" element={<Report />} /> */}
               {/* <Route path="payroll" element={<Payroll />} /> */}

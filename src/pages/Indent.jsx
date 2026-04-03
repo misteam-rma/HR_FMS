@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { HistoryIcon, Plus, X } from 'lucide-react';
+import { HistoryIcon, Plus, X, Search, Filter, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import useDataStore from '../store/dataStore';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
 
 const Indent = () => {
@@ -35,13 +36,27 @@ const Indent = () => {
     message: "",
   });
 
+  // Expanded Cards State
+  const [expandedCards, setExpandedCards] = useState({});
+  const toggleCard = (id) => {
+    setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
+
+  // Filter States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
+
   const handleShareClick = (item) => {
     setSelectedRow(item);
 
     // Create a formatted message with row details
     const formattedMessage = `
-Indent Details:
-
 Indent Number: ${item.indentNumber}
 Post: ${item.post}
 Gender: ${item.gender}
@@ -75,6 +90,7 @@ This indent requires your attention.
 
     try {
       setSubmitting(true);
+      const timestamp = getCurrentTimestamp();
 
       const response = await fetch('https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec', {
         method: 'POST',
@@ -156,7 +172,7 @@ This indent requires your attention.
       setTableLoading(true);
       const result = await fetchIndentDataFromRow7();
       if (result.success) {
-        console.log('Data from row 7:', result.data);
+
       } else {
         console.error('Error:', result.error);
       }
@@ -223,7 +239,7 @@ This indent requires your attention.
         const socialSiteTypesIndex = headers.indexOf('Social Site Types')
         // Add other column indices as needed
 
-        // Process the data
+        // Process and sort the data (latest first - REC-99 before REC-01)
         const processedData = dataFromRow7.map(row => ({
           timestamp: row[timestampIndex],
           indentNumber: row[indentNumberIndex],
@@ -236,8 +252,12 @@ This indent requires your attention.
           socialSite: row[socialSiteIndex],
           experience: row[experienceIndex],
           socialSiteTypes: row[socialSiteTypesIndex],
-          // Add other fields as needed
-        }));
+        })).sort((a, b) => {
+          const numA = parseInt(a.indentNumber?.match(/\d+/)?.[0] || 0);
+          const numB = parseInt(b.indentNumber?.match(/\d+/)?.[0] || 0);
+          return numB - numA; // Sort descending
+        });
+
         setIndentData(processedData)
         return {
           success: true,
@@ -505,46 +525,201 @@ This indent requires your attention.
     setShowModal(false);
   };
 
+  // Helper date matching
+  const getFormattedDateToMatch = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return String(dateStr);
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const getFormattedDateToMatchFromSheet = (itemDate) => {
+    if (!itemDate) return '';
+    if (typeof itemDate === 'string' && /^\d{2}\/\d{2}\/\d{4}/.test(itemDate)) {
+      return itemDate.split(' ')[0];
+    }
+    const d = new Date(itemDate);
+    if (isNaN(d.getTime())) return String(itemDate);
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Filter Logic
+  const filteredData = indentData.filter(item => {
+    // Overall search
+    const matchesSearch = searchTerm ?
+      Object.values(item).some(val =>
+        String(val || '').toLowerCase().includes(searchTerm.toLowerCase())
+      ) : true;
+
+    // Department check
+    const matchesDepartment = filterDepartment ? item.department === filterDepartment : true;
+
+    // Date check
+    let matchesDate = true;
+    if (filterDate) {
+      const formattedFilterDate = getFormattedDateToMatch(filterDate);
+      const formattedItemDate = getFormattedDateToMatchFromSheet(item.completionDate);
+
+      // We can also check if timestamp contains the date as fallback
+      const formattedTimestamp = getFormattedDateToMatchFromSheet(item.timestamp);
+      matchesDate = formattedItemDate === formattedFilterDate || formattedTimestamp === formattedFilterDate;
+    }
+
+    return matchesSearch && matchesDepartment && matchesDate;
+  });
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Get unique departments from the complete loaded indent data
+  const uniqueDepartmentsFromData = Array.from(
+    new Set(
+      indentData
+        .map(item => item.department)
+        .filter(dept => dept && typeof dept === 'string' && dept.trim() !== '')
+    )
+  ).sort();
+
+  const renderPaginationNav = () => (
+    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px w-full justify-center sm:w-auto" aria-label="Pagination">
+      <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="relative inline-flex items-center px-1.5 py-1 sm:px-2 sm:py-1 rounded-l-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+        <span className="sr-only">Previous</span>
+        <svg className="h-4 w-4 sm:h-4 sm:w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+      </button>
+
+      {[...Array(totalPages)].map((_, i) => {
+        const pageNum = i + 1;
+        if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
+          return (
+            <button key={pageNum} onClick={() => paginate(pageNum)} className={`relative inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1 border text-xs sm:text-sm font-medium ${currentPage === pageNum ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
+              {pageNum}
+            </button>
+          );
+        } else if ((pageNum === currentPage - 2 && pageNum > 1) || (pageNum === currentPage + 2 && pageNum < totalPages)) {
+          return <span key={pageNum} className="relative inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-700">...</span>;
+        }
+        return null;
+      })}
+
+      <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className="relative inline-flex items-center px-1.5 py-1 sm:px-2 sm:py-1 rounded-r-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+        <span className="sr-only">Next</span>
+        <svg className="h-4 w-4 sm:h-4 sm:w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+      </button>
+    </nav>
+  );
+
+
   return (
-    <div className="space-y-6 page-content p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Indent</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
+    <div className="space-y-3 md:pb-4 mb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 md:gap-4">
+        <h1 className="hidden md:block text-2xl font-bold text-gray-800">Indent</h1>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+          {/* Mobile Top Row: Search + Create Button */}
+          <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
+            {/* Overall Search */}
+            <div className="relative flex-1 sm:w-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search all fields..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-xs sm:text-sm"
+              />
+            </div>
+
+            {/* Create Button */}
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200 shrink-0"
+              disabled={loading}
+              title="Create Indent"
+            >
+              {loading ? (
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <>
+                  <Plus size={16} className="sm:mr-2" />
+                  <span className="hidden sm:inline">Create Indent</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Mobile Bottom Row: Filters */}
+          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+            {/* Department Filter (Custom Dropdown) */}
+            <div className="relative">
+              <div
+                onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)}
+                className="flex items-center gap-2 h-9 px-3 border border-gray-300 rounded bg-white text-xs text-gray-700 cursor-pointer hover:border-indigo-500 transition shadow-sm relative overflow-hidden"
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Loading...
-            </>
-          ) : (
-            <>
-              <Plus size={16} className="mr-2" />
-              Create Indent
-            </>
-          )}
-        </button>
+                <Filter size={12} className="text-gray-400 shrink-0" />
+                <span className="truncate">{filterDepartment || "All Departments"}</span>
+                <ChevronDown size={14} className={`ml-auto text-gray-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+
+              {isDeptDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsDeptDropdownOpen(false)}></div>
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-xl z-50 overflow-hidden py-1 max-h-48 overflow-y-auto">
+                    <div
+                      onClick={() => { setFilterDepartment(''); setIsDeptDropdownOpen(false); setCurrentPage(1); }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-gray-50 flex items-center justify-between ${!filterDepartment ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-600'}`}
+                    >
+                      All Departments
+                      {!filterDepartment && <div className="w-1 h-1 bg-indigo-500 rounded-full" />}
+                    </div>
+                    {uniqueDepartmentsFromData.map((dept, index) => (
+                      <div
+                        key={index}
+                        onClick={() => { setFilterDepartment(dept); setIsDeptDropdownOpen(false); setCurrentPage(1); }}
+                        className={`px-3 py-2 text-xs cursor-pointer hover:bg-gray-50 flex items-center justify-between ${filterDepartment === dept ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-600'}`}
+                      >
+                        {dept}
+                        {filterDepartment === dept && <div className="w-1 h-1 bg-indigo-500 rounded-full" />}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Date Filter */}
+            <div className="relative">
+              <div className="flex items-center gap-2 h-9 px-3 border border-gray-300 rounded bg-white text-xs text-gray-700 relative overflow-hidden">
+                <Calendar size={12} className="text-gray-400 shrink-0" />
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => {
+                    setFilterDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-transparent focus:outline-none text-[11px] font-medium"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Modal */}
@@ -894,163 +1069,189 @@ This indent requires your attention.
           </div>
         </div>
       )}
-
-      {/* Info Card */}
-      <div className="bg-white rounded-xl shadow-lg border p-6">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">
-          Indent Management
-        </h2>
-      </div>
-
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          {/* Add max-height and overflow-y to the table container */}
-          <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
-            <table className="min-w-full divide-y divide-gray-200 shadow">
-              <thead className="bg-gray-50 sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Indent Number
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Post
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Gender
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Department
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prefer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Experience
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    No. of Post
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Completion Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Social Site
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Social Site Types
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {tableLoading ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
-                      <div className="flex justify-center flex-col items-center">
-                        <div className="w-6 h-6 border-4 border-blue-500 border-dashed rounded-full animate-spin mb-2"></div>
-                        <span className="text-gray-600 text-sm">
-                          Loading indent data...
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : indentData.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
-                      <p className="text-gray-500">No indent data found.</p>
-                    </td>
-                  </tr>
-                ) : (
-                  indentData.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {item.indentNumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-2">
-
-                          <button
-                            onClick={() => handleShareClick(item)}
-                            className="bg-green-600 px-4 py-2 rounded-md text-white hover:bg-green-700 transition-colors min-w-[80px]"
-                          >
-                            Share
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.post}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.gender}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.department}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.prefer}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.experience}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.noOfPost}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="text-sm text-gray-900 break-words">
-                          {item.completionDate
-                            ? (() => {
-                              const date = new Date(item.completionDate);
-                              if (!date || isNaN(date.getTime()))
-                                return "Invalid date";
-                              const day = date
-                                .getDate()
-                                .toString()
-                                .padStart(2, "0");
-                              const month = (date.getMonth() + 1)
-                                .toString()
-                                .padStart(2, "0");
-                              const year = date.getFullYear();
-                              const hours = date
-                                .getHours()
-                                .toString()
-                                .padStart(2, "0");
-                              const minutes = date
-                                .getMinutes()
-                                .toString()
-                                .padStart(2, "0");
-                              const seconds = date
-                                .getSeconds()
-                                .toString()
-                                .padStart(2, "0");
-                              return (
-                                <div>
-                                  <div className="font-medium break-words">
-                                    {`${day}/${month}/${year}`}
-                                  </div>
-                                  <div className="text-xs text-gray-500 break-words">
-                                    {`${hours}:${minutes}:${seconds}`}
-                                  </div>
-                                </div>
-                              );
-                            })()
-                            : "—"}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.socialSite}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.socialSiteTypes}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      {/* Unified Main Content Container (Synced with Indent.jsx) */}
+      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[500px] flex flex-col">
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <LoadingSpinner message="Retrieving indent data..." minHeight="400px" />
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto scrollbar-hide">
+              {/* Increased height and vertical scroll */}
+              <div className="max-h-[calc(105vh-280px)] min-h-[530px] overflow-y-auto scrollbar-hide">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Indent Number
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Action
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Post
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Gender
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Department
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Prefer
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Experience
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        No. of Post
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Completion Date
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Social Site
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[300px]">
+                        Social Site Types
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {tableLoading ? (
+                      <tr>
+                        <td colSpan="11" className="px-6 border-b-none py-1">
+                          <LoadingSpinner message="Loading..." minHeight="450px" />
+                        </td>
+                      </tr>
+                    ) : filteredData.length === 0 ? (
+                      <tr>
+                        <td colSpan="11" className="px-6 py-24 text-center">
+                          <div className="flex flex-col items-center justify-center">
+                            <p className="text-gray-500 text-lg">No indent data found for the given filters.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      currentItems.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                            {item.indentNumber}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => handleShareClick(item)}
+                                className="bg-green-600 px-3 py-1 rounded-md text-white text-xs hover:bg-green-700 transition-colors"
+                              >
+                                Share
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 min-w-[150px] text-center">
+                            {item.post}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                            {item.gender}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                            {item.department}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                            {item.prefer}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 break-words max-w-[200px] text-center">
+                            {item.experience}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                            {item.noOfPost}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                            <div className="text-sm text-gray-900 break-words text-center">
+                              {item.completionDate
+                                ? (() => {
+                                  // Robust date parsing for display
+                                  if (typeof item.completionDate === 'string' && /^\d{2}\/\d{2}\/\d{4}/.test(item.completionDate)) {
+                                    const parts = item.completionDate.split(' ');
+                                    return (
+                                      <div className="flex flex-col items-center">
+                                        <div className="font-medium">{parts[0]}</div>
+                                        <div className="text-xs text-gray-500">{parts[1] || ''}</div>
+                                      </div>
+                                    );
+                                  }
+
+                                  const date = new Date(item.completionDate);
+                                  if (!date || isNaN(date.getTime()))
+                                    return <span className="text-gray-400">{String(item.completionDate)}</span>;
+
+                                  const day = date.getDate().toString().padStart(2, "0");
+                                  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+                                  const year = date.getFullYear();
+                                  const hours = date.getHours().toString().padStart(2, "0");
+                                  const minutes = date.getMinutes().toString().padStart(2, "0");
+                                  const seconds = date.getSeconds().toString().padStart(2, "0");
+
+                                  return (
+                                    <div className="flex flex-col items-center">
+                                      <div className="font-medium">
+                                        {`${day}/${month}/${year}`}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {`${hours}:${minutes}:${seconds}`}
+                                      </div>
+                                    </div>
+                                  );
+                                })()
+                                : "—"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                            {item.socialSite}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 break-words min-w-[300px] max-w-[400px] text-center">
+                            {item.socialSiteTypes}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="hidden md:flex px-4 py-1 bg-white border-t border-gray-200 items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-4 flex-wrap">
+                <p className="text-sm text-gray-700 font-medium">
+                  Showing <span className="font-bold">{filteredData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold">{Math.min(indexOfLastItem, filteredData.length)}</span> of <span className="font-bold">{filteredData.length}</span> records
+                </p>
+                <div className="flex items-center gap-2 border-l border-gray-300 pl-4 h-5">
+                  <label className="text-xs text-gray-500 font-medium whitespace-nowrap">Rows per page:</label>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="text-[11px] border border-gray-200 rounded-md px-2 py-0.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white font-medium text-gray-700 outline-none transition shadow-sm"
+                  >
+                    {[15, 30, 50, 100].map(val => (
+                      <option key={val} value={val}>{val}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Unified Pagination block for Desktop */}
+              <div className="flex items-center w-auto justify-end gap-4">
+                {renderPaginationNav()}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

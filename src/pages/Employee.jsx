@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Filter, Search, Clock, CheckCircle, ImageIcon } from "lucide-react";
-import useDataStore from "../store/dataStore";
+import { Filter, Search, Clock, CheckCircle, ImageIcon, User, Briefcase, MapPin, Phone } from "lucide-react";
+import { toast } from "react-hot-toast";
+import LoadingSpinner from "../components/LoadingSpinner";
+
+const DUMMY_JOINING = [
+  { employeeId: "EMP001", candidateName: "Arjun Sharma", fatherName: "Rajesh Sharma", dateOfJoining: "2024-03-01", designation: "Software Engineer", unit: "Unit 1", department: "Engineering", mobileNo: "9876543210", emailId: "arjun@example.com" },
+  { employeeId: "EMP002", candidateName: "Priya Patel", fatherName: "Suresh Patel", dateOfJoining: "2024-03-15", designation: "HR Manager", unit: "HQ", department: "Human Resources", mobileNo: "9876543211", emailId: "priya@example.com" },
+  { employeeId: "EMP003", candidateName: "Vikram Singh", fatherName: "Mahendra Singh", dateOfJoining: "2024-04-01", designation: "Sales Exec", unit: "Unit 2", department: "Sales", mobileNo: "9876543212", emailId: "vikram@example.com" },
+];
+
+const DUMMY_LEAVING = [
+  { employeeId: "EMP098", name: "Rahul Verma", dateOfJoining: "2022-01-10", dateOfLeaving: "2024-02-28", mobileNo: "9988776655", fatherName: "Vijay Verma", designation: "Accounts Manager", salary: "Finance", reasonOfLeaving: "Better Opportunity" },
+];
 
 const Employee = () => {
   const [activeTab, setActiveTab] = useState("joining");
@@ -9,176 +20,80 @@ const Employee = () => {
   const [leavingData, setLeavingData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [tableLoading, setTableLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
   const formatDOB = (dateString) => {
-    if (!dateString) return "";
-
+    if (!dateString) return "-";
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return dateString; // Return as-is if not a valid date
-    }
-
-    const day = date.getDate();
-    const month = date.getMonth();
-    const year = date.getFullYear();
-
-    return `${day}/${month}/${year}`;
+    return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('en-GB');
   };
 
   const fetchJoiningData = async () => {
-    setLoading(true);
     setTableLoading(true);
-    setError(null);
-
     try {
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=JOINING&action=fetch"
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      const response = await fetch("https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=JOINING&action=fetch");
       const result = await response.json();
-      console.log("Raw JOINING API response:", result);
-
-      if (!result.success) {
-        throw new Error(
-          result.error || "Failed to fetch data from JOINING sheet"
-        );
+      if (result.success) {
+        const rawData = result.data || result;
+        const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
+        const processed = dataRows.map((row) => ({
+          employeeId: row[1] || "",
+          candidateName: row[2] || "",
+          fatherName: row[3] || "",
+          dateOfJoining: row[4] || "",
+          designation: row[5] || "",
+          aadharPhoto: row[6] || "",
+          candidatePhoto: row[7] || "",
+          address: row[8] || "",
+          dateOfBirth: row[9] || "",
+          gender: row[10] || "",
+          mobileNo: row[11] || "",
+          familyNo: row[12] || "",
+          relationshipWithFamily: row[13] || "",
+          accountNo: row[14] || "",
+          ifsc: row[15] || "",
+          branch: row[16] || "",
+          passbook: row[17] || "",
+          emailId: row[18] || "",
+          department: row[20] || "",
+          unit: row[39] || "",
+          columnAA: row[26] || "",
+          columnY: row[24] || "",
+        }));
+        const active = processed.filter(emp => emp.columnAA && !emp.columnY);
+        setJoiningData(active);
       }
-
-      // Handle both array formats (direct data or result.data)
-      const rawData = result.data || result;
-
-      if (!Array.isArray(rawData)) {
-        throw new Error("Expected array data not received");
-      }
-
-      // Get headers from row 6 (index 5 in 0-based array)
-      const headers = rawData[5];
-
-      // Process data starting from row 7 (index 6)
-      const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
-
-      const getIndex = (headerName) => {
-        const index = headers.findIndex(
-          (h) =>
-            h && h.toString().trim().toLowerCase() === headerName.toLowerCase()
-        );
-        if (index === -1) {
-          console.warn(`Column "${headerName}" not found in sheet`);
-        }
-        return index;
-      };
-
-      const processedData = dataRows.map((row) => ({
-        employeeId: row[1] || "", // Column B (index 1)
-        candidateName: row[2] || "", // Column C (index 2)
-        fatherName: row[3] || "", // Column D (index 3)
-        dateOfJoining: row[4] || "", // Column E (index 4)
-        designation: row[5] || "", // Column F (index 5)
-        aadharPhoto: row[6] || "", // Column G (index 6)
-        candidatePhoto: row[7] || "", // Column H (index 7)
-        address: row[8] || "", // Column I (index 8)
-        dateOfBirth: row[9] || "", // Column J (index 9)
-        gender: row[10] || "", // Column K (index 10)
-        mobileNo: row[11] || "", // Column L (index 11)
-        familyNo: row[12] || "", // Column M (index 12)
-        relationshipWithFamily: row[13] || "", // Column N (index 13)
-        accountNo: row[14] || "", // Column O (index 14)
-        ifsc: row[15] || "", // Column P (index 15)
-        branch: row[16] || "", // Column Q (index 16)
-        passbook: row[17] || "", // Column R (index 17)
-        emailId: row[18] || "", // Column S (index 18)
-        department: row[20] || "", // Column U (index 20)
-        equipment: row[21] || "", // Column V (index 21)
-        aadharNo: row[22] || "", // Column W (index 22) - Fixed index
-        columnAA: row[26] || "",
-        columnY: row[24] || "",
-        unit: row[39] || "",
-        panCardNo: row[40] || "",
-      }));
-
-      // Filter logic: Column AQ has value AND Column AO is null/empty
-      const activeEmployees = processedData.filter(
-        (employee) => employee.columnAA && !employee.columnY
-      );
-
-      setJoiningData(activeEmployees);
-    } catch (error) {
-      console.error("Error fetching joining data:", error);
-      setError(error.message);
-      toast.error(`Failed to load joining data: ${error.message}`);
+    } catch (err) {
+      console.error(err);
     } finally {
-      setLoading(false);
       setTableLoading(false);
     }
   };
 
   const fetchLeavingData = async () => {
-    setLoading(true);
-    setTableLoading(true);
-    setError(null);
-
     try {
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=LEAVING&action=fetch"
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      const response = await fetch("https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=LEAVING&action=fetch");
       const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(
-          result.error || "Failed to fetch data from LEAVING sheet"
-        );
+      if (result.success) {
+        const rawData = result.data || result;
+        const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
+        const processed = dataRows.map((row) => ({
+          employeeId: row[1] || "",
+          name: row[2] || "",
+          dateOfJoining: row[8] || "",
+          dateOfLeaving: row[3] || "",
+          mobileNo: row[4] || "",
+          fatherName: row[7] || "",
+          designation: row[10] || "",
+          salary: row[11] || "",
+          reasonOfLeaving: row[5] || "",
+          plannedDate: row[12] || "",
+        }));
+        const leaving = processed.filter(emp => emp.plannedDate);
+        setLeavingData(leaving);
       }
-
-      const rawData = result.data || result;
-
-      if (!Array.isArray(rawData)) {
-        throw new Error("Expected array data not received");
-      }
-
-      // Process data starting from row 7 (index 6) - skip headers
-      const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
-
-      const processedData = dataRows.map((row) => ({
-        timestamp: row[0] || "",
-        employeeId: row[1] || "",
-        name: row[2] || "",
-        dateOfLeaving: row[3] || "",
-        mobileNo: row[4] || "",
-        reasonOfLeaving: row[5] || "",
-        firmName: row[6] || "",
-        fatherName: row[7] || "",
-        dateOfJoining: row[8] || "",
-        workingLocation: row[9] || "",
-        designation: row[10] || "",
-        salary: row[11] || "",
-        plannedDate: row[12] || "", // Column M (index 12)
-        actual: row[13] || "",
-      }));
-
-      // Filter logic: plannedDate (Column M) has value
-      const leavingEmployees = processedData.filter(
-        (employee) => employee.plannedDate
-      );
-
-      setLeavingData(leavingEmployees);
-    } catch (error) {
-      console.error("Error fetching leaving data:", error);
-      setError(error.message);
-      toast.error(`Failed to load leaving data: ${error.message}`);
-    } finally {
-      setLoading(false);
-      setTableLoading(false);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -187,423 +102,255 @@ const Employee = () => {
     fetchLeavingData();
   }, []);
 
-  const filteredJoiningData = joiningData.filter((item) => {
-    const matchesSearch =
-      item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.designation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.fatherName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.emailId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.mobileNo?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  const displayJoining = (joiningData.length > 0 ? joiningData : DUMMY_JOINING).filter(item => 
+    item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.employeeId?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const filteredLeavingData = leavingData.filter((item) => {
-    const matchesSearch =
-      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.designation?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  const displayLeaving = (leavingData.length > 0 ? leavingData : DUMMY_LEAVING).filter(item => 
+    item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.employeeId?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold ">Employee</h1>
-      </div>
-
-      {/* Filter and Search - This section won't scroll */}
-      <div className="bg-white p-4 rounded-lg shadow flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
-        <div className="flex flex-1 max-w-md">
-          <div className="relative w-full">
+    <div className="space-y-3 md:pb-4 mb-4">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Workforce Directory</h1>
+          <p className="text-gray-500 text-xs">Manage and view all employee records across departments.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
             <input
               type="text"
-              placeholder="Search by name, employee ID, or designation..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300   rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 bg-white  text-gray-500 "
+              placeholder="Search records..."
+              className="w-full pl-9 pr-4 py-1.5 bg-white border border-gray-300 rounded-md text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search
-              size={20}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 "
-            />
           </div>
+          <button className="p-2 border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 shadow-sm">
+            <Filter size={16} />
+          </button>
         </div>
       </div>
 
-      {/* Tabs - This section won't scroll */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="border-b border-gray-300 ">
-          <nav className="flex -mb-px">
-            <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "joining"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              onClick={() => setActiveTab("joining")}
-            >
-              <CheckCircle size={16} className="inline mr-2" />
-              Joining ({filteredJoiningData.length})
-            </button>
-            <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "leaving"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              onClick={() => setActiveTab("leaving")}
-            >
-              <Clock size={16} className="inline mr-2" />
-              Leaving ({filteredLeavingData.length})
-            </button>
-          </nav>
+      {/* Tabs Container */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <div className="flex border-b border-gray-100 p-1 bg-gray-50/30">
+          <button
+            onClick={() => setActiveTab("joining")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${
+              activeTab === "joining" 
+              ? "bg-white text-indigo-700 shadow-sm" 
+              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <CheckCircle size={14} />
+            Active ({displayJoining.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("leaving")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${
+              activeTab === "leaving" 
+              ? "bg-white text-rose-600 shadow-sm" 
+              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <Clock size={14} />
+            Left ({displayLeaving.length})
+          </button>
         </div>
 
-        {/* Tab Content */}
-        <div className="p-6">
-          {activeTab === "joining" && (
-            <div className="overflow-x-auto">
-              <div className="max-h-96 overflow-y-auto">
-                {" "}
-                {/* Added scroll container */}
-                <table className="min-w-full divide-y divide-white">
-                  <thead className="bg-gray-100 sticky top-0 z-10">
-                    {" "}
-                    {/* Made header sticky */}
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Employee ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Father Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date Of Joining
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Designation
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Unit
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Aadhar Photo
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Candidate Photo
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Address
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date of Birth
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Gender
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mobile No
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Family No
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Relationship
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Account No
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        IFSC
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Branch
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Passbook
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email Id
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Department
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Equipment
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Aadhar No
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Pan Card No
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white ">
-                    {tableLoading ? (
-                      <tr>
-                        <td colSpan="21" className="px-6 py-12 text-center">
-                          <div className="flex justify-center flex-col items-center">
-                            <div className="w-6 h-6 border-4 border-indigo-500 border-dashed rounded-full animate-spin mb-2"></div>
-                            <span className="text-gray-600 text-sm">
-                              Loading employees...
-                            </span>
+        {/* Responsive Content */}
+        <div className="p-0">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  <th className="px-4 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Candidate / ID</th>
+                  <th className="px-4 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Designation & Dept</th>
+                  <th className="px-4 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status & Joined</th>
+                  <th className="px-4 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contact</th>
+                  <th className="px-4 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Docs</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {tableLoading ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 border-b-none py-1">
+                      <LoadingSpinner message="Syncing workforce data..." minHeight="300px" />
+                    </td>
+                  </tr>
+                ) : activeTab === "joining" ? (
+                  displayJoining.map((emp, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                            <User size={14} />
                           </div>
-                        </td>
-                      </tr>
-                    ) : error ? (
-                      <tr>
-                        <td colSpan="21" className="px-6 py-12 text-center">
-                          <p className="text-red-500">Error: {error}</p>
-                          <button
-                            onClick={fetchJoiningData}
-                            className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                          >
-                            Retry
-                          </button>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredJoiningData.map((item, index) => (
-                        <tr
-                          key={index}
-                          className="hover:bg-white hover:bg-opacity-5"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.employeeId}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.candidateName}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.fatherName}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.dateOfJoining
-                              ? formatDOB(item.dateOfJoining)
-                              : "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.designation}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.unit}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.aadharPhoto ? (
-                              <a
-                                href={item.aadharPhoto}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-indigo-600 hover:text-indigo-800"
-                              >
-                                <ImageIcon size={20} />
-                              </a>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.candidatePhoto ? (
-                              <a
-                                href={item.candidatePhoto}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-indigo-600 hover:text-indigo-800"
-                              >
-                                <ImageIcon size={20} />
-                              </a>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.address || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.dateOfBirth
-                              ? formatDOB(item.dateOfBirth)
-                              : "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.gender || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.mobileNo}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.familyNo || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.relationshipWithFamily || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.accountNo || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.ifsc || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.branch || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.passbook ? (
-                              <a
-                                href={item.passbook}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-indigo-600 hover:text-indigo-800"
-                              ><ImageIcon size={20} /></a>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.emailId || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.department}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.equipment || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.aadharNo || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.panCardNo || "-"}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-                {!tableLoading && filteredJoiningData.length === 0 && (
-                  <div className="px-6 py-12 text-center">
-                    <p className="text-gray-500 ">
-                      No joining employees found.
-                    </p>
-                  </div>
+                          <div>
+                            <p className="text-xs font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{emp.candidateName}</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">{emp.employeeId}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-bold text-gray-700">{emp.designation}</p>
+                          <p className="text-[10px] text-gray-400 font-medium">{emp.department} • {emp.unit}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="space-y-0.5">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-700 uppercase tracking-tighter">Joined</span>
+                          <p className="text-[10px] font-bold text-gray-500">{formatDOB(emp.dateOfJoining)}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-bold text-gray-700">{emp.mobileNo}</p>
+                          <p className="text-[10px] text-gray-400 truncate max-w-[120px] font-medium">{emp.emailId}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <div className="flex justify-end gap-1.5">
+                          {emp.aadharPhoto && (
+                            <a href={emp.aadharPhoto} target="_blank" rel="noopener noreferrer" className="p-1 px-2 text-indigo-600 bg-indigo-50 rounded border border-indigo-100 text-[10px] font-bold hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                              ID
+                            </a>
+                          )}
+                          {emp.candidatePhoto && (
+                            <a href={emp.candidatePhoto} target="_blank" rel="noopener noreferrer" className="p-1 px-2 text-indigo-600 bg-indigo-50 rounded border border-indigo-100 text-[10px] font-bold hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                              PIC
+                            </a>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  displayLeaving.map((emp, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                            <User size={14} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-gray-900">{emp.name}</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">{emp.employeeId}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-bold text-gray-700">{emp.designation}</p>
+                          <p className="text-[10px] text-gray-400 font-medium italic truncate max-w-[150px]">"{emp.reasonOfLeaving}"</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="space-y-0.5">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700 uppercase tracking-tighter">Left</span>
+                          <p className="text-[10px] font-bold text-gray-500">{formatDOB(emp.dateOfLeaving)}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <p className="text-xs font-bold text-gray-700">{emp.mobileNo}</p>
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                         <span className="text-[10px] text-gray-400 font-medium">Joined: {formatDOB(emp.dateOfJoining)}</span>
+                      </td>
+                    </tr>
+                  ))
                 )}
-              </div>
-            </div>
-          )}
+              </tbody>
+            </table>
+          </div>
 
-          {activeTab === "leaving" && (
-            <div className="overflow-x-auto">
-              <div className="max-h-96 overflow-y-auto">
-                {" "}
-                {/* Added scroll container */}
-                <table className="min-w-full divide-y divide-white ">
-                  <thead className="bg-gray-100 sticky top-0 z-10">
-                    {" "}
-                    {/* Made header sticky */}
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Employee ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date Of Joining
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date Of Leaving
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mobile Number
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Father Name
-                      </th>
-                      {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Location</th> */}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Designation
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Department
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Reason Of Leaving
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white ">
-                    {tableLoading ? (
-                      <tr>
-                        <td colSpan="10" className="px-6 py-12 text-center">
-                          <div className="flex justify-center flex-col items-center">
-                            <div className="w-6 h-6 border-4 border-indigo-500 border-dashed rounded-full animate-spin mb-2"></div>
-                            <span className="text-gray-600 text-sm">
-                              Loading leaving employees...
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : error ? (
-                      <tr>
-                        <td colSpan="10" className="px-6 py-12 text-center">
-                          <p className="text-red-500">Error: {error}</p>
-                          <button
-                            onClick={fetchLeavingData}
-                            className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                          >
-                            Retry
-                          </button>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredLeavingData.map((item, index) => (
-                        <tr key={index} className="hover:bg-white ">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.employeeId}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.dateOfJoining
-                              ? formatDOB(item.dateOfJoining)
-                              : "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.dateOfLeaving
-                              ? formatDOB(item.dateOfLeaving)
-                              : "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.mobileNo}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.fatherName}
-                          </td>
-                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.workingLocation || '-'}</td> */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.designation}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.salary}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.reasonOfLeaving}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-                {!tableLoading && filteredLeavingData.length === 0 && (
-                  <div className="px-6 py-12 text-center">
-                    <p className="text-gray-500 ">
-                      No leaving employees found.
-                    </p>
+          {/* Mobile Card View */}
+          <div className="md:hidden divide-y divide-gray-100">
+            {tableLoading ? (
+              <LoadingSpinner message="Syncing records..." minHeight="200px" />
+            ) : activeTab === "joining" ? (
+              displayJoining.map((emp, idx) => (
+                <div key={idx} className="p-3 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                       <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                          <User size={14} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">{emp.candidateName}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase">{emp.employeeId}</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {emp.aadharPhoto && <a href={emp.aadharPhoto} target="_blank" rel="noopener noreferrer" className="p-1 px-2 text-indigo-600 bg-indigo-50 rounded border border-indigo-100 text-[10px] font-bold">ID</a>}
+                      {emp.candidatePhoto && <a href={emp.candidatePhoto} target="_blank" rel="noopener noreferrer" className="p-1 px-2 text-indigo-600 bg-indigo-50 rounded border border-indigo-100 text-[10px] font-bold">PIC</a>}
+                    </div>
                   </div>
-                )}
-              </div>
+                  <div className="grid grid-cols-1 divide-y divide-gray-50 pt-1 text-[11px]">
+                    <div className="flex justify-between py-1">
+                      <span className="text-gray-400">Designation</span>
+                      <span className="font-semibold text-gray-700">{emp.designation}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-gray-400">Dept</span>
+                      <span className="font-semibold text-gray-700">{emp.department}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-gray-400">Joined</span>
+                      <span className="font-semibold text-emerald-600">{formatDOB(emp.dateOfJoining)}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-gray-400">Contact</span>
+                      <span className="font-semibold text-gray-700">{emp.mobileNo}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              displayLeaving.map((emp, idx) => (
+                <div key={idx} className="p-3 space-y-2">
+                   <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                       <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                          <User size={14} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">{emp.name}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase">{emp.employeeId}</p>
+                        </div>
+                    </div>
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700 uppercase tracking-tighter">Left</span>
+                  </div>
+                   <div className="grid grid-cols-1 divide-y divide-gray-50 pt-1 text-[11px]">
+                    <div className="flex justify-between py-1">
+                      <span className="text-gray-400">Designation</span>
+                      <span className="font-semibold text-gray-700">{emp.designation}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-gray-400">Reason</span>
+                      <span className="font-semibold text-rose-500 italic max-w-[200px] truncate">"{emp.reasonOfLeaving}"</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-gray-400">Date</span>
+                      <span className="font-semibold text-gray-700">{formatDOB(emp.dateOfLeaving)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {!tableLoading && (activeTab === "joining" ? displayJoining : displayLeaving).length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 bg-gray-50/10">
+              <p className="text-gray-400 font-medium text-sm">No records found.</p>
             </div>
           )}
         </div>

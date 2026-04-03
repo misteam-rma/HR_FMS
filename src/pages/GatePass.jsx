@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Check, Clock, Calendar, Plus, Image } from 'lucide-react';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const GatePass = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -650,247 +651,374 @@ const GatePass = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Gate Pass Management</h1>
+    <div className="space-y-3 md:pb-4 mb-4 font-outfit">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Gate Pass Management</h1>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Security and exit tracking</p>
+        </div>
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          className="inline-flex items-center px-4 py-2 rounded-md shadow-sm text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-indigo-100"
         >
-          <Plus size={16} className="mr-2" />
+          <Plus size={14} className="mr-1.5" />
           New Request
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
-        <div className="flex flex-1 max-w-md">
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="Search by name or employee ID..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-          </div>
+      {/* Search Bar */}
+      <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name or ID..."
+            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs sm:text-sm transition-all shadow-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200">
-          <nav className="flex -mb-px">
-            <button
-              onClick={() => setActiveTab('pending')}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'pending'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Pending ({pendingPasses.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('approved')}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'approved'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Approved ({approvedPasses.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('rejected')}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'rejected'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Rejected ({rejectedPasses.length})
-            </button>
+      {/* Content Card with Tabs */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="border-b border-gray-100 bg-gray-50/30">
+          <nav className="flex px-2 overflow-x-auto no-scrollbar">
+            {[
+              { id: "pending", label: "Pending", count: pendingPasses.length },
+              { id: "approved", label: "Approved", count: approvedPasses.length },
+              { id: "rejected", label: "Rejected", count: rejectedPasses.length }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                className={`py-3 px-4 font-bold text-[10px] uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
+                  ? "border-indigo-600 text-indigo-700"
+                  : "border-transparent text-gray-400 hover:text-gray-600"
+                  }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="p-0">
           <div className="overflow-x-auto">
             {tableLoading ? (
-              <div className="px-6 py-12 text-center">
-                <div className="flex justify-center flex-col items-center">
-                  <div className="w-6 h-6 border-4 border-indigo-500 border-dashed rounded-full animate-spin mb-2"></div>
-                  <span className="text-gray-600 text-sm">
-                    {loading ? 'Processing request...' : 'Loading gate pass data...'}
-                  </span>
-                </div>
-              </div>
+              <LoadingSpinner message="Syncing gate logs..." minHeight="300px" />
             ) : error ? (
               <div className="px-6 py-12 text-center">
-                <p className="text-red-500">Error: {error}</p>
-                <button
-                  onClick={fetchGatePassData}
-                  className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                >
-                  Retry
-                </button>
+                <p className="text-rose-500 text-xs font-bold mb-2">Error: {error}</p>
+                <button onClick={fetchGatePassData} className="px-3 py-1 bg-rose-50 text-rose-600 border border-rose-100 rounded text-xs font-bold shadow-sm">Retry Log Fetch</button>
               </div>
             ) : (
-              renderTable()
+              <>
+                {/* Desktop Tables */}
+                <div className="hidden md:block">
+                  {activeTab === "pending" && (
+                    <table className="min-w-full divide-y divide-gray-100">
+                      <thead className="bg-gray-50/50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select</th>
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Visit Details</th>
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Times</th>
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Docs</th>
+                          <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 bg-white">
+                        {filteredPendingPasses.length > 0 ? (
+                          filteredPendingPasses.map((item, index) => (
+                            <tr key={index} className="hover:bg-gray-50/50 transition-colors group">
+                               <td className="px-4 py-2 whitespace-nowrap">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedRow?.serialNo === item.serialNo}
+                                  onChange={() => handleCheckboxChange(item.serialNo, item)}
+                                  className="h-3.5 w-3.5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                />
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap">
+                                <p className="text-xs font-bold text-gray-900">{item.employeeName}</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase">{item.employeeId} | {item.department}</p>
+                              </td>
+                              <td className="px-4 py-2">
+                                <p className="text-[11px] font-bold text-gray-700 leading-tight">{item.visitPlace}</p>
+                                <p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5 tracking-tighter line-clamp-1">{item.visitReason}</p>
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap">
+                                <p className="text-[10px] text-rose-600 font-bold">Out: {item.departureTime}</p>
+                                <p className="text-[10px] text-emerald-600 font-bold">In: {item.arrivalTime}</p>
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap">
+                                {item.gatePassImage ? (
+                                  <a href={item.gatePassImage} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-indigo-50 rounded text-indigo-600 inline-block transition-colors">
+                                    <Image size={14} />
+                                  </a>
+                                ) : <span className="text-[10px] text-gray-300 font-bold">N/A</span>}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    onClick={() => handleGatePassAction('accept')}
+                                    disabled={!selectedRow || selectedRow.serialNo !== item.serialNo || loading}
+                                    className={`px-3 py-1 bg-emerald-50 text-emerald-700 rounded border border-emerald-100 text-[10px] font-bold uppercase tracking-tight hover:bg-emerald-600 hover:text-white transition-all shadow-sm ${(!selectedRow || selectedRow.serialNo !== item.serialNo || loading) ? "opacity-30" : ""}`}
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleGatePassAction('rejected')}
+                                    disabled={selectedRow?.serialNo !== item.serialNo || loading}
+                                    className={`px-3 py-1 bg-rose-50 text-rose-700 rounded border border-rose-100 text-[10px] font-bold uppercase tracking-tight hover:bg-rose-600 hover:text-white transition-all shadow-sm ${(selectedRow?.serialNo !== item.serialNo || loading) ? "opacity-30" : ""}`}
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr><td colSpan="6" className="px-4 py-12 text-center text-gray-400 text-xs">No pending requests found.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  )}
+
+                  {(activeTab === "approved" || activeTab === "rejected") && (
+                    <table className="min-w-full divide-y divide-gray-100">
+                      <thead className="bg-gray-50/50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Visit Details</th>
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Times</th>
+                          <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 bg-white">
+                        {(activeTab === "approved" ? filteredApprovedPasses : filteredRejectedPasses).map((item, index) => (
+                           <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              <p className="text-xs font-bold text-gray-900">{item.employeeName}</p>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase">{item.employeeId}</p>
+                            </td>
+                            <td className="px-4 py-2">
+                              <p className="text-[11px] font-bold text-gray-700 line-clamp-1">{item.visitPlace}</p>
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              <p className="text-[10px] text-gray-500">Out: {item.departureTime}</p>
+                              <p className="text-[10px] text-gray-500">In: {item.arrivalTime}</p>
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-center">
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest shadow-sm ${activeTab === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                {activeTab}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {/* Mobile View */}
+                <div className="md:hidden divide-y divide-gray-100">
+                  {(activeTab === "pending" ? filteredPendingPasses : (activeTab === "approved" ? filteredApprovedPasses : filteredRejectedPasses)).length > 0 ? (
+                    (activeTab === "pending" ? filteredPendingPasses : (activeTab === "approved" ? filteredApprovedPasses : filteredRejectedPasses)).map((item, index) => (
+                      <div key={index} className="p-3 space-y-2">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="font-bold text-indigo-600">#{item.employeeId}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${activeTab === 'pending' ? 'bg-amber-100 text-amber-700' : (activeTab === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}`}>
+                            {activeTab}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-gray-900 leading-tight">{item.employeeName}</div>
+                          <div className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{item.department}</div>
+                        </div>
+                        <div className="bg-gray-50 p-2 rounded border border-gray-100 space-y-1">
+                          <div className="flex justify-between items-start text-[11px]">
+                            <span className="text-gray-400 uppercase font-bold tracking-tighter">Place</span>
+                            <span className="font-bold text-gray-700 text-right max-w-[150px]">{item.visitPlace}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px]">
+                            <span className="text-rose-500 font-bold">Departure: {item.departureTime}</span>
+                            <span className="text-emerald-500 font-bold">Arrival: {item.arrivalTime}</span>
+                          </div>
+                        </div>
+                        {activeTab === "pending" && (
+                          <div className="flex gap-2 pt-1">
+                             <button
+                              onClick={() => {
+                                handleCheckboxChange(item.serialNo, item);
+                                setTimeout(() => handleGatePassAction('accept'), 50);
+                              }}
+                              className="flex-1 py-2 bg-emerald-50 text-emerald-700 rounded border border-emerald-100 text-xs font-bold uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleCheckboxChange(item.serialNo, item);
+                                setTimeout(() => handleGatePassAction('rejected'), 50);
+                              }}
+                              className="flex-1 py-2 bg-rose-50 text-rose-700 rounded border border-rose-100 text-xs font-bold uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-gray-400 text-xs font-medium">No results found.</div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Modal for new gate pass request */}
+      {/* Refined Modal for new gate pass request */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-hide">
-            <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
-              <h3 className="text-lg font-medium">New Gate Pass Request</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
-                <X size={20} />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200 shadow-2xl">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden border border-indigo-100 flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50">
+              <div>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">New Gate Pass</h3>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Security logging system</p>
+              </div>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded">
+                <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name of Employee (कर्मचारी का नाम) *</label>
-                <select
-                  name="employeeName"
-                  value={formData.employeeName}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                >
-                  <option value="">Select Employee</option>
-                  {employees.map(employee => (
-                    <option key={employee.id} value={employee.name}>{employee.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID (कर्मचारी आईडी) </label>
-                <input
-                  type="text"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 focus:outline-none"
-                  readOnly
-                />
-              </div>
-
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                <input
-                  type="text"
-                  name="department"
-                  value={formData.department}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 focus:outline-none"
-                  readOnly
-                />
-              </div> */}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Place to visit (जगह का दौरा) *</label>
-                <input
-                  type="text"
-                  name="visitPlace"
-                  value={formData.visitPlace}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Enter place to visit"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason to visit (यात्रा करने का कारण) *</label>
-                <textarea
-                  name="visitReason"
-                  value={formData.visitReason}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Please provide reason for visit..."
-                  required
-                />
-              </div>
-
+            
+            <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto scrollbar-hide">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Departure From Plant *</label>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 px-1">Employee Name*</label>
+                  <select
+                    name="employeeName"
+                    value={formData.employeeName}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                    required
+                  >
+                    <option value="">Select Employee</option>
+                    {employees.map(employee => (
+                      <option key={employee.id} value={employee.name}>{employee.name.toUpperCase()}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 px-1">Approval From (HOD)*</label>
+                  <select
+                    name="hodName"
+                    value={formData.hodName}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                    required
+                  >
+                    <option value="">Select HOD</option>
+                    {hodNames.map((name, index) => (
+                      <option key={index} value={name}>{name.toUpperCase()}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 px-1">Visit Destination*</label>
+                  <input
+                    type="text"
+                    name="visitPlace"
+                    value={formData.visitPlace}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    placeholder="Where are you going?"
+                    required
+                  />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 px-1">Departure Time*</label>
                   <input
                     type="datetime-local"
                     name="departureTime"
                     value={formData.departureTime}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Arrival at Plant (प्लांट में वापसी) </label>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 px-1">Expected Return*</label>
                   <input
                     type="datetime-local"
                     name="arrivalTime"
                     value={formData.arrivalTime}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    required
+                  />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 px-1">Reason for Visit*</label>
+                   <input
+                    type="text"
+                    name="visitReason"
+                    value={formData.visitReason}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    placeholder="Purpose of exit"
+                    required
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">HOD Name (एचओडी का नाम) *</label>
-                <select
-                  name="hodName"
-                  value={formData.hodName}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                >
-                  <option value="">Select HOD</option>
-                  {hodNames.map((hod, index) => (
-                    <option key={index} value={hod}>{hod}</option>
-                  ))}
-                </select>
+              <div className="pt-2 border-t border-gray-50">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2 px-1">Gate Pass Document (Optional)</label>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 relative">
+                    <input
+                      type="file"
+                      name="gatePassImage"
+                      onChange={handleInputChange}
+                      className="hidden"
+                      id="pass-image-upload"
+                      accept="image/*"
+                    />
+                    <label 
+                      htmlFor="pass-image-upload"
+                      className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-lg py-3 hover:border-indigo-300 hover:bg-indigo-50 transition-all cursor-pointer group"
+                    >
+                      <Image size={16} className="text-gray-400 group-hover:text-indigo-500" />
+                      <span className="text-[10px] font-bold text-gray-500 group-hover:text-indigo-600 uppercase tracking-widest">
+                        {formData.gatePassImage ? formData.gatePassImage.name : 'Selection Image'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number (व्हाट्सएप नंबर) *</label>
-                <input
-                  type="tel"
-                  name="whatsappNumber"
-                  value={formData.whatsappNumber}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Enter WhatsApp number"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gate Pass Image (गेटपास इमेज)</label>
-                <input
-                  type="file"
-                  name="gatePassImage"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="flex-1 py-2.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors uppercase tracking-widest"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`flex-[2] py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {submitting ? 'Submitting...' : 'Submit Request'}
+                  {submitting ? 'Processing Upload...' : 'Request Gate Pass'}
                 </button>
               </div>
             </form>

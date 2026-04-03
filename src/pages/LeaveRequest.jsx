@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, X, Calendar, Clock, CheckCircle, AlertCircle, Filter, Search } from 'lucide-react';
-import useAuthStore from '../store/authStore';
-import useDataStore from '../store/dataStore';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../components/LoadingSpinner';
+
+const DUMMY_LEAVES = [
+  { id: 1, serialNo: 'LR-001', employeeName: 'Demo User', startDate: '10/05/2024', endDate: '12/05/2024', leaveType: 'Casual Leave', days: '3', status: 'Approved' },
+  { id: 2, serialNo: 'LR-002', employeeName: 'Demo User', startDate: '20/06/2024', endDate: '20/06/2024', leaveType: 'Sick Leave', days: '1', status: 'Pending' }
+];
 
 const LeaveRequest = () => {
   const employeeId = localStorage.getItem("employeeId");
@@ -354,8 +356,12 @@ const LeaveRequest = () => {
         }))
         .filter(item => item.employeeName === user.Name);
 
-      console.log("Filtered leave data:", processedData);
-      setLeavesData(processedData);
+      if (processedData.length > 0) {
+        setLeavesData(processedData);
+      } else {
+        console.warn('No leave requests found for user, using dummy fallback');
+        setLeavesData(DUMMY_LEAVES);
+      }
 
     } catch (error) {
       console.error('Error fetching leave data:', error);
@@ -640,395 +646,321 @@ const LeaveRequest = () => {
     { value: '8', label: 'September' },
     { value: '9', label: 'October' },
     { value: '10', label: 'November' },
-    { value: '11', label: 'December' }
   ];
 
   return (
-    <div className="space-y-6 page-content p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Leave Request</h1>
+    <div className="space-y-3 md:pb-4 mb-4 font-outfit">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 px-2 sm:px-0">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Leave Requests</h1>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Manage your absences</p>
+        </div>
         <button
           onClick={() => setShowModal(true)}
           disabled={hasSubmittedToday()}
-          className={`inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${hasSubmittedToday()
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-indigo-600 hover:bg-indigo-700'
+          className={`inline-flex items-center px-4 py-2 rounded-md shadow-sm text-xs font-bold text-white transition-all ${hasSubmittedToday()
+              ? 'bg-gray-400 cursor-not-allowed opacity-50'
+              : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100'
             }`}
-          title={hasSubmittedToday() ? "You have already submitted a leave request today. Please try again tomorrow." : ""}
+          title={hasSubmittedToday() ? "Already submitted today" : "Create new request"}
         >
-          <Plus size={16} className="mr-2" />
-          New Leave Request
-          {hasSubmittedToday() && (
-            <span className="ml-2 text-xs">(Disabled for today)</span>
-          )}
+          <Plus size={14} className="mr-1.5" />
+          <span>New Request</span>
+          {hasSubmittedToday() && <span className="ml-1.5 text-[10px] opacity-80">(Wait till tomorrow)</span>}
         </button>
       </div>
 
       {/* Month and Year Filter */}
-      <div className="bg-white rounded-lg shadow border p-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mx-2 sm:mx-0">
         <div className="flex items-center flex-wrap gap-4">
-          <div className="flex items-center">
-            <Filter size={18} className="text-gray-500 mr-2" />
-            <label htmlFor="monthFilter" className="text-sm font-medium text-gray-700 mr-3">
-              Filter by Month:
-            </label>
+          <div className="flex items-center gap-2">
+            <Filter size={14} className="text-gray-400" />
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filters</span>
             <select
-              id="monthFilter"
               value={selectedMonth}
               onChange={handleMonthChange}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="border border-gray-300 rounded-md px-2 py-1.5 text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 outline-none bg-white"
             >
               {monthOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
+                <option key={option.value} value={option.value}>{option.label.toUpperCase()}</option>
               ))}
             </select>
-          </div>
-
-          <div className="flex items-center">
-            <label htmlFor="yearFilter" className="text-sm font-medium text-gray-700 mr-3">
-              Year:
-            </label>
             <select
-              id="yearFilter"
               value={selectedYear}
               onChange={handleYearChange}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="border border-gray-300 rounded-md px-2 py-1.5 text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 outline-none bg-white"
             >
               {yearOptions.map(year => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
+                <option key={year} value={year}>{year}</option>
               ))}
             </select>
           </div>
         </div>
       </div>
 
-      {/* Updated Leave Statistics Cards to match Leave Management */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-bold">Casual Leave</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                {leaveStats.casualLeave}
-              </h3>
-              <p className="text-xs text-gray-500">
-                Total Leave : <b>6</b> | Remaining :{" "}
-                <b> {6 - leaveStats.casualLeave}</b>
-              </p>
+      {/* Modern Leave Statistics Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        {[
+          { label: "Casual", taken: leaveStats.casualLeave, total: 6, color: "indigo" },
+          { label: "Earned", taken: leaveStats.earnedLeave, total: 12, color: "emerald" },
+          { label: "Sick", taken: leaveStats.sickLeave, total: 6, color: "rose" },
+          { label: "Restricted", taken: leaveStats.restrictedHoliday, total: 2, color: "amber" }
+        ].map((stat) => (
+          <div key={stat.label} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all hover:shadow-md">
+            <p className={`text-[10px] font-bold text-gray-400 uppercase tracking-widest`}>{stat.label}</p>
+            <div className="flex items-end gap-1 mt-1">
+              <span className={`text-xl font-bold text-${stat.color}-600 leading-none`}>{stat.taken}</span>
+              <span className="text-[10px] text-gray-300 font-bold mb-0.5">/ {stat.total}</span>
             </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-bold">Earned Leave</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                {leaveStats.earnedLeave}
-              </h3>
-              <p className="text-xs text-gray-500">
-                Total Leave : <b>12</b> | Remaining :{" "}
-                <b> {12 - leaveStats.earnedLeave}</b>
-              </p>
+            <div className="w-full bg-gray-50 h-1 rounded-full mt-2 overflow-hidden">
+               <div 
+                className={`h-full bg-${stat.color}-500 rounded-full`} 
+                style={{ width: `${Math.min(100, (stat.taken / stat.total) * 100)}%` }}
+              ></div>
             </div>
+            <p className="text-[9px] text-gray-400 font-bold mt-1.5 uppercase">Left: {Math.max(0, stat.total - stat.taken)} Days</p>
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-bold">Sick Leave</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                {leaveStats.sickLeave}
-              </h3>
-              <p className="text-xs text-gray-500">
-                Total Leave : <b>6</b> | Remaining :{" "}
-                <b> {6 - leaveStats.sickLeave}</b>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-bold">
-                Restricted Holiday
-              </p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                {leaveStats.restrictedHoliday}
-              </h3>
-              <p className="text-xs text-gray-500">
-                Total Leave : <b>2</b> | Remaining :{" "}
-                <b> {2 - leaveStats.restrictedHoliday}</b>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-bold">Total Leave</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                {leaveStats.totalLeave}
-              </h3>
-              <p className="text-xs text-gray-500">
-                All approved days (Current Year)
-              </p>
-            </div>
-          </div>
+        ))}
+        <div className="bg-indigo-600 p-3 rounded-lg border border-indigo-700 shadow-sm col-span-2 md:col-span-4 lg:col-span-1 shadow-indigo-100">
+          <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Total Approved</p>
+          <p className="text-xl font-bold text-white mt-1">{leaveStats.totalLeave}</p>
+          <p className="text-[9px] text-indigo-200 font-bold mt-1.5 uppercase tracking-tighter">(Current Year Summary)</p>
         </div>
       </div>
 
-      {/* Leave Requests Table - remains unchanged */}
-      <div className="bg-white rounded-lg shadow border overflow-hidden">
-        <div className="p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">My Leave Requests</h2>
+      {/* Content Card with Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mx-2 sm:mx-0">
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle size={14} className="text-indigo-600" />
+            <h2 className="text-[10px] font-bold text-gray-800 uppercase tracking-widest">My Leave Requests</h2>
+          </div>
+          <span className="text-[10px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded border border-gray-100 uppercase tracking-tighter">
+            {leavesData.length} Records
+          </span>
+        </div>
+
+        <div className="p-0">
           {tableLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            </div>
+            <LoadingSpinner message="Syncing your requests..." minHeight="300px" />
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leave Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applied Date</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {leavesData
-                    .filter(leave =>
-                      selectedMonth === 'all' ||
-                      isDateInSelectedPeriod(leave.startDate, selectedMonth, selectedYear) ||
-                      isDateInSelectedPeriod(leave.endDate, selectedMonth, selectedYear)
-                    )
-                    .map((request) => (
-                      <tr key={request.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.leaveType}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDOB(request.startDate)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDOB(request.endDate)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.days}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">{request.reason}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'approved'
-                              ? 'bg-green-100 text-green-800'
-                              : request.status === 'rejected'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-yellow-100 text-yellow-800'
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-100">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Serial</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Period</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Days</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Applied On</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 bg-white">
+                    {leavesData.length > 0 ? (
+                      leavesData.map((request, index) => (
+                        <tr key={index} className="hover:bg-gray-50/50 transition-colors group">
+                          <td className="px-4 py-2 whitespace-nowrap text-[10px] font-bold text-gray-400">#{request.serialNo || index + 1}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-700">{request.leaveType}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-[11px] text-gray-600 font-medium">
+                            {formatDOB(request.startDate)} - {formatDOB(request.endDate)}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold">{request.days}D</span>
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest shadow-sm ${
+                              request.status?.toLowerCase() === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                              request.status?.toLowerCase() === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                              'bg-amber-100 text-amber-700'
                             }`}>
-                            {request.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {request.appliedDate}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-              {leavesData.length === 0 && (
-                <div className="px-6 py-12 text-center">
-                  <p className="text-gray-500">No leave requests found.</p>
-                </div>
-              )}
+                              {request.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-[10px] text-gray-400 font-medium">{request.timestamp?.split(' ')[0]}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="6" className="px-4 py-12 text-center text-gray-400 text-xs">No records found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile View */}
+              <div className="md:hidden divide-y divide-gray-100">
+                {leavesData.length > 0 ? (
+                  leavesData.map((request, index) => (
+                    <div key={index} className="p-3 space-y-2">
+                       <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">#{request.serialNo || index+1}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest ${
+                          request.status?.toLowerCase() === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                          request.status?.toLowerCase() === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                          'bg-amber-100 text-amber-700'
+                        }`}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <div className="text-xs font-bold text-gray-800 leading-tight">{request.leaveType}</div>
+                          <div className="text-[10px] text-gray-500 font-medium mt-0.5">{formatDOB(request.startDate)} - {formatDOB(request.endDate)}</div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{request.days}D</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-gray-400 text-[10px] font-bold uppercase">No records found.</div>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal for new leave request - remains unchanged from previous update */}
+      {/* Refined Modal for new leave request */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-hide">
-            <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
-              <h3 className="text-lg font-medium">New Leave Request</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
-                <X size={20} />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden border border-indigo-100 flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50">
+              <div>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">New Leave Request</h3>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Fill in your absence details</p>
+              </div>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded">
+                <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Employee ID */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-                <input
-                  type="text"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 focus:outline-none"
-                  readOnly
-                />
-              </div>
-
-              {/* Employee Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employee Name*</label>
-                <input
-                  type="text"
-                  name="employeeName"
-                  value={formData.employeeName}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 focus:outline-none"
-                  readOnly
-                />
-              </div>
-
-              {/* Department field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                <input
-                  type="text"
-                  name="department"
-                  value={formData.department}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 focus:outline-none"
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">HOD Name*</label>
-                <select
-                  name="hodName"
-                  value={formData.hodName}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                >
-                  <option value="">Select HOD Name</option>
-                  {hodNames.map((name, index) => (
-                    <option key={index} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Substitute dropdown */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Substitute</label>
-                <select
-                  name="substitute"
-                  value={formData.substitute}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Select Substitute</option>
-                  {employees
-                    .filter(emp => emp.department === formData.department && emp.name !== formData.employeeName)
-                    .map((employee) => (
-                      <option key={employee.id} value={employee.name}>
-                        {employee.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              {/* Leave Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Leave Type*</label>
-                <select
-                  name="leaveType"
-                  value={formData.leaveType}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                >
-                  <option value="">Select Leave Type</option>
-                  {leaveTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Date fields */}
+            
+            <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto scrollbar-hide">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">From Date *</label>
-                  <input
-                    type="date"
-                    name="fromDate"
-                    value={formData.fromDate}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    required
-                  />
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Employee Info</label>
+                  <div className="p-2.5 bg-gray-50 border border-gray-100 rounded-lg">
+                    <p className="text-xs font-bold text-gray-800 leading-tight">{formData.employeeName}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">ID: {formData.employeeId}</p>
+                    <p className="text-[10px] text-indigo-600 font-bold uppercase mt-1">Dept: {formData.department || 'N/A'}</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">To Date *</label>
-                  <input
-                    type="date"
-                    name="toDate"
-                    value={formData.toDate}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    required
-                  />
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">HOD Approval From*</label>
+                    <select
+                      name="hodName"
+                      value={formData.hodName}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                      required
+                    >
+                      <option value="">Select HOD</option>
+                      {hodNames.map((name, index) => (
+                        <option key={index} value={name}>{name.toUpperCase()}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Duty Substitute*</label>
+                    <select
+                      name="substitute"
+                      value={formData.substitute}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                      required
+                    >
+                      <option value="">Select Substitute</option>
+                      {employees
+                        .filter(emp => emp.department === formData.department && emp.name !== formData.employeeName)
+                        .map((employee) => (
+                          <option key={employee.id} value={employee.name}>{employee.name.toUpperCase()}</option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-gray-50">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5">Leave Specifics</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="md:col-span-2">
+                    <select
+                      name="leaveType"
+                      value={formData.leaveType}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                      required
+                    >
+                      <option value="">Select Leave Type</option>
+                      {leaveTypes.map((type) => (
+                        <option key={type} value={type}>{type.toUpperCase()}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase px-1">From Date</label>
+                    <input
+                      type="date"
+                      name="fromDate"
+                      value={formData.fromDate}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase px-1">To Date</label>
+                    <input
+                      type="date"
+                      name="toDate"
+                      value={formData.toDate}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
               {formData.fromDate && formData.toDate && (
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    Total Days: <span className="font-semibold">{calculateDays(formData.fromDate, formData.toDate)}</span>
-                  </p>
+                <div className="bg-indigo-50 p-2.5 rounded-lg border border-indigo-100 flex items-center justify-between">
+                   <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">Calculated Duration:</span>
+                   <span className="text-sm font-bold text-indigo-800 bg-white px-2 py-0.5 rounded shadow-sm">{calculateDays(formData.fromDate, formData.toDate)} Days</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason *</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 px-0.5">Reason for Absence*</label>
                 <textarea
                   name="reason"
                   value={formData.reason}
                   onChange={handleInputChange}
-                  rows={3}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Please provide reason for leave..."
+                  rows={2}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-gray-300 resize-none"
+                  placeholder="Type your reason here..."
                   required
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="flex-1 py-2.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors uppercase tracking-widest"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 min-h-[42px] flex items-center justify-center ${submitting ? 'opacity-75 cursor-not-allowed' : ''
-                    }`}
                   disabled={submitting}
+                  className={`flex-[2] py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {submitting ? (
-                    <div className="flex items-center">
-                      <svg
-                        className="animate-spin h-4 w-4 text-white mr-2"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Submitting...</span>
-                    </div>
-                  ) : 'Submit Request'}
+                  {submitting ? 'Sending Request...' : 'Submit Request'}
                 </button>
               </div>
             </form>

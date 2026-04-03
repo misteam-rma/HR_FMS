@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
+import LoadingSpinner from '../components/LoadingSpinner';
 import logo from '../Assets/RMAALL.png';
 import officeBg from '../Assets/office-bg.png';
 
@@ -106,12 +107,12 @@ const Login = () => {
       {/* Left Section: Image and Content */}
       <div className="relative md:w-5/12 lg:w-4/12 hidden md:flex flex-col items-start justify-center p-12 overflow-hidden text-white">
         {/* Background Image with Overlay */}
-        <div 
+        <div
           className="absolute inset-0 z-0 bg-cover bg-center transition-transform hover:scale-105 duration-[20s]"
           style={{ backgroundImage: `url(${officeBg})` }}
         />
         <div className="absolute inset-0 z-10 bg-indigo-900/70 backdrop-blur-[1px]" />
-        
+
         {/* Branding Content */}
         <div className="relative z-20 space-y-6 animate-in fade-in slide-in-from-left duration-700">
           <h1 className="text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight">
@@ -121,7 +122,7 @@ const Login = () => {
             Streamline human resources and file management with our powerful, intuitive system designed for modern businesses.
           </p>
         </div>
-        
+
         {/* Subtle decorative line */}
         <div className="absolute bottom-12 left-12 w-24 h-1 bg-blue-500/50 rounded-full z-20" />
       </div>
@@ -129,13 +130,13 @@ const Login = () => {
       {/* Right Section: Login Form */}
       <div className="flex-1 bg-white flex flex-col items-center justify-center p-6 md:p-12 relative">
         <div className="w-full max-w-sm space-y-12">
-          
+
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img 
-              src={logo} 
-              alt="Rahul Mishra & Associates" 
-              className="h-20 w-auto object-contain transition-opacity duration-500" 
+            <img
+              src={logo}
+              alt="Rahul Mishra & Associates"
+              className="h-20 w-auto object-contain transition-opacity duration-500"
             />
           </div>
 
@@ -203,17 +204,13 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className={`w-full py-4 px-6 text-sm font-bold bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100/50 hover:bg-indigo-700 hover:shadow-indigo-200/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 transition-all active:scale-[0.98] ${
-                  submitting ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
+                className={`w-full py-4 px-6 text-sm font-bold bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100/50 hover:bg-indigo-700 hover:shadow-indigo-200/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 transition-all active:scale-[0.98] ${submitting ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
               >
                 {submitting ? (
-                  <div className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Authenticating...</span>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-5 h-5 border-2 border-white border-dashed rounded-full animate-spin"></div>
+                    <span className="font-bold uppercase tracking-widest text-xs">Authenticating...</span>
                   </div>
                 ) : 'Sign in Securely'}
               </button>
@@ -233,4 +230,4 @@ const Login = () => {
 };
 
 export default Login;
-
+
