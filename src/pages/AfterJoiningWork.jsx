@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, Search, Clock, CheckCircle, X } from 'lucide-react';
+import { Filter, Search, Clock, CheckCircle, X, Calendar, ChevronDown, Check, ChevronUp } from 'lucide-react';
 import useDataStore from '../store/dataStore';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -15,6 +15,13 @@ const AfterJoiningWork = () => {
   const [tableLoading, setTableLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [filterDepartment, setFilterDepartment] = useState("");
+  const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
+  const [filterDate, setFilterDate] = useState("");
+
+  // Pagination State (Synced with CallTracker.jsx)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
 
   const [formData, setFormData] = useState({
     checkSalarySlipResume: false,
@@ -88,7 +95,7 @@ const AfterJoiningWork = () => {
 
       const processedData = dataRows.map((row) => ({
         timestamp: row[getIndex("Timestamp")] || "",
-        joiningNo: row[getIndex("SKA-Joining ID")] || "",
+        joiningNo: row[getIndex("Joining ID")] || "",
         indentNo: row[getIndex("Indent No")] || "",
         enquiryNo: row[getIndex("Enquiry No")] || "",
         candidateName: row[getIndex("Name As Per Aadhar")] || "",
@@ -96,7 +103,7 @@ const AfterJoiningWork = () => {
         dateOfJoining: row[getIndex("Date Of Joining")] || "",
         joiningPlace: row[getIndex("Joining Place")] || "",
         designation: row[getIndex("Designation")] || "",
-        salary: row[getIndex("Department")] || "",
+        department: row[getIndex("Department")] || "",
         aadharPhoto: row[getIndex("Aadhar Frontside Photo")] || "",
         panCard: row[getIndex("Pan card")] || "",
         candidatePhoto: row[getIndex("Candidate's Photo")] || "",
@@ -293,22 +300,22 @@ const AfterJoiningWork = () => {
       const fullDataResult = await fullDataResponse.json();
       const allData = fullDataResult.data || fullDataResult;
 
-      // Look for header row with "SKA-Joining ID" instead of "Employee ID"
+      // Look for header row with "Joining ID" instead of "Employee ID"
       let headerRowIndex = allData.findIndex((row) =>
         row.some((cell) =>
-          cell?.toString().trim().toLowerCase().includes("ska-joining id")
+          cell?.toString().trim().toLowerCase().includes("joining id")
         )
       );
       if (headerRowIndex === -1) headerRowIndex = 5;
 
       const headers = allData[headerRowIndex].map((h) => h?.toString().trim());
 
-      // Use "SKA-Joining ID" instead of "Employee ID"
+      // Use "Joining ID" instead of "Employee ID"
       const employeeIdIndex = headers.findIndex(
-        (h) => h?.toLowerCase() === "ska-joining id"
+        (h) => h?.toLowerCase() === "joining id"
       );
       if (employeeIdIndex === -1) {
-        throw new Error("Could not find 'SKA-Joining ID' column");
+        throw new Error("Could not find 'Joining ID' column");
       }
 
       const rowIndex = allData.findIndex(
@@ -601,17 +608,17 @@ const AfterJoiningWork = () => {
       const allData = fullDataResult.data || fullDataResult;
       let headerRowIndex = allData.findIndex((row) =>
         row.some((cell) =>
-          cell?.toString().trim().toLowerCase().includes("ska-joining id")
+          cell?.toString().trim().toLowerCase().includes("joining id")
         )
       );
       if (headerRowIndex === -1) headerRowIndex = 5;
 
       const headers = allData[headerRowIndex].map((h) => h?.toString().trim());
       const employeeIdIndex = headers.findIndex(
-        (h) => h?.toLowerCase() === "ska-joining id"
+        (h) => h?.toLowerCase() === "joining id"
       );
       if (employeeIdIndex === -1) {
-        throw new Error("Could not find 'SKA-Joining ID' column");
+        throw new Error("Could not find 'Joining ID' column");
       }
 
       const rowIndex = allData.findIndex(
@@ -758,251 +765,448 @@ const AfterJoiningWork = () => {
     return `${day}/${month}/${year}`;
   };
 
-  const filteredPendingData = pendingData.filter((item) => {
-    const matchesSearch =
-      item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.joiningNo?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  const uniqueDepartments = Array.from(
+    new Set(
+      [...pendingData, ...historyData]
+        .map((item) => item.department)
+        .filter((dept) => dept && typeof dept === 'string' && dept.trim() !== "")
+    )
+  ).sort();
 
-  const filteredHistoryData = historyData.filter((item) => {
-    const matchesSearch =
-      item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.joiningNo?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  // Combined Filter logic synced with CallTracker.jsx
+  const filterRecords = (data) => {
+    return data.filter((item) => {
+      const matchesSearch =
+        item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.joiningNo?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesDepartment = !filterDepartment || item.department === filterDepartment;
+
+      let matchesDate = true;
+      if (filterDate) {
+        // Handle various date formats (e.g. 01/11/2021 or 2021-11-01)
+        const getFormattedDate = (dateStr) => {
+          if (!dateStr) return "";
+          if (dateStr.includes('/')) {
+            const [d, m, y] = dateStr.split(' ')[0].split('/');
+            return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+          }
+          try {
+            return new Date(dateStr).toISOString().split('T')[0];
+          } catch (e) {
+            return "";
+          }
+        };
+        const itemDate = getFormattedDate(item.dateOfJoining);
+        matchesDate = itemDate === filterDate;
+      }
+
+      return matchesSearch && matchesDepartment && matchesDate;
+    });
+  };
+
+  const filteredPendingData = filterRecords(pendingData);
+  const filteredHistoryData = filterRecords(historyData);
+
+  // Pagination Logic (Synced with CallTracker.jsx)
+  const activeData = activeTab === "pending" ? filteredPendingData : filteredHistoryData;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = activeData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(activeData.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const renderPaginationNav = () => (
+    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px w-full justify-center sm:w-auto" aria-label="Pagination">
+      <button
+        onClick={() => paginate(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="relative inline-flex items-center px-1.5 py-1 sm:px-2 sm:py-1 rounded-l-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="sr-only">Previous</span>
+        <svg className="h-4 w-4 sm:h-4 sm:w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {[...Array(totalPages)].map((_, i) => {
+        const pageNum = i + 1;
+        if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
+          return (
+            <button
+              key={pageNum}
+              onClick={() => paginate(pageNum)}
+              className={`relative inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1 border text-xs sm:text-sm font-medium ${currentPage === pageNum ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`}
+            >
+              {pageNum}
+            </button>
+          );
+        }
+        if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+          return <span key={pageNum} className="relative inline-flex items-center px-2 py-1 border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-700">...</span>;
+        }
+        return null;
+      })}
+
+      <button
+        onClick={() => paginate(currentPage + 1)}
+        disabled={currentPage === totalPages || totalPages === 0}
+        className="relative inline-flex items-center px-1.5 py-1 sm:px-2 sm:py-1 rounded-r-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="sr-only">Next</span>
+        <svg className="h-4 w-4 sm:h-4 sm:w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+    </nav>
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold  ">After Joining Work</h1>
-      </div>
+    <div className="space-y-4 md:space-y-6">
+      {/* Header & Segmented Control */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 md:gap-4 mb-2">
+        <div className="flex items-center gap-4">
+          <h1 className="hidden md:block text-2xl font-bold text-gray-800 tracking-tight">After Joining Work</h1>
 
-      <div className="bg-white  p-4 rounded-lg shadow flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
-        <div className="flex flex-1 max-w-md">
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="Search Something..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300   rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white   text-gray-500    "
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search
-              size={20}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2  text-gray-500  "
-            />
+          {/* Segmented Tab Control (Standardized Layout) */}
+          <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200 shadow-sm self-start sm:self-center">
+            <button
+              onClick={() => { setActiveTab("pending"); setCurrentPage(1); }}
+              className={`flex items-center gap-2 py-1.5 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${activeTab === "pending"
+                ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
+                }`}
+            >
+              <Clock size={13} />
+              <span>Pending ({filteredPendingData.length})</span>
+            </button>
+            <button
+              onClick={() => { setActiveTab("history"); setCurrentPage(1); }}
+              className={`flex items-center gap-2 py-1.5 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${activeTab === "history"
+                ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
+                }`}
+            >
+              <CheckCircle size={13} />
+              <span>History ({filteredHistoryData.length})</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+          {/* Search Section */}
+          <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search candidates/ID..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-xs sm:text-sm shadow-sm transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 w-full sm:w-auto">
+            {/* Department Filter */}
+            <div className="relative col-span-1 min-w-[140px]">
+              <div
+                onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)}
+                className="flex items-center gap-2 h-9 px-3 border border-gray-300 rounded bg-white text-xs text-gray-700 cursor-pointer hover:border-indigo-500 transition shadow-sm relative overflow-hidden"
+              >
+                <Filter size={12} className="text-gray-400 shrink-0" />
+                <span className="truncate font-medium">{filterDepartment || "All Dept"}</span>
+                <ChevronDown size={14} className={`ml-auto text-gray-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+
+              {isDeptDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsDeptDropdownOpen(false)}></div>
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden py-1 max-h-48 overflow-y-auto ring-1 ring-black ring-opacity-5">
+                    <div
+                      onClick={() => { setFilterDepartment(''); setIsDeptDropdownOpen(false); setCurrentPage(1); }}
+                      className={`px-3 py-2 text-xs cursor-pointer flex items-center justify-between transition-colors ${!filterDepartment ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      All Departments
+                      {!filterDepartment && <Check size={12} className="text-indigo-500" />}
+                    </div>
+                    {uniqueDepartments.map((dept, index) => (
+                      <div
+                        key={index}
+                        onClick={() => { setFilterDepartment(dept); setIsDeptDropdownOpen(false); setCurrentPage(1); }}
+                        className={`px-3 py-2 text-xs cursor-pointer flex items-center justify-between transition-colors ${filterDepartment === dept ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                      >
+                        {dept}
+                        {filterDepartment === dept && <Check size={12} className="text-indigo-500" />}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Date Filter */}
+            <div className="relative col-span-1">
+              <div className="flex items-center gap-2 h-9 px-3 border border-gray-300 rounded bg-white text-xs text-gray-700 relative overflow-hidden shadow-sm hover:border-indigo-500 transition">
+                <Calendar size={12} className="text-gray-400 shrink-0" />
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => {
+                    setFilterDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-transparent focus:outline-none text-[11px] font-medium cursor-pointer"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white  rounded-lg shadow overflow-hidden">
-        <div className="border-b border-gray-300  ">
-          <nav className="flex -mb-px">
-            <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "pending"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              onClick={() => setActiveTab("pending")}
-            >
-              <Clock size={16} className="inline mr-2" />
-              Pending ({filteredPendingData.length})
-            </button>
-            <button
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${activeTab === "history"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              onClick={() => setActiveTab("history")}
-            >
-              <CheckCircle size={16} className="inline mr-2" />
-              History ({filteredHistoryData.length})
-            </button>
-          </nav>
-        </div>
+      {/* Unified Main Content Container (Synced with CallTracker.jsx) */}
+      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[530px] flex flex-col">
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center p-12 text-center">
+            <LoadingSpinner message="Retrieving joining records..." minHeight="450px" />
+          </div>
+        ) : (
+          <>
+            {activeTab === "pending" && (
+              <div className="flex-1 flex flex-col">
+                {/* Desktop View (Table + Footer combined) */}
+                <div className="hidden md:flex flex-col bg-white overflow-hidden">
+                  <div className="max-h-[calc(105vh-280px)] min-h-[530px] overflow-y-auto scrollbar-hide">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Action</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Joining ID</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Name</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Father Name</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Joining Date</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Designation</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Department</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-100">
+                        {tableLoading ? (
+                          <tr>
+                            <td colSpan="7" className="px-4 py-1">
+                              <LoadingSpinner message="Scanning records..." minHeight="300px" />
+                            </td>
+                          </tr>
+                        ) : error ? (
+                          <tr>
+                            <td colSpan="7" className="px-4 py-12 text-center">
+                              <p className="text-rose-500 text-xs font-bold mb-2">Error: {error}</p>
+                              <button onClick={fetchJoiningData} className="px-3 py-1 bg-rose-50 text-rose-600 border border-rose-100 rounded text-xs font-bold shadow-sm">Retry</button>
+                            </td>
+                          </tr>
+                        ) : currentItems.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" className="px-4 py-24 text-center">
+                              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest leading-loose">No pending work found.</p>
+                            </td>
+                          </tr>
+                        ) : (
+                          currentItems.map((item, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
+                                <button
+                                  onClick={() => handleAfterJoiningClick(item)}
+                                  className="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs hover:bg-indigo-700 transition-all shadow-sm active:scale-95 font-bold"
+                                >
+                                  Process
+                                </button>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">{item.joiningNo}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 font-bold">{item.candidateName}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.fatherName}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-medium tracking-tight">{formatDOB(item.dateOfJoining)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.designation}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-[11px] font-bold text-indigo-600 uppercase tracking-tighter bg-indigo-50/30 rounded-full py-1 h-fit">{item.department}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
 
-        <div className="p-6">
-          {activeTab === "pending" && (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-white">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      SKA-Joining ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Father Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date Of Joining
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Designation
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Department
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white">
-                  {tableLoading ? (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-1">
-                        <LoadingSpinner message="Scanning pending tasks..." minHeight="300px" />
-                      </td>
-                    </tr>
-                  ) : error ? (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center">
-                        <p className="text-red-500">Error: {error}</p>
-                        <button
-                          onClick={fetchJoiningData}
-                          className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                  {/* Desktop Pagination Footer */}
+                  <div className="px-4 py-3 bg-white border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-6 flex-wrap">
+                      <p className="text-[13px] text-gray-600 font-medium tracking-wide">
+                        Showing <span className="font-bold text-gray-900">{activeData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, activeData.length)}</span> of <span className="font-bold text-gray-900">{activeData.length}</span> records
+                      </p>
+                      <div className="flex items-center gap-2 h-5 text-gray-400">
+                        <label className="text-[12px] font-bold uppercase tracking-widest whitespace-nowrap">Rows:</label>
+                        <select
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value));
+                            setCurrentPage(1);
+                          }}
+                          className="text-xs bg-transparent font-bold text-indigo-600 outline-none cursor-pointer"
                         >
-                          Retry
-                        </button>
-                      </td>
-                    </tr>
-                  ) : filteredPendingData.length > 0 ? (
-                    filteredPendingData.map((item, index) => (
-                      <tr key={index} className="hover:bg-white">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => handleAfterJoiningClick(item)}
-                            className="px-3 py-1 bg-indigo-700 text-white rounded-md text-sm"
-                          >
-                            Process
-                          </button>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.joiningNo}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.candidateName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.fatherName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDOB(item.dateOfJoining)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.designation}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.salary}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center">
-                        <p className="text-gray-500">
-                          No pending after joining work found.
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {activeTab === "history" && (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y   divide-white  ">
-                <thead className="bg-gray-100  ">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium  text-gray-500 uppercase tracking-wider">
-                      Employee ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium  text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium  text-gray-500 uppercase tracking-wider">
-                      Designation
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium  text-gray-500 uppercase tracking-wider">
-                      Date Of Joining
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium  text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y   divide-white  ">
-                  {tableLoading ? (
-                    <tr>
-                      <td colSpan="5" className="px-6 py-12 text-center">
-                        <div className="flex justify-center flex-col items-center">
-                          <div className="w-6 h-6 border-4 border-indigo-500 border-dashed rounded-full animate-spin mb-2"></div>
-                          <span className="text-gray-600 text-sm">
-                            Loading call history...
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : filteredHistoryData.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="px-6 py-12 text-center">
-                        <p className="text-gray-500">No call history found.</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredHistoryData.map((item, index) => (
-                      <tr key={index} className="hover:bg-white hover: ">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm  text-gray-500">
-                          {item.joiningNo}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm  text-gray-500">
-                          {item.candidateName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm  text-gray-500">
-                          {item.designation}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDOB(item.dateOfJoining)}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-sm  text-gray-500">
-                          <span className="px-2 py-1 text-xs rounded-full bg-green-500 font-semibold  text-white">
-                            Completed
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-              {filteredHistoryData.length === 0 && (
-                <div className="px-6 py-12 text-center">
-                  <p className=" text-gray-500  ">
-                    No after joining work history found.
-                  </p>
+                          {[15, 30, 50, 100].map((val) => (
+                            <option key={val} value={val}>{val}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center w-auto justify-end">
+                      {renderPaginationNav()}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden flex flex-col h-[calc(100vh-240px)]">
+                  <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
+                    {currentItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-24">
+                        <p className="text-gray-500 text-lg">No pending work found.</p>
+                      </div>
+                    ) : (
+                      currentItems.map((item, index) => (
+                        <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-2.5 space-y-1.5 hover:border-indigo-200 transition-colors">
+                          <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-indigo-600 text-sm">#{item.joiningNo}</span>
+                              <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-medium uppercase tracking-wider">{item.department}</span>
+                            </div>
+                            <button
+                              onClick={() => handleAfterJoiningClick(item)}
+                              className="px-3 py-1 bg-indigo-600 text-white rounded text-xs font-bold shadow-sm active:scale-95 transition-transform"
+                            >
+                              Process
+                            </button>
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-gray-800 tracking-tight">{item.candidateName}</div>
+                            <div className="text-xs text-gray-600 mt-0.5 tracking-tight font-medium">Designation: {item.designation}</div>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t border-gray-50 mt-1">
+                            <span>Joining: {formatDOB(item.dateOfJoining)}</span>
+                            <span className="truncate max-w-[120px]">{item.fatherName}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="border-t border-gray-300 bg-white px-2 py-2 flex justify-center sticky bottom-0">
+                    {renderPaginationNav()}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "history" && (
+              <div className="flex-1 flex flex-col">
+                {/* Desktop History View */}
+                <div className="hidden md:flex flex-col bg-white overflow-hidden">
+                  <div className="max-h-[calc(105vh-280px)] min-h-[530px] overflow-y-auto scrollbar-hide">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Joining ID</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Name</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Designation</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Joining Date</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-100">
+                        {currentItems.length === 0 ? (
+                          <tr>
+                            <td colSpan="5" className="px-4 py-24 text-center">
+                              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest leading-loose">No history found.</p>
+                            </td>
+                          </tr>
+                        ) : (
+                          currentItems.map((item, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">{item.joiningNo}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600 font-bold">{item.candidateName}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.designation}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-medium tracking-tight tracking-tight">{formatDOB(item.dateOfJoining)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
+                                <span className="bg-green-100 text-green-800 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest border border-green-200">
+                                  Completed
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Desktop Pagination Footer */}
+                  <div className="px-4 py-3 bg-white border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-6 flex-wrap">
+                      <p className="text-[13px] text-gray-600 font-medium tracking-wide">
+                        Showing <span className="font-bold text-gray-900">{activeData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, activeData.length)}</span> of <span className="font-bold text-gray-900">{activeData.length}</span> records
+                      </p>
+                    </div>
+                    <div className="flex items-center w-auto justify-end">
+                      {renderPaginationNav()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile History View */}
+                <div className="md:hidden flex flex-col h-[calc(100vh-240px)]">
+                  <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
+                    {currentItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-24">
+                        <p className="text-gray-500 text-lg">No history found.</p>
+                      </div>
+                    ) : (
+                      currentItems.map((item, index) => (
+                        <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-2.5 space-y-1.5">
+                          <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <span className="font-bold text-indigo-600 text-sm">#{item.joiningNo}</span>
+                            <span className="bg-green-100 text-green-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Completed</span>
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-gray-800 tracking-tight">{item.candidateName}</div>
+                            <div className="text-xs text-gray-600 mt-0.5 tracking-tight font-medium">{item.designation}</div>
+                          </div>
+                          <div className="text-[10px] text-gray-400 pt-1 border-t border-gray-50">
+                            Joining: {formatDOB(item.dateOfJoining)}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="border-t border-gray-300 bg-white px-2 py-2 flex justify-center sticky bottom-0">
+                    {renderPaginationNav()}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
+      {/* Checklist Modal - Premium Redesign */}
       {showModal && selectedItem && (
-        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl my-8">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-lg font-medium text-gray-500">
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4 backdrop-blur-sm bg-black/20 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-8 overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-800 tracking-tight">
                 After Joining Work Checklist
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-500"
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
               >
                 <X size={20} />
               </button>
@@ -1014,7 +1218,7 @@ const AfterJoiningWork = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Employee ID
+                    Joining ID
                   </label>
                   <input
                     type="text"

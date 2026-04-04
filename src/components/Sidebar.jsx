@@ -64,6 +64,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     checkLeaveManagementAccess();
   }, [user]);
 
+  const [attendanceOpen, setAttendanceOpen] = useState(true);
+
   const adminMenuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/indent', icon: FileText, label: 'Indent' },
@@ -74,7 +76,18 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/leaving', icon: UserX, label: 'Leaving' },
     { path: '/after-leaving-work', icon: UserMinus, label: 'After Leaving' },
     { path: '/employee', icon: Users, label: 'Employee' },
-    { path: '/admin-attendance', icon: AlarmClockCheck, label: 'Attendance Dashboard' },
+    { 
+      label: 'Attendance', 
+      icon: Clock, 
+      isNested: true,
+      isOpen: attendanceOpen,
+      onToggle: () => setAttendanceOpen(!attendanceOpen),
+      subItems: [
+        { path: '/attendance/monthly', label: 'Monthly' },
+        { path: '/attendance/daily', label: 'Daily' },
+      ]
+    },
+    // { path: '/admin-attendance', icon: AlarmClockCheck, label: 'Attendance Dashboard' },
     { path: '/leave-management', icon: BookPlus, label: 'Leave Mgmt' },
     { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: AlarmClockCheck, label: 'License' },
@@ -119,21 +132,58 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-hide">
-            {menuItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={({ isActive }) => `
-                  flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group
-                  ${isActive 
-                    ? 'bg-blue-600/10 text-blue-400 border-l-4 border-blue-600' 
-                    : 'hover:bg-slate-800 hover:text-white border-l-4 border-transparent'}
-                `}
-              >
-                <item.icon size={20} className="group-hover:scale-110 transition-transform" />
-                <span className="font-medium">{item.label}</span>
-              </NavLink>
+            {menuItems.map((item, idx) => (
+              <React.Fragment key={idx}>
+                {item.isNested ? (
+                  <div className="space-y-1">
+                    <button
+                      onClick={item.onToggle}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group hover:bg-slate-800 hover:text-white border-l-4 border-transparent`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon size={20} className="group-hover:scale-110 transition-transform" />
+                        <span className="font-medium">{item.label}</span>
+                      </div>
+                      {item.isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {item.isOpen && (
+                      <div className="pl-9 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                        {item.subItems.map((sub) => (
+                          <NavLink
+                            key={sub.path}
+                            to={sub.path}
+                            onClick={onClose}
+                            className={({ isActive }) => `
+                              flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200
+                              ${isActive 
+                                ? 'bg-blue-600/20 text-blue-400 font-bold' 
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'}
+                            `}
+                          >
+                            <span className="text-sm">{sub.label}</span>
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={onClose}
+                    className={({ isActive }) => `
+                      flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group
+                      ${isActive 
+                        ? 'bg-blue-600/10 text-blue-400 border-l-4 border-blue-600' 
+                        : 'hover:bg-slate-800 hover:text-white border-l-4 border-transparent'}
+                    `}
+                  >
+                    <item.icon size={20} className="group-hover:scale-110 transition-transform" />
+                    <span className="font-medium">{item.label}</span>
+                  </NavLink>
+                )}
+              </React.Fragment>
             ))}
           </nav>
 

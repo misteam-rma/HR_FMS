@@ -1,234 +1,253 @@
-import React, { useEffect, useState } from 'react';
-import { Search, Download, FileSpreadsheet, FileText, Calendar, User, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import toast from 'react-hot-toast';
-import LoadingSpinner from '../components/LoadingSpinner';
+import React, { useState, useEffect } from "react";
+import { 
+  Search, Users, Calendar, Filter, Clock, CheckCircle2, 
+  XCircle, AlertCircle, ChevronRight, FileText, ChevronDown, 
+  Check, History, Download, MapPin, List, BarChart3
+} from "lucide-react";
+import LoadingSpinner from "../components/LoadingSpinner";
+import toast from "react-hot-toast";
 
-const DUMMY_ATTENDANCE = [
-  { year: '2024', empId: 'EMP001', name: 'Arjun Sharma', designation: 'Software Engineer', month: 'March', punchDays: '22', absents: '0', totalWorking: '22', lateDays: '1', lateNotAllowed: '0', lateAllowed: '1', punchMiss: '0', holidays: '4' },
-  { year: '2024', empId: 'EMP002', name: 'Priya Patel', designation: 'HR Manager', month: 'March', punchDays: '21', absents: '1', totalWorking: '22', lateDays: '0', lateNotAllowed: '0', lateAllowed: '0', punchMiss: '0', holidays: '4' },
-];
+// Professional Dummy Monthly History (Jan - Apr 2024)
+const generateMonthlyData = () => {
+  const employees = [
+    { id: "EMP1001", name: "Rahul Sharma", dept: "Engineering", post: "Software Engineer" },
+    { id: "EMP1002", name: "Priya Patel", dept: "HR", post: "HR Manager" },
+    { id: "EMP1003", name: "Amit Kumar", dept: "Sales", post: "Sales Executive" },
+    { id: "EMP1004", name: "Sneha Gupta", dept: "Engineering", post: "Project Lead" },
+    { id: "EMP1005", name: "Vikram Singh", dept: "Finance", post: "Accountant" },
+  ];
+
+  const months = ["January", "February", "March", "April"];
+  const data = [];
+
+  months.forEach(month => {
+    employees.forEach(emp => {
+      const punchDays = Math.floor(Math.random() * 5) + 21;
+      const absents = Math.random() > 0.8 ? Math.floor(Math.random() * 3) + 1 : 0;
+      
+      data.push({
+        year: "2024",
+        month: month,
+        empId: emp.id,
+        name: emp.name,
+        designation: emp.post,
+        department: emp.dept,
+        punchDays: punchDays,
+        absents: absents,
+        totalWorking: 26,
+        lateDays: Math.floor(Math.random() * 4),
+        lateNotAllowed: Math.random() > 0.9 ? 1 : 0,
+        lateAllowed: 2,
+        punchMiss: Math.random() > 0.85 ? 1 : 0,
+        holidays: 4,
+        status: absents > 0 ? "Under Review" : "Verified",
+        lastPunch: "06:15 PM"
+      });
+    });
+  });
+  return data.reverse();
+};
+
+const DUMMY_MONTHLY_DATA = generateMonthlyData();
 
 const Attendance = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [activeTab, setActiveTab] = useState("all"); 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("");
+  const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
+  const [filterMonth, setFilterMonth] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
   const [tableLoading, setTableLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [downloading, setDownloading] = useState({});
 
-  const fetchAttendanceData = async () => {
+  useEffect(() => {
     setTableLoading(true);
-    try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbx2Gx6GwLbx4vROXNK6PnB9J6pU61x5cfjjaqsEYH5nWkZwQGR8p-0geF14UK7QyG3qPg/exec?sheet=Report&action=fetch');
-      const result = await response.json();
-      if (result.success) {
-        const rawData = result.data || result;
-        const headers = rawData[3];
-        const dataRows = rawData.length > 4 ? rawData.slice(4) : [];
-        const getIndex = (n) => headers.findIndex(h => h && h.toString().trim().toLowerCase() === n.toLowerCase());
-        
-        const processed = dataRows.map((row) => ({
-          year: row[getIndex('Year')] || '',
-          month: row[getIndex('Month')] || '',
-          empId: row[getIndex('Employee ID')] || '',
-          name: row[getIndex('Name')] || '',
-          designation: row[getIndex('Designation')] || '',
-          punchDays: row[getIndex('Punch Days')] || '0',
-          absents: row[getIndex('Absent(<4)')] || '0',
-          totalWorking: row[getIndex('Total Days')] || '0',
-          lateDays: row[getIndex('Late Days(4-8)')] || '0',
-          lateNotAllowed: row[getIndex('Late Not Allowed')] || '0',
-          lateAllowed: row[getIndex('Late Allowed')] || '0',
-          punchMiss: row[getIndex('Punch Miss')] || '0',
-          holidays: row[getIndex('Sunday+National Holiday Given')] || '0',
-        }));
-        setAttendanceData(processed);
-      }
-    } catch (err) { setError(err.message); }
-    finally { setTableLoading(false); }
+    const timer = setTimeout(() => setTableLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, [activeTab, filterMonth, searchTerm, filterDepartment]);
+
+  const filteredData = DUMMY_MONTHLY_DATA.filter(item => {
+    if (activeTab === "pending" && item.status !== "Under Review") return false;
+    const matchesSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.empId.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDept = !filterDepartment || item.department === filterDepartment;
+    const matchesMonth = !filterMonth || item.month === filterMonth;
+    return matchesSearch && matchesDept && matchesMonth;
+  });
+
+  const departments = [...new Set(DUMMY_MONTHLY_DATA.map(d => d.department))].sort();
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  useEffect(() => { fetchAttendanceData(); }, []);
-
-  const displayData = (attendanceData.length > 0 ? attendanceData : DUMMY_ATTENDANCE).filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.empId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.month.toLowerCase().includes(searchTerm.toLowerCase())
+  const renderPaginationNav = () => (
+    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px w-full justify-center sm:w-auto">
+      <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="relative inline-flex items-center px-1.5 py-1 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+        <ChevronRight className="h-4 w-4 rotate-180" />
+      </button>
+      {[...Array(Math.max(1, Math.min(5, totalPages)))].map((_, i) => (
+        <button key={i} onClick={() => paginate(i+1)} className={`relative inline-flex items-center px-4 py-2 border text-[11px] font-bold ${currentPage === (i+1) ? "z-10 bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm" : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"}`}>
+          {i + 1}
+        </button>
+      ))}
+      <button onClick={() => paginate(currentPage + 1)} disabled={currentPage >= totalPages} className="relative inline-flex items-center px-1.5 py-1 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </nav>
   );
 
-  const downloadExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(displayData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-    XLSX.writeFile(wb, "Attendance_Report.xlsx");
-    toast.success("Excel report generated");
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="max-w-full mx-auto px-1 sm:px-2 lg:px-4 py-4 space-y-4 md:space-y-6 pb-20 md:pb-8 font-outfit">
+      
+      {/* 🧩 Header Section - Call Tracker Parity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Attendance Analytics</h1>
-          <p className="text-slate-500 text-sm">Monthly work history and performance metrics.</p>
+        {/* Tab Switcher - Call Tracker SPEC */}
+        <div className="flex bg-gray-100 p-1 rounded-lg w-fit">
+           <button 
+             onClick={() => { setActiveTab("all"); setCurrentPage(1); }} 
+             className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === 'all' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+           >
+             <BarChart3 size={13} />
+             <span>All History ({filteredData.length})</span>
+           </button>
+           <button 
+             onClick={() => { setActiveTab("pending"); setCurrentPage(1); }} 
+             className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === 'pending' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+           >
+             <History size={13} />
+             <span>Under Review</span>
+           </button>
         </div>
-        <div className="flex items-center gap-2">
-            <button 
-              onClick={downloadExcel}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
-            >
-              <FileSpreadsheet size={18} />
-              Export Excel
-            </button>
-            <button className="p-2 border border-slate-200 rounded-xl bg-white text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-                <Calendar size={18} />
-            </button>
+
+        {/* Filter Toolbar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          {/* Search bar */}
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+            <input 
+               type="text" 
+               placeholder="Search calls..." 
+               value={searchTerm} 
+               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+               className="pl-9 pr-4 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full text-[13px] shadow-sm bg-white"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 lg:flex lg:items-center gap-2">
+             {/* Department Filter */}
+             <div className="relative">
+               <div onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)} className="flex items-center gap-2 h-8 px-3 border border-gray-200 rounded bg-white text-[11px] text-gray-700 font-medium cursor-pointer hover:border-indigo-400 transition shadow-sm">
+                 <Filter size={11} className="text-gray-400" />
+                 <span className="truncate">{filterDepartment || "All Dept"}</span>
+                 <ChevronDown size={12} className={`ml-1 text-gray-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
+               </div>
+               {isDeptDropdownOpen && (
+                 <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden py-1">
+                    <div onClick={() => { setFilterDepartment(""); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50">All Departments</div>
+                    {departments.map(d => (
+                       <div key={d} onClick={() => { setFilterDepartment(d); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50 flex items-center justify-between">
+                         {d}
+                         {filterDepartment === d && <Check size={11} className="text-indigo-500" />}
+                       </div>
+                    ))}
+                 </div>
+               )}
+             </div>
+
+             {/* Select Month */}
+             <select 
+                value={filterMonth} 
+                onChange={(e) => { setFilterMonth(e.target.value); setCurrentPage(1); }} 
+                className="h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-700 font-medium outline-none shadow-sm hover:border-indigo-400 transition"
+             >
+                <option value="">All Months</option>
+                {["January", "February", "March", "April"].map(m => (
+                  <option key={m} value={m}>{m.toUpperCase()}</option>
+                ))}
+             </select>
+          </div>
         </div>
       </div>
 
-      {/* Hero Stats (Dynamic from displayData) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                <CheckCircle2 size={24} />
+      {/* 📊 Main Table Content Area - Call Tracker Absolute Mirroring */}
+      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[530px] flex flex-col">
+        {tableLoading ? (
+           <div className="flex-1 flex items-center justify-center p-12">
+             <LoadingSpinner message="Auditing monthly..." minHeight="450px" />
+           </div>
+        ) : (
+          <>
+            <div className="max-h-[calc(105vh-280px)] min-h-[530px] overflow-y-auto scrollbar-hide">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employee Name</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employee ID</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Analytics Month</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Net Present</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Total Absents</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late Marks</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late (N)</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Miss Punch</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {currentItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" className="px-6 py-24 text-center">
+                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">No history recorded.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    currentItems.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700 font-normal uppercase">
+                           {item.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal uppercase">#{item.empId}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal uppercase tracking-tight">{item.month} {item.year}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-emerald-600 font-normal">{item.punchDays} Days</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.absents}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateDays}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateNotAllowed}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.punchMiss}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${item.status === 'Verified' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
+                             {item.status}
+                           </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-            <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg. Present</p>
-                <p className="text-lg font-bold text-slate-900">94.2%</p>
-            </div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
-                <XCircle size={24} />
-            </div>
-            <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Absents</p>
-                <p className="text-lg font-bold text-slate-900">12 Days</p>
-            </div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-                <Clock size={24} />
-            </div>
-            <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Late Markings</p>
-                <p className="text-lg font-bold text-slate-900">8 Units</p>
-            </div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-600">
-                <AlertCircle size={24} />
-            </div>
-            <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Punch Misses</p>
-                <p className="text-lg font-bold text-slate-900">3 Cases</p>
-            </div>
-        </div>
-      </div>
 
-      {/* Search & Filter */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search by Employee, ID or Month..." 
-            className="w-full pl-10 pr-4 py-2 bg-slate-50/50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <select className="px-4 py-2 bg-slate-50/50 border border-slate-100 rounded-xl text-sm outline-none">
-            <option>All Departments</option>
-            <option>Engineering</option>
-            <option>Human Resources</option>
-            <option>Sales</option>
-        </select>
-      </div>
-
-      {/* Main Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
-          <table className="w-full text-left border-collapse min-w-[1100px]">
-            <thead>
-              <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Personnel</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Timeline</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Attendance Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Incidents</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Data</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {tableLoading ? (
-                <tr>
-                  <td colSpan="5" className="px-6 border-b-none py-1">
-                    <LoadingSpinner message="Scanning attendance records..." minHeight="300px" />
-                  </td>
-                </tr>
-              ) : displayData.map((item, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/80 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xs">
-                            {item.name.charAt(0)}
-                        </div>
-                        <div>
-                            <p className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{item.name}</p>
-                            <p className="text-[11px] font-medium text-slate-400">{item.designation} • {item.empId}</p>
-                        </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-700">{item.month}</span>
-                        <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">{item.year}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-6">
-                        <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Present</p>
-                            <div className="flex items-center gap-1.5">
-                                <div className="h-1.5 w-12 bg-slate-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-500 rounded-full" style={{width: '90%'}}></div>
-                                </div>
-                                <span className="text-xs font-bold text-slate-700">{item.punchDays}d</span>
-                            </div>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Absent</p>
-                             <span className={`text-xs font-bold ${item.absents > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
-                                {item.absents}d
-                             </span>
-                        </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center gap-3">
-                        <div className="flex flex-col items-center">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Late</span>
-                            <span className={`text-xs font-bold ${item.lateDays > 0 ? 'text-amber-600' : 'text-slate-400'}`}>{item.lateDays}</span>
-                        </div>
-                        <div className="w-px h-6 bg-slate-100"></div>
-                        <div className="flex flex-col items-center">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Miss</span>
-                            <span className={`text-xs font-bold ${item.punchMiss > 0 ? 'text-rose-600' : 'text-slate-400'}`}>{item.punchMiss}</span>
-                        </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View Daily Stats">
-                        <FileText size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            {/* 📑 Footer Pagination - Call Tracker Mirror */}
+            <div className="px-4 py-3 bg-white border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-6 flex-wrap">
+                <p className="text-[13px] text-gray-600 font-medium tracking-wide">
+                  Showing <span className="font-bold text-gray-900">{filteredData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, filteredData.length)}</span> of <span className="font-bold text-gray-900">{filteredData.length}</span> records
+                </p>
+                <div className="flex items-center gap-2 h-5">
+                  <label className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Rows per page:</label>
+                  <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="text-xs bg-transparent font-medium text-gray-700 outline-none cursor-pointer">
+                    {[15, 30, 50, 100].map(val => <option key={val} value={val}>{val}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center w-auto justify-end">
+                {renderPaginationNav()}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

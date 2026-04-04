@@ -3,12 +3,6 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-const DUMMY_EVENTS = [
-  { id: 1, title: 'Team Meeting', date: new Date().toISOString().split('T')[0], time: '10:00 AM', location: 'Conference Room A', type: 'meeting', description: 'Weekly status update' },
-  { id: 2, title: 'Product Launch', date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString().split('T')[0], time: '02:00 PM', location: 'Main Hall', type: 'event', description: 'New product showcase' },
-  { id: 3, title: 'Public Holiday', date: new Date(new Date().setMonth(new Date().getMonth() + 1, 1)).toISOString().split('T')[0], time: 'All Day', location: 'Office Closed', type: 'holiday', description: 'National Holiday' }
-];
-
 const CompanyCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -76,8 +70,7 @@ const CompanyCalendar = () => {
       if (processedData.length > 0) {
         setCompanyEvents(processedData);
       } else {
-        console.warn('No calendar data found, using dummy fallback');
-        setCompanyEvents(DUMMY_EVENTS);
+        setCompanyEvents([]);
       }
 
     } catch (error) {

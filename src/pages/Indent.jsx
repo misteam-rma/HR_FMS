@@ -1222,8 +1222,93 @@ This indent requires your attention.
               </div>
             </div>
 
-            {/* Pagination Controls */}
-            <div className="hidden md:flex px-4 py-1 bg-white border-t border-gray-200 items-center justify-between flex-wrap gap-2">
+            {/* Refined Mobile Card View (Matched to FindEnquiry.jsx) */}
+            <div className="md:hidden flex flex-col h-[calc(100vh-220px)]">
+              <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
+                {tableLoading ? (
+                  <LoadingSpinner message="Retrieving indents..." minHeight="250px" />
+                ) : filteredData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-32">
+                    <div className="p-4 bg-gray-100 rounded-full mb-3">
+                      <Search size={24} className="text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-bold text-sm tracking-tight text-center px-6 uppercase">No matching indents found</p>
+                  </div>
+                ) : (
+                  currentItems.map((item, index) => (
+                    <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 space-y-3 relative overflow-hidden group hover:border-indigo-200 transition-all duration-300">
+                      {/* Card Header: Indent Identifiers */}
+                      <div className="flex justify-between items-center bg-gray-50/80 -mx-3 -mt-3 p-2.5 px-3 border-b border-gray-100 mb-0.5">
+                        <div className="flex items-center gap-2">
+                           <div className="w-1 h-3 bg-indigo-600 rounded-full"></div>
+                           <span className="font-black text-indigo-600 text-xs tracking-tighter uppercase">{item.indentNumber}</span>
+                        </div>
+                        <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">{item.department}</span>
+                      </div>
+
+                      {/* Main Post Section */}
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-black text-gray-800 leading-tight truncate uppercase tracking-tight">{item.post}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded uppercase">{item.gender}</span>
+                            <span className="text-[10px] font-bold text-gray-500 border border-gray-100 px-1.5 py-0.5 rounded uppercase">{item.noOfPost} Posts</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleShareClick(item)}
+                          className="p-2 bg-indigo-600 text-white rounded-lg shadow-lg shadow-indigo-100 active:scale-90 transition-transform shrink-0"
+                          title="Share Indent"
+                        >
+                          <HistoryIcon size={14} />
+                        </button>
+                      </div>
+
+                      {/* Detailed Grid Section - High Density */}
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-50">
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-gray-400 font-black uppercase tracking-tighter block opacity-60">Completion Target</span>
+                          <div className="flex items-center gap-1.5 font-bold text-gray-700 text-[10px]">
+                             <Calendar size={10} className="text-indigo-400" />
+                             {item.completionDate ? (typeof item.completionDate === 'string' ? item.completionDate.split(' ')[0] : new Date(item.completionDate).toLocaleDateString()) : "N/A"}
+                          </div>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-gray-400 font-black uppercase tracking-tighter block opacity-60">Experience Req</span>
+                          <div className="text-[10px] font-bold text-gray-700 truncate">{item.experience || "Not Specified"}</div>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-gray-400 font-black uppercase tracking-tighter block opacity-60">Preference</span>
+                          <div className="text-[10px] font-bold text-gray-700">{item.prefer}</div>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-gray-400 font-black uppercase tracking-tighter block opacity-60">Sourcing</span>
+                          <div className={`text-[10px] font-bold ${item.socialSite === "Yes" ? 'text-emerald-600' : 'text-rose-500'}`}>
+                             {item.socialSite === "Yes" ? "Social Sites Required" : "No Social Site"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Site Types (Conditional Box) */}
+                      {item.socialSite === "Yes" && item.socialSiteTypes && (
+                        <div className="bg-indigo-50/30 p-2 rounded border border-indigo-100/50 mt-1 animate-in slide-in-from-top-1 duration-300">
+                           <span className="text-[8px] text-indigo-400 font-black uppercase tracking-tighter block mb-1">Approved Platform Channels</span>
+                           <div className="text-[10px] font-medium text-indigo-700 leading-tight">{item.socialSiteTypes}</div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              {/* Sticky Fixed Mobile Pagination (Standardized UI) */}
+              <div className="border-t border-gray-200 bg-white p-2.5 flex justify-center sticky bottom-0 z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                {renderPaginationNav()}
+              </div>
+            </div>
+
+            {/* Desktop Pagination Controls Footer (Standardized) - Hidden on Mobile since it's redundant */}
+            <div className="hidden md:flex px-4 py-1.5 bg-white border-t border-gray-200 items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-4 flex-wrap">
                 <p className="text-sm text-gray-700 font-medium">
                   Showing <span className="font-bold">{filteredData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold">{Math.min(indexOfLastItem, filteredData.length)}</span> of <span className="font-bold">{filteredData.length}</span> records
@@ -1245,7 +1330,6 @@ This indent requires your attention.
                 </div>
               </div>
 
-              {/* Unified Pagination block for Desktop */}
               <div className="flex items-center w-auto justify-end gap-4">
                 {renderPaginationNav()}
               </div>

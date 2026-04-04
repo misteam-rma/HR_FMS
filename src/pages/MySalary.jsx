@@ -1,16 +1,14 @@
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { IndianRupee, TrendingUp, Download, Eye, Banknote, CalendarDays, Wallet } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const MySalary = () => {
-  // const { user } = useAuthStore();
-  // const { getFilteredData } = useDataStore();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(false);
   const [tableLoading, setTableLoading] = useState(false);
   const [salaryData, setSalaryData] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  //  const salaryData = getFilteredData('salaryData', user);
 
   //  Filter salary by selected year
   const filteredSalary = salaryData.filter(record => {
@@ -47,7 +45,6 @@ const MySalary = () => {
       }
 
       const rawData = result.data || result;
-      console.log("Raw data from API:", rawData);
 
       if (!Array.isArray(rawData)) {
         throw new Error('Expected array data not received');
@@ -56,7 +53,6 @@ const MySalary = () => {
       // Skip header row
       const dataRows = rawData.length > 1 ? rawData.slice(1) : [];
 
-      // Map rows to structured data
       // Map rows to structured data - PROPERLY CONVERT STRINGS TO NUMBERS
       const processedData = dataRows
         .map((row, index) => {
@@ -91,7 +87,6 @@ const MySalary = () => {
           item.employeeId === employeeId && item.employeeName === employeeName
         );
 
-      console.log("Filtered salary data:", processedData);
       setSalaryData(processedData);
 
     } catch (error) {
@@ -109,7 +104,6 @@ const MySalary = () => {
   }, []);
 
   // Calculate yearly statistics
-  // Calculate yearly statistics with type safety
   const totalEarnings = filteredSalary.reduce((sum, record) => {
     const netSalary = typeof record.netSalary === 'string'
       ? parseFloat(record.netSalary.replace(/[^\d.]/g, '')) || 0
@@ -133,213 +127,173 @@ const MySalary = () => {
     return sum + overtime;
   }, 0);
 
-  const years = [2023, 2024, 2025];
-
-  const handleDownloadPayslip = (salaryRecord) => {
-    // In a real app, this would generate and download a PDF payslip
-    alert(`Downloading payslip for ${salaryRecord.month}`);
-  };
-
-  const handleViewPayslip = (salaryRecord) => {
-    // In a real app, this would open a detailed payslip view
-    alert(`Viewing payslip for ${salaryRecord.month}`);
-  };
+  const years = [2023, 2024, 2025, 2026];
 
   return (
-    <div className="space-y-6 page-content p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">My Salary</h1>
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 font-outfit">
+      {/* Header Container */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {years.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
+           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Salary</h1>
+           <p className="text-slate-500 text-sm font-medium">View your payroll and compensation history</p>
         </div>
+      </div>
+
+      {/* Unified Filter Toolbar */}
+      <div className="bg-white/60 backdrop-blur-xl p-4 flex items-center justify-between gap-4 rounded-3xl border border-slate-200/60 shadow-sm w-full md:w-auto self-start">
+         <div className="flex items-center gap-3">
+             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                 <CalendarDays size={16} className="text-slate-400" />
+                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Financial Year</span>
+             </div>
+             <select
+               value={selectedYear}
+               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+               className="w-full md:w-32 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+             >
+               {years.map(year => (
+                 <option key={year} value={year}>{year}</option>
+               ))}
+             </select>
+         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 mr-4">
-              <DollarSign size={24} className="text-green-600" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Earnings', value: totalEarnings, icon: IndianRupee, color: 'emerald' },
+          { label: 'Avg Monthly', value: averageSalary, icon: TrendingUp, color: 'blue' },
+          { label: 'Total Deductions', value: totalDeductions, icon: Wallet, color: 'rose' },
+          { label: 'Overtime Earnings', value: totalOvertime, icon: Banknote, color: 'amber' }
+        ].map((stat, idx) => {
+          const Icon = stat.icon;
+          return (
+            <div key={idx} className="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm transition-all hover:shadow-md flex items-center justify-between gap-4">
+               <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                  <h3 className="text-2xl font-black text-slate-900 mt-1">₹{Math.round(stat.value).toLocaleString()}</h3>
+               </div>
+               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-${stat.color}-50 text-${stat.color}-600 shrink-0 shadow-sm`}>
+                  <Icon size={24} />
+               </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Total Earnings</p>
-              <h3 className="text-2xl font-bold text-gray-800">₹{totalEarnings.toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 mr-4">
-              <TrendingUp size={24} className="text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Average Salary</p>
-              <h3 className="text-2xl font-bold text-gray-800">₹{Math.round(averageSalary).toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-red-100 mr-4">
-              <DollarSign size={24} className="text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Total Deductions</p>
-              <h3 className="text-2xl font-bold text-gray-800">₹{totalDeductions.toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg border p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-amber-100 mr-4">
-              <DollarSign size={24} className="text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Total Overtime</p>
-              <h3 className="text-2xl font-bold text-gray-800">₹{totalOvertime.toLocaleString()}</h3>
-            </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
+      {/* Salary Breakdown Chart (Latest Month) */}
+      {filteredSalary.length > 0 && !tableLoading && (
+        <div className="bg-slate-900 rounded-3xl shadow-lg shadow-slate-200 p-6 flex flex-col md:flex-row items-center gap-6">
+          <div className="md:w-1/3">
+             <h2 className="text-xl font-bold text-white tracking-tight leading-tight">Latest Breakdown</h2>
+             <p className="text-sm text-indigo-200 font-medium mb-1">For {filteredSalary[0].month}</p>
+             <div className="inline-block px-3 py-1 bg-white/10 rounded-full border border-white/10 mt-3">
+                <span className="text-2xl font-black text-white">₹{filteredSalary[0].netSalary.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest ml-2">Net Pay</span>
+             </div>
+          </div>
+          <div className="md:w-2/3 w-full grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+               { label: 'Basic Salary', value: filteredSalary[0].basicSalary, color: 'text-emerald-400' },
+               { label: 'Allowances', value: filteredSalary[0].allowances, color: 'text-blue-400' },
+               { label: 'Overtime', value: filteredSalary[0].overtime, color: 'text-amber-400' },
+               { label: 'Deductions', value: filteredSalary[0].deductions, color: 'text-rose-400' }
+            ].map((item, idx) => (
+                <div key={idx} className="bg-white/5 rounded-2xl border border-white/10 p-4">
+                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">{item.label}</p>
+                   <p className={`text-lg font-black ${item.color}`}>₹{item.value.toLocaleString()}</p>
+                </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Salary Records Table */}
-      <div className="bg-white rounded-lg shadow border overflow-hidden">
-        <div className="p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Salary Records - {selectedYear}</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+      <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+         <div className="px-6 py-4 border-b border-slate-200/60 bg-slate-50/50 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm">
+            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Payslip Archive</h2>
+            <span className="text-[10px] font-black text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-100 uppercase">Records for {selectedYear}</span>
+         </div>
+          
+         <div className="overflow-x-auto min-h-[300px] max-h-[calc(105vh-280px)] overflow-y-auto">
+            <table className="min-w-full divide-y divide-slate-100 text-left border-collapse">
+              <thead className="bg-slate-50/50 sticky top-0 z-10 backdrop-blur-sm shadow-sm md:shadow-none">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Basic Salary</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allowances</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overtime</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deductions</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Salary</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pay Date</th>
-                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th> */}
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Period</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Basic</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Allowances</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Overtime</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Deductions</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Net Pay</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Status</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-slate-100">
                 {tableLoading ? (
                   <tr>
-                    <td colSpan="8" className="px-6 py-1">
-                      <LoadingSpinner message="Retrieving salary statements..." minHeight="300px" />
+                    <td colSpan="8" className="px-6 py-12">
+                      <LoadingSpinner message="Retrieving salary statements..." />
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
-                      <p className="text-red-500">Error: {error}</p>
-                      <button
-                        onClick={fetchSalaryData}
-                        className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                      >
-                        Retry
-                      </button>
+                    <td colSpan="8" className="px-6 py-12 text-center flex flex-col items-center justify-center min-h-[200px]">
+                      <p className="text-rose-500 text-sm font-bold mb-3">{error}</p>
+                      <button onClick={fetchSalaryData} className="px-5 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-100 transition-colors uppercase tracking-widest shadow-sm">Retry Request</button>
                     </td>
                   </tr>
-                ) : filteredSalary.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {record.month}
+                ) : filteredSalary.length > 0 ? filteredSalary.map((record) => (
+                  <tr key={record.id} className="hover:bg-slate-50/80 transition-colors group">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                       <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{record.month}</p>
+                       <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1 uppercase tracking-tight">
+                         <CalendarDays size={10} /> 
+                         {record.payDate ? new Date(record.payDate).toLocaleDateString() : 'N/A'}
+                       </p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600">
                       ₹{record.basicSalary.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₹{record.allowances.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₹{record.overtime.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₹{record.deductions.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                      ₹{record.netSalary.toLocaleString()}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${record.status === 'Paid'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                        {record.status}
+                      <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold shadow-sm inline-block min-w-[60px] text-center border border-blue-100">
+                         +{record.allowances.toLocaleString()}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(record.payDate).toLocaleDateString()}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded text-xs font-bold shadow-sm inline-block min-w-[60px] text-center border border-amber-100">
+                         +{record.overtime.toLocaleString()}
+                      </span>
                     </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleViewPayslip(record)}
-                          className="text-indigo-600 hover:text-indigo-900"
-                          title="View Payslip"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDownloadPayslip(record)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Download Payslip"
-                        >
-                          <Download size={16} />
-                        </button>
-                      </div>
-                    </td> */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="bg-rose-50 text-rose-700 px-2 py-1 rounded text-xs font-bold shadow-sm inline-block min-w-[60px] text-center border border-rose-100">
+                         -{record.deductions.toLocaleString()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-sm font-black shadow-sm inline-block border border-slate-700">
+                         ₹{record.netSalary.toLocaleString()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm inline-block w-[80px] text-center ${record.status === 'Paid'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-amber-100 text-amber-700'
+                        }`}>
+                        {record.status || 'Pending'}
+                      </span>
+                    </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan="8" className="px-6 py-20 text-center text-slate-400 font-bold text-sm">
+                      No salary records found for {selectedYear}.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
-            {!tableLoading && filteredSalary.length === 0 && (
-              <div className="px-6 py-12 text-center">
-                <p className="text-gray-500">No salary records found for the selected year.</p>
-              </div>
-            )}
           </div>
-        </div>
       </div>
-
-      {/* Salary Breakdown Chart (Latest Month) */}
-      {filteredSalary.length > 0 && (
-        <div className="bg-white rounded-lg shadow border p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">
-            Latest Salary Breakdown - {filteredSalary[0].month}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-sm text-gray-600">Basic Salary</p>
-              <p className="text-xl font-bold text-green-600">₹{filteredSalary[0].basicSalary.toLocaleString()}</p>
-            </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-600">Allowances</p>
-              <p className="text-xl font-bold text-blue-600">₹{filteredSalary[0].allowances.toLocaleString()}</p>
-            </div>
-            <div className="text-center p-4 bg-amber-50 rounded-lg">
-              <p className="text-sm text-gray-600">Overtime</p>
-              <p className="text-xl font-bold text-amber-600">₹{filteredSalary[0].overtime.toLocaleString()}</p>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <p className="text-sm text-gray-600">Deductions</p>
-              <p className="text-xl font-bold text-red-600">₹{filteredSalary[0].deductions.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

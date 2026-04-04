@@ -28,38 +28,6 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-const DUMMY_DATA = {
-  totalEmployee: 124,
-  activeEmployee: 118,
-  leftEmployee: 6,
-  leaveThisMonth: 2,
-  monthlyData: [
-    { month: 'Oct', hired: 12, left: 2 },
-    { month: 'Nov', hired: 8, left: 1 },
-    { month: 'Dec', hired: 15, left: 3 },
-    { month: 'Jan', hired: 10, left: 1 },
-    { month: 'Feb', hired: 14, left: 2 },
-    { month: 'Mar', hired: 18, left: 2 },
-  ],
-  departmentData: [
-    { department: 'Engineering', employees: 45 },
-    { department: 'Sales', employees: 32 },
-    { department: 'HR', employees: 8 },
-    { department: 'Marketing', employees: 22 },
-    { department: 'Design', employees: 17 },
-  ],
-  designationData: [
-    { designation: 'Senior Dev', employees: 15 },
-    { designation: 'Junior Dev', employees: 25 },
-    { designation: 'Manager', employees: 10 },
-    { designation: 'Director', employees: 4 },
-  ],
-  statusData: [
-    { name: 'Active', value: 118, color: '#2563eb' },
-    { name: 'Resigned', value: 6, color: '#94a3b8' }
-  ]
-};
-
 const Dashboard = () => {
   const [totalEmployee, setTotalEmployee] = useState(0);
   const [activeEmployee, setActiveEmployee] = useState(0);
@@ -72,19 +40,19 @@ const Dashboard = () => {
 
   // Fallback Logic
   const displayStats = {
-    total: totalEmployee || DUMMY_DATA.totalEmployee,
-    active: activeEmployee || DUMMY_DATA.activeEmployee,
-    left: leftEmployee || DUMMY_DATA.leftEmployee,
-    leaves: leaveThisMonth || DUMMY_DATA.leaveThisMonth
+    total: totalEmployee || 0,
+    active: activeEmployee || 0,
+    left: leftEmployee || 0,
+    leaves: leaveThisMonth || 0
   };
 
-  const displayMonthlyData = monthlyHiringData.length > 0 ? monthlyHiringData : DUMMY_DATA.monthlyData;
-  const displayDeptData = departmentData.length > 0 ? departmentData : DUMMY_DATA.departmentData;
-  const displayDesigData = designationData.length > 0 ? designationData : DUMMY_DATA.designationData;
+  const displayMonthlyData = monthlyHiringData.length > 0 ? monthlyHiringData : [];
+  const displayDeptData = departmentData.length > 0 ? departmentData : [];
+  const displayDesigData = designationData.length > 0 ? designationData : [];
 
   const displayStatusData = useMemo(() => [
-    { name: 'Active', value: activeEmployee || DUMMY_DATA.activeEmployee, color: '#2563eb' },
-    { name: 'Resigned', value: leftEmployee || DUMMY_DATA.leftEmployee, color: '#cbd5e1' }
+    { name: 'Active', value: activeEmployee || 0, color: '#2563eb' },
+    { name: 'Resigned', value: leftEmployee || 0, color: '#cbd5e1' }
   ], [activeEmployee, leftEmployee]);
 
   // Parse DD/MM/YYYY format date

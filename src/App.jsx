@@ -18,11 +18,12 @@ import LeaveRequest from './pages/LeaveRequest';
 // import MySalary from './pages/MySalary';
 import CompanyCalendar from './pages/CompanyCalendar';
 import ProtectedRoute from './components/ProtectedRoute';
-// import Attendance from './pages/Attendance';
+import Attendance from './pages/Attendance';
+import AttendanceDaily from './pages/AttendanceDaily';
 import LeaveManagement from './pages/LeaveManagement';
 // import Attendancedaily from './pages/Attendancedaily';
 // import Report from './pages/Report';
-// import Payroll from './pages/Payroll';
+import Payroll from './pages/Payroll';
 // import MisReport from './pages/MisReport';
 import Joining from './pages/Joining';
 import License from './pages/License';
@@ -60,6 +61,8 @@ function App() {
             <Route path="my-profile" element={<MyProfile />} />
             <Route path="my-attendance" element={<MyAttendance />} />
             <Route path="attendance-form" element={<AttendanceForm />} />
+            <Route path="attendance/daily" element={<AttendanceDaily />} />
+            <Route path="attendance/monthly" element={<Attendance />} />
             <Route path="leave-request" element={<LeaveRequest />} />
             {/* <Route path="my-salary" element={<MySalary />} /> */}
             <Route path="company-calendar" element={<CompanyCalendar />} />

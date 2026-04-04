@@ -1,22 +1,6 @@
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-const DUMMY_PROFILE = {
-  joiningNo: 'SKA-DEMO-001',
-  candidateName: 'John Doe (Demo)',
-  fatherName: 'Robert Doe',
-  dateOfJoining: '01/01/2024',
-  designation: 'Senior HR Manager',
-  companyName: 'Human Resources',
-  bodAsPerAadhar: '15/05/1990',
-  gender: 'Male',
-  mobileNo: '9876543210',
-  familyMobileNo: '9123456789',
-  email: 'john.doe@example.com',
-  currentAddress: '123 Business Park, Sector 62, Noida, Uttar Pradesh',
-  candidatePhoto: ''
-};
-
 const MyProfile = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -530,9 +514,8 @@ const MyProfile = () => {
         setFormData(profile);
         localStorage.setItem("employeeId", profile.joiningNo);
       } else {
-        console.warn('No profile data found for current user, using dummy fallback');
-        setProfileData(DUMMY_PROFILE);
-        setFormData(DUMMY_PROFILE);
+        setProfileData(null);
+        setFormData({});
       }
 
     } catch (error) {

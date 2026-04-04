@@ -1,4 +1,4 @@
-import { FileText, ScrollText, Users, User, KeyRound } from 'lucide-react'
+import { KeyRound } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 const License = () => {
@@ -13,65 +13,54 @@ const License = () => {
     }, [])
 
     return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 overflow-y-auto">
-                <div className="max-w-4xl mx-auto">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
-                                    <KeyRound className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <h1 className="text-3xl font-bold text-gray-800">License Agreement</h1>
-                                    <p className="text-gray-600 mt-1">
-                                        Software license terms and conditions
-                                    </p>
-                                </div>
-                            </div>
+        <div className="space-y-6 animate-in fade-in duration-500 pb-10 font-outfit">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">License Agreement</h1>
+                    <p className="text-slate-500 text-sm font-medium mt-1">
+                        Software license terms and conditions
+                    </p>
+                </div>
+            </div>
+
+            {/* License Content */}
+            <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col justify-center items-center py-16 px-4">
+                <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+                    <KeyRound size={32} />
+                </div>
+                
+                <div className="w-full max-w-2xl space-y-6">
+                    {/* Copyright Notice */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-8 hover:shadow-md transition-all">
+                        <div className="text-2xl font-black text-slate-900 mb-4 text-center tracking-tight">
+                            © BOTIVATE SERVICES LLP
                         </div>
+                        <p className="text-slate-600 text-center leading-relaxed font-medium">
+                            This software is developed exclusively by Botivate Services LLP for use by its clients.
+                            Unauthorized use, distribution, or copying of this software is strictly prohibited and
+                            may result in legal action.
+                        </p>
                     </div>
 
-                    {/* License Content */}
-                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                        <div className="p-8 max-h-[calc(100vh-100px)] overflow-y-auto">
-                            <div className="flex flex-col justify-start items-center space-y-6">
-                                {/* Copyright Notice */}
-                                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-6 max-w-2xl w-full">
-                                    <div className="text-xl font-bold text-gray-800 mb-3 text-center">
-                                        © BOTIVATE SERVICES LLP
-                                    </div>
-                                    <p className="text-gray-700 text-center leading-relaxed">
-                                        This software is developed exclusively by Botivate Services LLP for use by its clients.
-                                        Unauthorized use, distribution, or copying of this software is strictly prohibited and
-                                        may result in legal action.
-                                    </p>
-                                </div>
-
-                                {/* Contact Information */}
-                                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-5 max-w-2xl w-full">
-                                    <h4 className="font-semibold text-blue-800 mb-3 text-center">Contact Information</h4>
-                                    <p className="text-blue-700 mb-3 text-center">
-                                        For license inquiries or technical support, please contact our support team:
-                                    </p>
-                                    <div className="text-center space-y-1">
-                                        <div>
-                                            <a href="mailto:info@botivate.in" className="text-blue-600 font-medium hover:text-blue-800 transition-colors">
-                                                📧 info@botivate.in
-                                            </a>
-                                        </div>
-                                        <div>
-                                            <a href="https://www.botivate.in" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-medium hover:text-blue-800 transition-colors">
-                                                🌐 www.botivate.in
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    {/* Contact Information */}
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 text-center hover:shadow-md transition-all">
+                        <h4 className="font-bold text-slate-800 mb-3 text-lg">Contact Information</h4>
+                        <p className="text-slate-500 font-medium mb-4 text-sm">
+                            For license inquiries or technical support, please contact our support team:
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+                            <a href="mailto:info@botivate.in" className="flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-700 rounded-2xl font-bold hover:bg-indigo-600 hover:text-white transition-all">
+                                📧 info@botivate.in
+                            </a>
+                            <a href="https://www.botivate.in" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-700 rounded-2xl font-bold hover:bg-indigo-600 hover:text-white transition-all">
+                                🌐 www.botivate.in
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
     )
 }
 

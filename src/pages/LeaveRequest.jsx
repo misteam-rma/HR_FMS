@@ -1,11 +1,6 @@
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-const DUMMY_LEAVES = [
-  { id: 1, serialNo: 'LR-001', employeeName: 'Demo User', startDate: '10/05/2024', endDate: '12/05/2024', leaveType: 'Casual Leave', days: '3', status: 'Approved' },
-  { id: 2, serialNo: 'LR-002', employeeName: 'Demo User', startDate: '20/06/2024', endDate: '20/06/2024', leaveType: 'Sick Leave', days: '1', status: 'Pending' }
-];
-
 const LeaveRequest = () => {
   const employeeId = localStorage.getItem("employeeId");
   const rawUser = localStorage.getItem("user");
@@ -359,8 +354,7 @@ const LeaveRequest = () => {
       if (processedData.length > 0) {
         setLeavesData(processedData);
       } else {
-        console.warn('No leave requests found for user, using dummy fallback');
-        setLeavesData(DUMMY_LEAVES);
+        setLeavesData([]);
       }
 
     } catch (error) {
@@ -649,37 +643,41 @@ const LeaveRequest = () => {
   ];
 
   return (
-    <div className="space-y-3 md:pb-4 mb-4 font-outfit">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 px-2 sm:px-0">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 font-outfit">
+      {/* Header Container */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Leave Requests</h1>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Manage your absences</p>
+           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Leave Requests</h1>
+           <p className="text-slate-500 text-sm font-medium">Manage your absences and track entitlements</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           disabled={hasSubmittedToday()}
-          className={`inline-flex items-center px-4 py-2 rounded-md shadow-sm text-xs font-bold text-white transition-all ${hasSubmittedToday()
-              ? 'bg-gray-400 cursor-not-allowed opacity-50'
-              : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100'
+          className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 ${hasSubmittedToday()
+              ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+              : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-200'
             }`}
           title={hasSubmittedToday() ? "Already submitted today" : "Create new request"}
         >
-          <Plus size={14} className="mr-1.5" />
-          <span>New Request</span>
-          {hasSubmittedToday() && <span className="ml-1.5 text-[10px] opacity-80">(Wait till tomorrow)</span>}
+          <Plus size={18} />
+          <span className="hidden sm:inline">New Request</span>
+          {hasSubmittedToday() && <span className="ml-1 text-[10px] opacity-80">(Wait till tomorrow)</span>}
         </button>
       </div>
 
-      {/* Month and Year Filter */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mx-2 sm:mx-0">
-        <div className="flex items-center flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <Filter size={14} className="text-gray-400" />
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filters</span>
+      {/* Unified Filter Toolbar */}
+      <div className="bg-white/60 backdrop-blur-xl p-4 rounded-3xl border border-slate-200/60 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+         <div className="flex items-center gap-3 w-full md:w-auto">
+             <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                <Filter size={18} />
+             </div>
+             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Date Filter</p>
+         </div>
+         <div className="flex w-full md:w-auto gap-3">
             <select
               value={selectedMonth}
               onChange={handleMonthChange}
-              className="border border-gray-300 rounded-md px-2 py-1.5 text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 outline-none bg-white"
+              className="flex-1 md:w-40 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-white"
             >
               {monthOptions.map(option => (
                 <option key={option.value} value={option.value}>{option.label.toUpperCase()}</option>
@@ -688,283 +686,270 @@ const LeaveRequest = () => {
             <select
               value={selectedYear}
               onChange={handleYearChange}
-              className="border border-gray-300 rounded-md px-2 py-1.5 text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 outline-none bg-white"
+              className="flex-1 md:w-32 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-white"
             >
               {yearOptions.map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
-          </div>
-        </div>
+         </div>
       </div>
 
       {/* Modern Leave Statistics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {[
           { label: "Casual", taken: leaveStats.casualLeave, total: 6, color: "indigo" },
           { label: "Earned", taken: leaveStats.earnedLeave, total: 12, color: "emerald" },
           { label: "Sick", taken: leaveStats.sickLeave, total: 6, color: "rose" },
           { label: "Restricted", taken: leaveStats.restrictedHoliday, total: 2, color: "amber" }
         ].map((stat) => (
-          <div key={stat.label} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all hover:shadow-md">
-            <p className={`text-[10px] font-bold text-gray-400 uppercase tracking-widest`}>{stat.label}</p>
-            <div className="flex items-end gap-1 mt-1">
-              <span className={`text-xl font-bold text-${stat.color}-600 leading-none`}>{stat.taken}</span>
-              <span className="text-[10px] text-gray-300 font-bold mb-0.5">/ {stat.total}</span>
+          <div key={stat.label} className="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm transition-all hover:shadow-md">
+            <p className={`text-[11px] font-bold text-slate-400 uppercase tracking-widest`}>{stat.label}</p>
+            <div className="flex items-end gap-1 mt-2 mb-3">
+              <span className={`text-3xl font-black text-${stat.color}-600 leading-none`}>{stat.taken}</span>
+              <span className="text-sm text-slate-300 font-bold mb-1">/ {stat.total}</span>
             </div>
-            <div className="w-full bg-gray-50 h-1 rounded-full mt-2 overflow-hidden">
+            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                <div 
-                className={`h-full bg-${stat.color}-500 rounded-full`} 
+                className={`h-full bg-${stat.color}-500 rounded-full transition-all`} 
                 style={{ width: `${Math.min(100, (stat.taken / stat.total) * 100)}%` }}
               ></div>
             </div>
-            <p className="text-[9px] text-gray-400 font-bold mt-1.5 uppercase">Left: {Math.max(0, stat.total - stat.taken)} Days</p>
+            <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">Left: {Math.max(0, stat.total - stat.taken)} Days</p>
           </div>
         ))}
-        <div className="bg-indigo-600 p-3 rounded-lg border border-indigo-700 shadow-sm col-span-2 md:col-span-4 lg:col-span-1 shadow-indigo-100">
-          <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Total Approved</p>
-          <p className="text-xl font-bold text-white mt-1">{leaveStats.totalLeave}</p>
-          <p className="text-[9px] text-indigo-200 font-bold mt-1.5 uppercase tracking-tighter">(Current Year Summary)</p>
+        <div className="bg-slate-900 p-5 rounded-3xl shadow-lg shadow-slate-200 col-span-2 md:col-span-4 lg:col-span-1 flex flex-col justify-center">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Total Approved</p>
+          <p className="text-4xl font-black text-white mt-1">{leaveStats.totalLeave}</p>
+          <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-widest">Current Year</p>
         </div>
       </div>
 
-      {/* Content Card with Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mx-2 sm:mx-0">
-        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle size={14} className="text-indigo-600" />
-            <h2 className="text-[10px] font-bold text-gray-800 uppercase tracking-widest">My Leave Requests</h2>
+      {/* Main Table Container */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto min-h-[530px] max-h-[calc(105vh-280px)] overflow-y-auto">
+             <table className="w-full text-left border-collapse min-w-[1000px]">
+                 <thead className="bg-slate-50/50 sticky top-0 z-10 backdrop-blur-sm">
+                   <tr>
+                      <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">S.No</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Type</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Period</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Duration</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Status</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Applied On</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-100">
+                    {tableLoading ? (
+                       <tr>
+                         <td colSpan="6" className="px-6 py-12">
+                           <LoadingSpinner message="Syncing requests..." minHeight="300px" />
+                         </td>
+                       </tr>
+                    ) : leavesData.length === 0 ? (
+                       <tr>
+                         <td colSpan="6" className="px-6 py-20 text-center">
+                            <p className="text-sm font-bold text-slate-400">No records found matching your criteria</p>
+                         </td>
+                       </tr>
+                    ) : leavesData.map((request, index) => (
+                       <tr key={index} className="hover:bg-slate-50/80 transition-colors group">
+                           <td className="px-6 py-4">
+                               <span className="text-[11px] font-black text-slate-400">#{request.serialNo || index + 1}</span>
+                           </td>
+                           <td className="px-6 py-4 font-bold text-sm text-slate-700">
+                               {request.leaveType}
+                           </td>
+                           <td className="px-6 py-4">
+                               <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                                   {formatDOB(request.startDate)} <span className="text-slate-300">→</span> {formatDOB(request.endDate)}
+                               </div>
+                           </td>
+                           <td className="px-6 py-4">
+                               <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-bold uppercase tracking-widest">{request.days} Days</span>
+                           </td>
+                           <td className="px-6 py-4">
+                               <span className={`px-2.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
+                                  request.status?.toLowerCase() === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                                  request.status?.toLowerCase() === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                                  'bg-amber-100 text-amber-700'
+                               }`}>
+                                  {request.status}
+                               </span>
+                           </td>
+                           <td className="px-6 py-4">
+                               <span className="text-[11px] font-bold text-slate-400">{request.timestamp?.split(' ')[0]}</span>
+                           </td>
+                       </tr>
+                    ))}
+                 </tbody>
+             </table>
           </div>
-          <span className="text-[10px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded border border-gray-100 uppercase tracking-tighter">
-            {leavesData.length} Records
-          </span>
-        </div>
 
-        <div className="p-0">
-          {tableLoading ? (
-            <LoadingSpinner message="Syncing your requests..." minHeight="300px" />
-          ) : (
-            <div className="overflow-x-auto">
-              {/* Desktop Table */}
-              <div className="hidden md:block">
-                <table className="min-w-full divide-y divide-gray-100">
-                  <thead className="bg-gray-50/50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Serial</th>
-                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type</th>
-                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Period</th>
-                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Days</th>
-                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Applied On</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 bg-white">
-                    {leavesData.length > 0 ? (
-                      leavesData.map((request, index) => (
-                        <tr key={index} className="hover:bg-gray-50/50 transition-colors group">
-                          <td className="px-4 py-2 whitespace-nowrap text-[10px] font-bold text-gray-400">#{request.serialNo || index + 1}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-700">{request.leaveType}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-[11px] text-gray-600 font-medium">
-                            {formatDOB(request.startDate)} - {formatDOB(request.endDate)}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold">{request.days}D</span>
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest shadow-sm ${
-                              request.status?.toLowerCase() === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                              request.status?.toLowerCase() === 'rejected' ? 'bg-rose-100 text-rose-700' :
-                              'bg-amber-100 text-amber-700'
-                            }`}>
-                              {request.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-[10px] text-gray-400 font-medium">{request.timestamp?.split(' ')[0]}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr><td colSpan="6" className="px-4 py-12 text-center text-gray-400 text-xs">No records found.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile View */}
-              <div className="md:hidden divide-y divide-gray-100">
-                {leavesData.length > 0 ? (
-                  leavesData.map((request, index) => (
-                    <div key={index} className="p-3 space-y-2">
-                       <div className="flex justify-between items-center">
-                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">#{request.serialNo || index+1}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest ${
+          {/* Mobile View */}
+          <div className="md:hidden divide-y divide-slate-100 bg-slate-50 min-h-[500px]">
+             {tableLoading ? (
+                <div className="p-8">
+                   <LoadingSpinner message="Syncing requests..." />
+                </div>
+             ) : leavesData.length === 0 ? (
+                <div className="p-12 text-center text-slate-400">
+                   <p className="text-sm font-bold">No records found</p>
+                </div>
+             ) : leavesData.map((request, index) => (
+                <div key={index} className="p-4 bg-white hover:bg-slate-50 transition-colors">
+                   <div className="flex justify-between items-start mb-3">
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">#{request.serialNo || index+1}</span>
+                       <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${
                           request.status?.toLowerCase() === 'approved' ? 'bg-emerald-100 text-emerald-700' :
                           request.status?.toLowerCase() === 'rejected' ? 'bg-rose-100 text-rose-700' :
                           'bg-amber-100 text-amber-700'
                         }`}>
                           {request.status}
                         </span>
-                      </div>
-                      <div className="flex justify-between items-end">
-                        <div>
-                          <div className="text-xs font-bold text-gray-800 leading-tight">{request.leaveType}</div>
-                          <div className="text-[10px] text-gray-500 font-medium mt-0.5">{formatDOB(request.startDate)} - {formatDOB(request.endDate)}</div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{request.days}D</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-8 text-center text-gray-400 text-[10px] font-bold uppercase">No records found.</div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Refined Modal for new leave request */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden border border-indigo-100 flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50">
-              <div>
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">New Leave Request</h3>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Fill in your absence details</p>
-              </div>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded">
-                <X size={18} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto scrollbar-hide">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Employee Info</label>
-                  <div className="p-2.5 bg-gray-50 border border-gray-100 rounded-lg">
-                    <p className="text-xs font-bold text-gray-800 leading-tight">{formData.employeeName}</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase">ID: {formData.employeeId}</p>
-                    <p className="text-[10px] text-indigo-600 font-bold uppercase mt-1">Dept: {formData.department || 'N/A'}</p>
-                  </div>
+                   </div>
+                   
+                   <div className="bg-slate-50 rounded-xl p-3 space-y-2 mb-1">
+                       <p className="text-sm font-bold text-slate-900">{request.leaveType}</p>
+                       <div className="flex items-center justify-between text-[11px] font-bold">
+                           <span className="text-slate-500">{formatDOB(request.startDate)} - {formatDOB(request.endDate)}</span>
+                           <span className="text-slate-900">{request.days} Days</span>
+                       </div>
+                   </div>
                 </div>
-                
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">HOD Approval From*</label>
-                    <select
-                      name="hodName"
-                      value={formData.hodName}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
-                      required
-                    >
-                      <option value="">Select HOD</option>
-                      {hodNames.map((name, index) => (
-                        <option key={index} value={name}>{name.toUpperCase()}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Duty Substitute*</label>
-                    <select
-                      name="substitute"
-                      value={formData.substitute}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
-                      required
-                    >
-                      <option value="">Select Substitute</option>
-                      {employees
-                        .filter(emp => emp.department === formData.department && emp.name !== formData.employeeName)
-                        .map((employee) => (
-                          <option key={employee.id} value={employee.name}>{employee.name.toUpperCase()}</option>
-                        ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-gray-50">
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5">Leave Specifics</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="md:col-span-2">
-                    <select
-                      name="leaveType"
-                      value={formData.leaveType}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
-                      required
-                    >
-                      <option value="">Select Leave Type</option>
-                      {leaveTypes.map((type) => (
-                        <option key={type} value={type}>{type.toUpperCase()}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase px-1">From Date</label>
-                    <input
-                      type="date"
-                      name="fromDate"
-                      value={formData.fromDate}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase px-1">To Date</label>
-                    <input
-                      type="date"
-                      name="toDate"
-                      value={formData.toDate}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {formData.fromDate && formData.toDate && (
-                <div className="bg-indigo-50 p-2.5 rounded-lg border border-indigo-100 flex items-center justify-between">
-                   <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">Calculated Duration:</span>
-                   <span className="text-sm font-bold text-indigo-800 bg-white px-2 py-0.5 rounded shadow-sm">{calculateDays(formData.fromDate, formData.toDate)} Days</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 px-0.5">Reason for Absence*</label>
-                <textarea
-                  name="reason"
-                  value={formData.reason}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-gray-300 resize-none"
-                  placeholder="Type your reason here..."
-                  required
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors uppercase tracking-widest"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className={`flex-[2] py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {submitting ? 'Sending Request...' : 'Submit Request'}
-                </button>
-              </div>
-            </form>
+             ))}
           </div>
+      </div>
+      
+      {/* Modern Request Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl animate-in zoom-in duration-300 overflow-hidden flex flex-col">
+                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                            <Plus size={20} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">New Leave Request</h3>
+                    </div>
+                    <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                        <X size={20} className="text-slate-500" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-8 space-y-5 overflow-y-auto max-h-[75vh]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5 md:col-span-2">
+                           <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Employee Info</label>
+                           <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div>
+                                 <p className="text-sm font-bold text-slate-900">{formData.employeeName}</p>
+                                 <p className="text-[11px] font-bold text-slate-400 mt-0.5">{formData.employeeId}</p>
+                              </div>
+                              <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-[10px] font-black uppercase tracking-widest">{formData.department || 'Dept NA'}</span>
+                           </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">HOD Approval From*</label>
+                            <select
+                              name="hodName"
+                              value={formData.hodName}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                              required
+                            >
+                              <option value="">Select HOD</option>
+                              {hodNames.map((name, index) => (
+                                <option key={index} value={name}>{name.toUpperCase()}</option>
+                              ))}
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Duty Substitute*</label>
+                            <select
+                              name="substitute"
+                              value={formData.substitute}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                              required
+                            >
+                              <option value="">Select Substitute</option>
+                              {employees
+                                .filter(emp => emp.department === formData.department && emp.name !== formData.employeeName)
+                                .map((employee) => (
+                                  <option key={employee.id} value={employee.name}>{employee.name.toUpperCase()}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-1.5 md:col-span-2 pt-2 border-t border-slate-100 mt-2">
+                           <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Leave Category*</label>
+                           <select
+                              name="leaveType"
+                              value={formData.leaveType}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                              required
+                            >
+                              <option value="">Select Leave Type</option>
+                              {leaveTypes.map((type) => (
+                                <option key={type} value={type}>{type.toUpperCase()}</option>
+                              ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">From Date</label>
+                            <input
+                              type="date"
+                              name="fromDate"
+                              value={formData.fromDate}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                              required
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">To Date</label>
+                            <input
+                              type="date"
+                              name="toDate"
+                              value={formData.toDate}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                              required
+                            />
+                        </div>
+
+                        {formData.fromDate && formData.toDate && (
+                           <div className="md:col-span-2 bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-widest">Calculated Duration</span>
+                              <span className="text-sm font-black text-indigo-800 bg-white px-3 py-1 rounded-lg shadow-sm">{calculateDays(formData.fromDate, formData.toDate)} Days</span>
+                           </div>
+                        )}
+
+                        <div className="space-y-1.5 md:col-span-2">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Reason for Absence*</label>
+                            <textarea
+                              name="reason"
+                              value={formData.reason}
+                              onChange={handleInputChange}
+                              rows={2}
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none transition-all"
+                              placeholder="Type your reason here..."
+                              required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-4 flex justify-end gap-3 mt-4 border-t border-slate-100">
+                        <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-2xl transition-all uppercase tracking-widest">Cancel</button>
+                        <button disabled={submitting} type="submit" className={`px-8 py-3 bg-indigo-600 text-white text-xs font-bold rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all uppercase tracking-widest ${submitting ? 'opacity-50' : ''}`}>{submitting ? 'Sending Request...' : 'Submit Request'}</button>
+                    </div>
+                </form>
+            </div>
         </div>
       )}
     </div>

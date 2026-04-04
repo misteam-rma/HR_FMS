@@ -87,6 +87,9 @@ const CallTracker = () => {
           applyingForPost: row[getIndex("Applying For the Post")],
           department: row[getIndex("Department")],
           candidateName: row[getIndex("Candidate Name")],
+          candidateSays: row[23] || "",
+          trackerStatus: row[24] || "",
+          nextCallDate: row[25] || "",
           candidateDOB: row[getIndex("DOB")], // Fetch DOB from Column F (index 5)
           candidatePhone: row[getIndex("Candidate Phone Number")],
           candidateEmail: row[getIndex("Candidate Email")],
@@ -459,13 +462,13 @@ const CallTracker = () => {
 
   const filteredPendingData = pendingData.filter(item => {
     // Search filter
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.candidateEnquiryNo?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     // Department filter
     const matchesDept = !filterDepartment || item.department === filterDepartment;
-    
+
     // Date filter
     let matchesDate = true;
     if (filterDate && item.id) { // id stores Timestamp Column A
@@ -473,39 +476,39 @@ const CallTracker = () => {
         const itemDate = new Date(item.id);
         const searchDate = new Date(filterDate);
         matchesDate = itemDate.getFullYear() === searchDate.getFullYear() &&
-                     itemDate.getMonth() === searchDate.getMonth() &&
-                     itemDate.getDate() === searchDate.getDate();
+          itemDate.getMonth() === searchDate.getMonth() &&
+          itemDate.getDate() === searchDate.getDate();
       } catch (e) {
         matchesDate = true;
       }
     }
-    
+
     return matchesSearch && matchesDept && matchesDate;
   });
 
   const filteredHistoryData = historyData.filter(item => {
     // Search filter
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       item.enquiryNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.candidateSays?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     // Date filter (History uses item.timestamp or item.timestamp from Column A)
     let matchesDate = true;
     if (filterDate && item.timestamp) {
-       try {
-         // Handle dd/mm/yyyy hh:mm:ss format seen in History
-         const [dPart] = item.timestamp.split(' ');
-         const [d, m, y] = dPart.split('/');
-         const itemDate = new Date(`${y}-${m}-${d}`);
-         const searchDate = new Date(filterDate);
-         matchesDate = itemDate.getFullYear() === searchDate.getFullYear() &&
-                      itemDate.getMonth() === searchDate.getMonth() &&
-                      itemDate.getDate() === searchDate.getDate();
-       } catch (e) {
-         matchesDate = true;
-       }
+      try {
+        // Handle dd/mm/yyyy hh:mm:ss format seen in History
+        const [dPart] = item.timestamp.split(' ');
+        const [d, m, y] = dPart.split('/');
+        const itemDate = new Date(`${y}-${m}-${d}`);
+        const searchDate = new Date(filterDate);
+        matchesDate = itemDate.getFullYear() === searchDate.getFullYear() &&
+          itemDate.getMonth() === searchDate.getMonth() &&
+          itemDate.getDate() === searchDate.getDate();
+      } catch (e) {
+        matchesDate = true;
+      }
     }
-    
+
     return matchesSearch && matchesDate;
   });
 
@@ -522,97 +525,76 @@ const CallTracker = () => {
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  };  // Pagination navigation renderer matching Indent.jsx
+  const renderPaginationNav = () => (
+    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px w-full justify-center sm:w-auto" aria-label="Pagination">
+      <button
+        onClick={() => paginate(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="relative inline-flex items-center px-1.5 py-1 sm:px-2 sm:py-1 rounded-l-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="sr-only">Previous</span>
+        <svg className="h-4 w-4 sm:h-4 sm:w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
 
-  const renderPaginationNav = () => {
-    if (totalPages <= 1) return null;
-
-    const pageButtons = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    return (
-      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-        <button
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="relative inline-flex items-center px-1 py-1 rounded-l-md border border-gray-300 bg-white text-xs font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span className="sr-only">Previous</span>
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-        </button>
-
-        {startPage > 1 && (
-          <>
-            <button onClick={() => paginate(1)} className="relative inline-flex items-center px-2 py-1 border border-gray-300 bg-white text-xs font-medium text-gray-700 hover:bg-indigo-50">1</button>
-            {startPage > 2 && <span className="relative inline-flex items-center px-2 py-1 border border-gray-300 bg-white text-xs font-medium text-gray-700">...</span>}
-          </>
-        )}
-
-        {Array.from({ length: endPage - startPage + 1 }).map((_, idx) => {
-          const pageNum = startPage + idx;
+      {[...Array(Math.max(1, totalPages))].map((_, i) => {
+        const pageNum = i + 1;
+        if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
           return (
             <button
               key={pageNum}
               onClick={() => paginate(pageNum)}
-              className={`relative inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-bold transition-all ${currentPage === pageNum ? 'bg-indigo-600 text-white z-10' : 'bg-white text-gray-700 hover:bg-indigo-50'}`}
+              className={`relative inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1 border text-xs sm:text-sm font-medium ${currentPage === pageNum ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`}
             >
               {pageNum}
             </button>
           );
-        })}
+        } else if ((pageNum === currentPage - 2 && pageNum > 1) || (pageNum === currentPage + 2 && pageNum < totalPages)) {
+          return <span key={pageNum} className="relative inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-700">...</span>;
+        }
+        return null;
+      })}
 
-        {endPage < totalPages && (
-          <>
-            {endPage < totalPages - 1 && <span className="relative inline-flex items-center px-2 py-1 border border-gray-300 bg-white text-xs font-medium text-gray-700">...</span>}
-            <button onClick={() => paginate(totalPages)} className="relative inline-flex items-center px-2 py-1 border border-gray-300 bg-white text-xs font-medium text-gray-700 hover:bg-indigo-50">{totalPages}</button>
-          </>
-        )}
-
-        <button
-          onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="relative inline-flex items-center px-1 py-1 rounded-r-md border border-gray-300 bg-white text-xs font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span className="sr-only">Next</span>
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
-        </button>
-      </nav>
-    );
-  };
+      <button
+        onClick={() => paginate(currentPage + 1)}
+        disabled={currentPage >= totalPages}
+        className="relative inline-flex items-center px-1.5 py-1 sm:px-2 sm:py-1 rounded-r-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="sr-only">Next</span>
+        <svg className="h-4 w-4 sm:h-4 sm:w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+    </nav>
+  );
 
   return (
     <div className="space-y-3 md:pb-4 mb-4">
       {/* Unified "One Filter" Dashboard Toolbar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 md:gap-4 mb-2">
         <div className="flex items-center gap-4">
-          <h1 className="hidden md:block text-2xl font-bold text-gray-800 tracking-tight">Call Tracker</h1>
-          
+          <h1 className="hidden md:block text-2xl font-bold text-gray-800">Call Tracker</h1>
+
           {/* Segmented Tab Control (Integrated into Filter Row) */}
           <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200 shadow-sm self-start sm:self-center">
             <button
               onClick={() => { setActiveTab("pending"); setCurrentPage(1); }}
-              className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${
-                activeTab === "pending"
-                ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === "pending"
+                  ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                }`}
             >
               <Clock size={13} />
               <span>Pending ({filteredPendingData.length})</span>
             </button>
             <button
               onClick={() => { setActiveTab("history"); setCurrentPage(1); }}
-              className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${
-                activeTab === "history"
-                ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === "history"
+                  ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                }`}
             >
               <History size={13} />
               <span>History ({filteredHistoryData.length})</span>
@@ -643,10 +625,10 @@ const CallTracker = () => {
             <div className="relative col-span-1 min-w-[140px]">
               <div
                 onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)}
-                className="flex items-center gap-2 h-9 px-3 border border-gray-300 rounded bg-white text-[11px] text-gray-700 cursor-pointer hover:border-indigo-500 transition shadow-sm relative overflow-hidden"
+                className="flex items-center gap-2 h-9 px-3 border border-gray-300 rounded bg-white text-xs text-gray-700 cursor-pointer hover:border-indigo-500 transition shadow-sm relative overflow-hidden"
               >
                 <Filter size={12} className="text-gray-400 shrink-0" />
-                <span className="truncate font-bold uppercase tracking-tight">{filterDepartment || "All Dept"}</span>
+                <span className="truncate font-medium">{filterDepartment || "All Dept"}</span>
                 <ChevronDown size={14} className={`ml-auto text-gray-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
               </div>
 
@@ -687,7 +669,7 @@ const CallTracker = () => {
                     setFilterDate(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer uppercase"
+                  className="w-full bg-transparent focus:outline-none text-[11px] font-medium cursor-pointer"
                 />
               </div>
             </div>
@@ -695,45 +677,48 @@ const CallTracker = () => {
         </div>
       </div>
 
-      {/* Unified Main Content Container (Synced with FindEnquiry.jsx) */}
-      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[500px] flex flex-col shadow-sm">
+      {/* Unified Main Content Container (Synced with Indent.jsx) */}
+      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[530px] flex flex-col">
         {loading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <LoadingSpinner message="Retrieving call records..." minHeight="400px" />
+          <div className="flex-1 flex items-center justify-center p-12">
+            <LoadingSpinner message="Retrieving call records..." minHeight="450px" />
           </div>
         ) : (
           <>
             {activeTab === "pending" && (
-              <div className="p-0 flex-1 flex flex-col">
-                {/* Desktop Table View */}
-                <div className="hidden md:block overflow-x-auto scrollbar-hide flex-1">
-                  <div className="max-h-[calc(100vh-280px)] min-h-[500px] overflow-y-auto scrollbar-hide flex flex-col justify-between">
+              <div className="flex-1 flex flex-col">
+                {/* Desktop View (Table + Footer combined) */}
+                <div className="hidden md:flex flex-col border border-gray-200 rounded-lg bg-white overflow-hidden">
+                  <div className="max-h-[calc(105vh-280px)] min-h-[530px] overflow-y-auto scrollbar-hide">
                     <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50/5 sticky top-0 z-10 backdrop-blur-sm">
+                      <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Action</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Indent Number</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Candidate Enquiry Number</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Applying For the Post</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Candidate Name</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">DOB</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Candidate Phone Number</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Candidate Email</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Previous Company Name</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Job Experience</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Department</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Previous Position</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Reason Of Leaving</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Marital Status</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Last Salary Drawn</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Candidate Photo</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Refrence By</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Present Address</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Aadhar Number</th>
-                          <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Resume Copy</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Action</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Indent Number</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Candidate Enquiry Number</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Applying For the Post</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Candidate Name</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">What Did The Candidate Says</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Tracker Status</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Next Call Date</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">DOB</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Candidate Phone Number</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Candidate Email</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Previous Company Name</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Job Experience</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Department</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Previous Position</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Reason Of Leaving</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Marital Status</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Last Salary Drawn</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Candidate Photo</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Refrence By</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Present Address</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Aadhar Number</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Resume Copy</th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-100 italic font-medium">
+                      <tbody className="bg-white divide-y divide-gray-100">
                         {tableLoading ? (
                           <tr>
                             <td colSpan="20" className="px-4 py-1">
@@ -758,108 +743,124 @@ const CallTracker = () => {
                         ) : (
                           currentItems.map((item) => (
                             <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
-                               <td className="px-4 py-2 whitespace-nowrap text-center not-italic">
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
                                 <button
                                   onClick={() => handleCallClick(item)}
-                                  className="px-4 py-1 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 text-[10px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-95"
+                                  className="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs hover:bg-indigo-700 transition-all shadow-sm active:scale-95"
                                 >
                                   Call
                                 </button>
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-xs font-black text-indigo-600 not-italic tracking-tighter">#{item.indentNo}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-xs font-black text-indigo-600 not-italic tracking-tighter">{item.candidateEnquiryNo}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-600 not-italic">{item.applyingForPost}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-black text-gray-900 not-italic">{item.candidateName}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-500 not-italic">{item.candidateDOB}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-black text-gray-700 not-italic">{item.candidatePhone}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-500 not-italic lowercase">{item.candidateEmail}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-600 italic">{item.previousCompany || "-"}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-600 italic">{item.jobExperience}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[10px] font-black text-gray-400 uppercase not-italic tracking-widest">{item.department}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-600 italic">{item.previousPosition}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-500 italic max-w-[150px] truncate" title={item.reasonForLeaving}>{item.reasonForLeaving}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-600 italic">{item.maritalStatus}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-black text-emerald-600 not-italic">{item.lastSalary}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center not-italic">
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.indentNo}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.candidateEnquiryNo}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.applyingForPost}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.candidateName}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 max-w-[200px] truncate" title={item.candidateSays}>{item.candidateSays || "-"}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.trackerStatus || "-"}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.nextCallDate ? new Date(item.nextCallDate).toLocaleDateString() : "-"}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.candidateDOB}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.candidatePhone}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.candidateEmail}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.previousCompany || "-"}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.jobExperience}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.department}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.previousPosition}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 max-w-[150px] truncate" title={item.reasonForLeaving}>{item.reasonForLeaving}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.maritalStatus}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.lastSalary}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
                                 {item.candidatePhoto ? (
-                                  <a href={item.candidatePhoto} target="_blank" rel="noopener noreferrer" className="p-1 px-2 text-indigo-600 bg-indigo-50 rounded border border-indigo-100 text-[10px] font-black uppercase hover:bg-white shadow-sm transition-all">PIC</a>
-                                ) : <span className="text-gray-300">—</span>}
+                                  <a href={item.candidatePhoto} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-900 text-sm">View</a>
+                                ) : <span className="text-gray-400 text-sm">—</span>}
                               </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-600 italic">{item.referenceBy || "—"}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-bold text-gray-500 italic max-w-[200px] truncate" title={item.presentAddress}>{item.presentAddress}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center text-[11px] font-black text-gray-700 not-italic tracking-tighter">{item.aadharNo}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center not-italic">
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.referenceBy || "—"}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 max-w-[200px] truncate" title={item.presentAddress}>{item.presentAddress}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.aadharNo}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
                                 {item.candidateResume ? (
-                                  <a href={item.candidateResume} target="_blank" rel="noopener noreferrer" className="p-1 px-2 text-indigo-600 bg-indigo-50 rounded border border-indigo-100 text-[10px] font-black uppercase hover:bg-white shadow-sm transition-all">DOC</a>
-                                ) : <span className="text-gray-300">—</span>}
+                                  <a href={item.candidateResume} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-900 text-sm">View</a>
+                                ) : <span className="text-gray-400 text-sm">—</span>}
                               </td>
                             </tr>
                           ))
                         )}
                       </tbody>
                     </table>
-
-                    {/* Standardized Pagination Footer */}
-                    <div className="flex px-4 py-1.5 bg-gray-50/50 border-t border-gray-100 items-center justify-between sticky bottom-0 backdrop-blur-md">
-                      <div className="flex items-center gap-4 flex-wrap">
-                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-tight">
-                          Showing <span className="text-indigo-600">{activeData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="text-indigo-600">{Math.min(indexOfLastItem, activeData.length)}</span> of <span className="text-gray-800">{activeData.length}</span> records
-                        </p>
-                        <div className="flex items-center gap-2 border-l border-gray-200 pl-4 h-4">
-                          <label className="text-[9px] text-gray-400 font-black uppercase">Rows:</label>
-                          <select
-                            value={itemsPerPage}
-                            onChange={(e) => {
-                              setItemsPerPage(Number(e.target.value));
-                              setCurrentPage(1);
-                            }}
-                            className="text-[9px] border border-gray-200 rounded px-1.5 py-0.5 bg-white font-black text-gray-600 outline-none shadow-sm cursor-pointer"
-                          >
-                            {[15, 30, 50, 100].map(val => (
-                              <option key={val} value={val}>{val}</option>
-                            ))}
-                          </select>
-                        </div>
+                  </div>
+                  
+                  {/* Desktop Pagination Footer */}
+                  <div className="px-4 py-3 bg-white border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-6 flex-wrap">
+                      <p className="text-[13px] text-gray-600 font-medium tracking-wide">
+                        Showing <span className="font-bold text-gray-900">{activeData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, activeData.length)}</span> of <span className="font-bold text-gray-900">{activeData.length}</span> records
+                      </p>
+                      <div className="flex items-center gap-2 h-5">
+                        <label className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Rows per page:</label>
+                        <select
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value));
+                            setCurrentPage(1);
+                          }}
+                          className="text-xs bg-transparent font-medium text-gray-700 outline-none cursor-pointer"
+                        >
+                          {[15, 30, 50, 100].map((val) => (
+                            <option key={val} value={val}>{val}</option>
+                          ))}
+                        </select>
                       </div>
-                      <div className="shrink-0 scale-90 origin-right">
-                        {renderPaginationNav()}
-                      </div>
+                    </div>
+                    <div className="flex items-center w-auto justify-end">
+                      {renderPaginationNav()}
                     </div>
                   </div>
                 </div>
 
-                {/* Mobile Card View (Simplified for consistency) */}
-                <div className="md:hidden flex flex-col">
-                  <div className="p-3 space-y-3">
-                    {currentItems.map((item) => (
-                      <div key={item.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-3.5 space-y-2.5">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="font-black text-indigo-600 tracking-widest uppercase">#{item.candidateEnquiryNo}</span>
-                          <span className="bg-gray-100 text-gray-400 px-2 py-0.5 rounded font-black uppercase">{item.department}</span>
-                        </div>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="text-sm font-black text-gray-800 leading-tight">{item.candidateName}</div>
-                            <div className="text-[10px] text-indigo-600 font-bold uppercase mt-0.5 tracking-tight">{item.applyingForPost}</div>
-                          </div>
-                           <div className="flex gap-1.5">
-                            {item.candidatePhoto && <a href={item.candidatePhoto} target="_blank" rel="noopener noreferrer" className="p-1 px-2 text-indigo-600 bg-indigo-50 rounded text-[9px] font-black uppercase">PIC</a>}
-                            {item.candidateResume && <a href={item.candidateResume} target="_blank" rel="noopener noreferrer" className="p-1 px-2 text-indigo-600 bg-indigo-50 rounded text-[9px] font-black uppercase">DOC</a>}
-                          </div>
-                        </div>
-                        <div className="pt-2 border-t border-gray-50 flex justify-between items-center">
-                           <div className="text-[11px] text-gray-700 font-black tracking-tight">{item.candidatePhone}</div>
-                           <button
+                {/* Mobile Card View with Embedded Pagination */}
+                <div className="md:hidden flex flex-col h-[calc(100vh-240px)]">
+                  <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
+                    {currentItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-24">
+                        <p className="text-gray-500 text-lg">No pending calls found.</p>
+                      </div>
+                    ) : (
+                      currentItems.map((item, index) => (
+                        <div key={item.id || index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-2.5 space-y-1.5">
+                          {/* Top Bar */}
+                          <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-indigo-600 text-sm">#{item.candidateEnquiryNo}</span>
+                              <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-medium uppercase tracking-wider">{item.department}</span>
+                            </div>
+                            <button
                               onClick={() => handleCallClick(item)}
-                              className="px-4 py-1.5 bg-indigo-600 text-white rounded text-[9px] font-black uppercase active:scale-95 transition-all"
+                              className="px-3 py-1 bg-indigo-600 text-white rounded text-xs font-bold shadow-sm active:scale-95 transition-transform"
                             >
                               Call
                             </button>
+                          </div>
+
+                          {/* Info Rows */}
+                          <div>
+                            <div className="text-sm font-bold text-gray-800 tracking-tight">{item.candidateName}</div>
+                            <div className="text-xs text-gray-600 mt-0.5"><span className="text-gray-400">Post:</span> {item.applyingForPost}</div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                            <div>
+                              <span className="block text-gray-400 text-[10px] uppercase">Phone</span>
+                              <span className="font-medium text-gray-700">{item.candidatePhone}</span>
+                            </div>
+                            <div>
+                              <span className="block text-gray-400 text-[10px] uppercase">Exp</span>
+                              <span className="font-medium text-gray-700">{item.jobExperience || "Fresher"}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
-                  <div className="p-3 flex justify-center sticky bottom-0 bg-white border-t border-gray-100">
+                  <div className="border-t border-gray-300 bg-white px-2 py-2 flex justify-center sticky bottom-0">
                     {renderPaginationNav()}
                   </div>
                 </div>
@@ -867,84 +868,128 @@ const CallTracker = () => {
             )}
 
             {activeTab === "history" && (
-              <div className="p-0 flex-1 flex flex-col">
-                {/* Desktop History View */}
-                <div className="hidden md:block overflow-x-auto scrollbar-hide flex-1">
-                  <div className="max-h-[calc(100vh-280px)] min-h-[500px] overflow-y-auto scrollbar-hide flex flex-col justify-between">
+              <div className="flex-1 flex flex-col">
+                {/* Desktop View (Table + Footer combined) */}
+                <div className="hidden md:flex flex-col border border-gray-200 rounded-lg bg-white overflow-hidden">
+                  <div className="max-h-[calc(100vh-280px)] min-h-[500px] overflow-y-auto scrollbar-hide">
                     <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50/5 sticky top-0 z-10 backdrop-blur-sm">
+                      <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
-                          <th className="px-4 py-2.5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Enq No.</th>
-                          <th className="px-4 py-2.5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                          <th className="px-4 py-2.5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Candidate Response</th>
-                          <th className="px-4 py-2.5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Next Action</th>
-                          <th className="px-4 py-2.5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Timestamp</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Enq No.</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Candidate Response</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Next Action</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Timestamp</th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-100 italic font-medium">
+                      <tbody className="bg-white divide-y divide-gray-100">
                         {currentItems.length === 0 ? (
-                           <tr>
-                              <td colSpan="5" className="px-4 py-24 text-center">
-                                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">No history recorded.</p>
-                              </td>
-                           </tr>
+                          <tr>
+                            <td colSpan="5" className="px-4 py-24 text-center">
+                              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">No history recorded.</p>
+                            </td>
+                          </tr>
                         ) : (
                           currentItems.map((item, index) => (
-                            <tr key={index} className="hover:bg-gray-50/50 transition-colors">
-                              <td className="px-4 py-2 whitespace-nowrap text-xs font-black text-indigo-600 not-italic">{item.enquiryNo}</td>
-                              <td className="px-4 py-2 whitespace-nowrap not-italic">
+                            <tr key={index} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.enquiryNo}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
                                 <span
-                                  className={`px-2 py-0.5 text-[9px] font-black rounded uppercase tracking-wider ${item.status === "Joining"
-                                      ? "bg-emerald-100 text-emerald-700"
-                                      : item.status === "Reject"
-                                        ? "bg-rose-100 text-rose-700"
-                                        : "bg-indigo-100 text-indigo-700"
+                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.status === "Joining"
+                                    ? "bg-green-100 text-green-800"
+                                    : item.status === "Reject"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-indigo-100 text-indigo-800"
                                     }`}
                                 >
                                   {item.status}
                                 </span>
                               </td>
-                              <td className="px-4 py-2 text-xs text-gray-600 leading-relaxed max-w-xs truncate" title={item.candidateSays}>"{item.candidateSays}"</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-xs font-black text-gray-500 not-italic">{item.nextDate || "-"}</td>
-                              <td className="px-4 py-2 whitespace-nowrap text-[10px] text-gray-300 font-black not-italic uppercase">{item.timestamp || "-"}</td>
+                              <td className="px-6 py-4 text-sm text-gray-500 max-w-sm truncate" title={item.candidateSays}>{item.candidateSays}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.nextDate || "-"}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.timestamp || "-"}</td>
                             </tr>
                           ))
                         )}
                       </tbody>
                     </table>
+                  </div>
 
-                    {/* Standardized Pagination Footer */}
-                    <div className="flex px-4 py-1.5 bg-gray-50/50 border-t border-gray-100 items-center justify-between sticky bottom-0 backdrop-blur-md">
-                      <div className="flex items-center gap-4">
-                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-tight">
-                          Showing <span className="text-indigo-600">{activeData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="text-indigo-600">{Math.min(indexOfLastItem, activeData.length)}</span> of <span className="text-gray-800">{activeData.length}</span> records
-                        </p>
+                  {/* Desktop Pagination Footer */}
+                  <div className="px-4 py-3 bg-white border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-6 flex-wrap">
+                      <p className="text-[13px] text-gray-600 font-medium tracking-wide">
+                        Showing <span className="font-bold text-gray-900">{activeData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, activeData.length)}</span> of <span className="font-bold text-gray-900">{activeData.length}</span> records
+                      </p>
+                      <div className="flex items-center gap-2 h-5">
+                        <label className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Rows per page:</label>
+                        <select
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value));
+                            setCurrentPage(1);
+                          }}
+                          className="text-xs bg-transparent font-medium text-gray-700 outline-none cursor-pointer"
+                        >
+                          {[15, 30, 50, 100].map((val) => (
+                            <option key={val} value={val}>{val}</option>
+                          ))}
+                        </select>
                       </div>
-                      <div className="shrink-0 scale-90 origin-right">
-                        {renderPaginationNav()}
-                      </div>
+                    </div>
+                    <div className="flex items-center w-auto justify-end">
+                      {renderPaginationNav()}
                     </div>
                   </div>
                 </div>
 
                 {/* Mobile History View */}
-                <div className="md:hidden flex flex-col">
-                  <div className="p-3 space-y-3">
-                    {currentItems.map((item, index) => (
-                      <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 p-3.5 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="font-black text-indigo-600 text-[10px] tracking-widest uppercase">#{item.enquiryNo}</span>
-                           <span className={`px-2 py-0.5 text-[9px] font-black rounded uppercase ${item.status === "Joining" ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100 text-indigo-700"}`}>{item.status}</span>
-                        </div>
-                        <div className="text-xs text-gray-600 italic font-medium leading-relaxed">"{item.candidateSays}"</div>
-                        <div className="flex justify-between items-center pt-2 border-t border-gray-50 text-[9px] font-black text-gray-400 uppercase">
-                          <span>Next: <span className="text-gray-600">{item.nextDate || "-"}</span></span>
-                          <span>{item.timestamp.split(' ')[0]}</span>
-                        </div>
+                <div className="md:hidden flex flex-col h-[calc(105vh-240px)]">
+                  <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
+                    {currentItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-24">
+                        <p className="text-gray-500 text-lg">No history found.</p>
                       </div>
-                    ))}
+                    ) : (
+                      currentItems.map((item, index) => (
+                        <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-2.5 space-y-2">
+                          <div className="flex justify-between items-center bg-gray-50 -mx-2.5 -mt-2.5 p-2 px-3 rounded-t-lg border-b border-gray-100 mb-1">
+                            <span className="font-bold text-indigo-600 text-xs tracking-tight">#{item.enquiryNo}</span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${item.status === "Joining"
+                                ? "bg-green-100 text-green-700"
+                                : item.status === "Reject"
+                                  ? "bg-red-100 text-red-700"
+                                  : item.status === "On Hold" || item.status === "Hold"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : item.status === "Interview"
+                                      ? "bg-blue-100 text-blue-700"
+                                      : "bg-indigo-100 text-indigo-700"
+                                }`}
+                            >
+                              {item.status}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-start pt-1">
+                            <div className="text-sm font-bold text-gray-900 leading-tight">Response:</div>
+                            <div className="text-[11px] text-gray-600 font-medium text-right max-w-[60%]">{item.candidateSays || '-'}</div>
+                          </div>
+
+                          <div className="flex justify-between items-start">
+                            <div className="text-xs text-gray-500">Next Action:</div>
+                            <div className="text-xs text-indigo-600 font-medium">{item.nextDate || '-'}</div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 text-[10px] text-gray-400 border-t border-gray-50 pt-2">
+                            <Clock size={10} />
+                            <span>{item.timestamp}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                  <div className="p-3 flex justify-center sticky bottom-0 bg-white border-t border-gray-100">
+                  <div className="border-t border-gray-300 bg-white px-2 py-2 flex justify-center sticky bottom-0">
                     {renderPaginationNav()}
                   </div>
                 </div>
@@ -958,10 +1003,10 @@ const CallTracker = () => {
       {showModal && selectedItem && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4 backdrop-blur-sm bg-black/20">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-white">
+            <div className="flex justify-between items-center p-4 border-b border-gray-100">
               <div>
-                <h3 className="text-lg font-black text-gray-800 tracking-tight">Process Call</h3>
-                <p className="text-[10px] text-gray-400 mt-0.5 font-bold uppercase tracking-widest">Enquiry: {selectedItem.candidateEnquiryNo}</p>
+                <h3 className="text-lg font-bold text-gray-800">Process Call</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Enquiry: {selectedItem.candidateEnquiryNo}</p>
               </div>
               <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600">
                 <X size={18} />
@@ -971,16 +1016,16 @@ const CallTracker = () => {
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gray-50/50 p-2 rounded-md border border-gray-100">
-                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Candidate</label>
-                    <div className="text-xs font-black text-indigo-600 truncate">{selectedItem.candidateName}</div>
+                  <label className="block text-[10px] font-bold text-gray-700 mb-0.5">Candidate</label>
+                  <div className="text-xs font-bold text-indigo-600 truncate">{selectedItem.candidateName}</div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-gray-700 mb-1 uppercase tracking-tighter">Status*</label>
+                  <label className="block text-[10px] font-bold text-gray-700 mb-0.5">Status*</label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 bg-white font-bold"
+                    className="w-full border border-gray-300 rounded px-2.5 py-1 text-xs focus:ring-1 focus:ring-indigo-500 bg-white"
                     required
                   >
                     <option value="">Select Status</option>
@@ -995,19 +1040,19 @@ const CallTracker = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-gray-700 mb-1 uppercase tracking-tighter">
-                  {formData.status === "Negotiation" ? "Customer Requirement*" : 
-                   formData.status === "On Hold" ? "Reason For Hold*" : 
-                   formData.status === "Joining" ? "Joining Commitment*" : 
-                   formData.status === "Reject" ? "Rejection Reason*" : 
-                   "Candidate Response*"}
+                <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
+                  {formData.status === "Negotiation" ? "Customer Requirement*" :
+                    formData.status === "On Hold" ? "Reason For Hold*" :
+                      formData.status === "Joining" ? "Joining Commitment*" :
+                        formData.status === "Reject" ? "Rejection Reason*" :
+                          "Candidate Response*"}
                 </label>
                 <textarea
                   name="candidateSays"
                   value={formData.candidateSays}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full border border-gray-300 rounded px-2.5 py-2 text-xs focus:ring-1 focus:ring-indigo-500 bg-white italic font-medium"
+                  className="w-full border border-gray-300 rounded px-2.5 py-1 text-xs focus:ring-1 focus:ring-indigo-500 bg-white"
                   placeholder="Enter details here..."
                   required
                 />
@@ -1015,7 +1060,7 @@ const CallTracker = () => {
 
               {formData.status && !["Joining", "Reject"].includes(formData.status) && (
                 <div className="animate-in slide-in-from-top-2 duration-200">
-                  <label className="block text-[10px] font-black text-gray-700 mb-1 uppercase tracking-tighter">
+                  <label className="block text-[10px] font-bold text-gray-700 mb-0.5">
                     {formData.status === "Interview" ? "Schedule Date*" : "Recall Date*"}
                   </label>
                   <div className="relative">
@@ -1025,7 +1070,7 @@ const CallTracker = () => {
                       name="nextDate"
                       value={formData.nextDate}
                       onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded pl-9 pr-2.5 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 bg-white font-bold"
+                      className="w-full border border-gray-300 rounded pl-9 pr-2.5 py-1 text-xs focus:ring-1 focus:ring-indigo-500 bg-white"
                       required
                     />
                   </div>
@@ -1036,19 +1081,19 @@ const CallTracker = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-5 py-2 border border-gray-200 rounded text-[10px] font-black uppercase text-gray-500 hover:bg-gray-50 transition-all"
+                  className="px-4 py-1.5 border border-gray-300 rounded text-xs text-gray-700 font-medium hover:bg-gray-50 transition-colors"
                   disabled={submitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-8 py-2 bg-indigo-600 text-white rounded text-[10px] font-black uppercase shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2"
+                  className="px-4 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
                   disabled={submitting}
                 >
                   {submitting ? (
                     <div className="flex items-center gap-2">
-                       <svg className="animate-spin h-3 w-3 text-white" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-3 w-3 text-white" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>

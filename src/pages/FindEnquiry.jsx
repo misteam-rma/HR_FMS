@@ -55,7 +55,7 @@ const FindEnquiry = () => {
   const [itemsPerPage, setItemsPerPage] = useState(15);
 
   // Google Drive folder ID for file uploads
-  const GOOGLE_DRIVE_FOLDER_ID = '13WWtV4E5AapVE2gkcjOZvTnH4Lx4IerR';
+  const GOOGLE_DRIVE_FOLDER_ID = '11rrcY8U9f61mcXLqDaJVzEgqkwFd5l6c';
 
   // Fetch all necessary data
   const fetchAllData = async () => {
@@ -831,8 +831,8 @@ const FindEnquiry = () => {
             <button
               onClick={() => { setActiveTab("pending"); setCurrentPage(1); }}
               className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === "pending"
-                  ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
             >
               <Clock size={13} />
@@ -841,8 +841,8 @@ const FindEnquiry = () => {
             <button
               onClick={() => { setActiveTab("history"); setCurrentPage(1); }}
               className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === "history"
-                  ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                ? "bg-white text-indigo-600 shadow-sm border border-gray-200"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
             >
               <History size={13} />
@@ -1009,8 +1009,8 @@ const FindEnquiry = () => {
                 </div>
 
                 {/* Mobile Card View with Embedded Pagination */}
-                <div className="md:hidden flex flex-col border border-gray-300 rounded-xl overflow-hidden bg-gray-50 shadow-sm h-[calc(105vh-240px)]">
-                  <div className="flex-1 p-3 space-y-3 overflow-y-auto scrollbar-hide">
+                <div className="md:hidden flex flex-col h-[calc(100vh-240px)]">
+                  <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
                     {tableLoading ? (
                       <LoadingSpinner message="Searching pending records..." minHeight="250px" />
                     ) : filteredPendingData.length === 0 ? (
@@ -1149,8 +1149,8 @@ const FindEnquiry = () => {
                 </div>
 
                 {/* Mobile Card View with Embedded Pagination */}
-                <div className="md:hidden flex flex-col border border-gray-300 rounded-xl overflow-hidden bg-gray-50 shadow-sm h-[calc(105vh-240px)]">
-                  <div className="flex-1 p-3 space-y-3 overflow-y-auto scrollbar-hide">
+                <div className="md:hidden flex flex-col h-[calc(105vh-240px)]">
+                  <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
                     {tableLoading ? (
                       <LoadingSpinner message="Retrieving history..." minHeight="250px" />
                     ) : filteredHistoryData.length === 0 ? (

@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { Camera, MapPin, Clock, CheckCircle2, AlertCircle, Loader2, Send } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';

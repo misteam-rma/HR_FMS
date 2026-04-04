@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Clock, CheckCircle2, XCircle, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -486,684 +486,299 @@ const LeaveApproval = () => {
     return matchesSearch && matchesEmployee;
   });
 
-  const renderPendingLeavesTable = () => (
-    <table className="min-w-full divide-y divide-white">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Select
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Employee ID
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Name
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Department
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            From
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            To
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Days
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Reason
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Leave Type
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Substitute
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-white">
-        {filteredPendingLeaves.length > 0 ? (
-          filteredPendingLeaves.map((item, index) => (
-            <tr key={index} className="hover:bg-white">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  checked={selectedRow?.serialNo === item.serialNo}
-                  onChange={() => handleCheckboxChange(item.serialNo, item)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.employeeId}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.employeeName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.department}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {selectedRow?.serialNo === item.serialNo ? (
-                  <input
-                    type="date"
-                    value={editableDates.from}
-                    onChange={(e) => handleDateChange("from", e.target.value)}
-                    className="border rounded p-1 text-sm"
-                  />
-                ) : (
-                  formatDate(item.startDate)
-                )}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {selectedRow?.serialNo === item.serialNo ? (
-                  <input
-                    type="date"
-                    value={editableDates.to}
-                    onChange={(e) => handleDateChange("to", e.target.value)}
-                    className="border rounded p-1 text-sm"
-                  />
-                ) : (
-                  formatDate(item.endDate)
-                )}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {selectedRow?.serialNo === item.serialNo
-                  ? calculateDays(editableDates.from, editableDates.to)
-                  : item.days}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.remark}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.leaveType}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.substitute}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleLeaveAction("accept")}
-                    disabled={
-                      !selectedRow ||
-                      selectedRow.serialNo !== item.serialNo ||
-                      loading
-                    }
-                    className={`px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 min-h-[42px] flex items-center justify-center ${!selectedRow ||
-                        selectedRow.serialNo !== item.serialNo ||
-                        loading
-                        ? "opacity-75 cursor-not-allowed"
-                        : ""
-                      }`}
-                  >
-                    {loading &&
-                      selectedRow?.serialNo === item.serialNo &&
-                      actionInProgress === "accept" ? (
-                      <div className="flex items-center">
-                        <svg
-                          className="animate-spin h-4 w-4 text-white mr-2"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        <span>Approving...</span>
-                      </div>
-                    ) : (
-                      "Approve"
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleLeaveAction("rejected")}
-                    disabled={
-                      selectedRow?.serialNo !== item.serialNo || loading
-                    }
-                    className={`px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 min-h-[42px] flex items-center justify-center ${selectedRow?.serialNo !== item.serialNo ||
-                        (loading && actionInProgress === "accept")
-                        ? "opacity-75 cursor-not-allowed"
-                        : ""
-                      }`}
-                  >
-                    {loading &&
-                      selectedRow?.serialNo === item.serialNo &&
-                      actionInProgress === "rejected" ? (
-                      <div className="flex items-center">
-                        <svg
-                          className="animate-spin h-4 w-4 text-white mr-2"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        <span>Rejecting...</span>
-                      </div>
-                    ) : (
-                      "Reject"
-                    )}
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="11" className="px-6 py-12 text-center">
-              <p className="text-gray-500">No pending leave requests for HOD approval.</p>
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
-
-  const renderApprovedLeavesTable = () => (
-    <table className="min-w-full divide-y divide-white">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Employee ID
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Name
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Department
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            From
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            To
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Days
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Reason
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Leave Type
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Substitute
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            HOD Approval Status
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-white">
-        {filteredApprovedLeaves.length > 0 ? (
-          filteredApprovedLeaves.map((item, index) => (
-            <tr key={index} className="hover:bg-white">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.employeeId}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.employeeName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.department}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatDate(item.startDate)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatDate(item.endDate)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.days}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.remark}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.leaveType}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.substitute}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
-                Approved
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="10" className="px-6 py-12 text-center">
-              <p className="text-gray-500">
-                No approved leave requests found.
-              </p>
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
-
-  const renderRejectedLeavesTable = () => (
-    <table className="min-w-full divide-y divide-white">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Employee ID
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Name
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Department
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            From
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            To
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Days
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Reason
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Leave Type
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Substitute
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            HOD Approval Status
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-white">
-        {filteredRejectedLeaves.length > 0 ? (
-          filteredRejectedLeaves.map((item, index) => (
-            <tr key={index} className="hover:bg-white">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.employeeId}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.employeeName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.department}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatDate(item.startDate)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatDate(item.endDate)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.days}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.remark}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.leaveType}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {item.substitute}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
-                Rejected
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="10" className="px-6 py-12 text-center">
-              <p className="text-gray-500">No rejected leave requests found.</p>
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
-
-  const renderTable = () => {
-    switch (activeTab) {
-      case "pending":
-        return renderPendingLeavesTable();
-      case "approved":
-        return renderApprovedLeavesTable();
-      case "rejected":
-        return renderRejectedLeavesTable();
-      default:
-        return renderPendingLeavesTable();
-    }
-  };
-
   return (
-    <div className="space-y-3 md:pb-4 mb-4 font-outfit">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 font-outfit">
+      
+      {/* Header Container */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Leave Approvals</h1>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">HOD Dashboard</p>
+           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Leave Approvals</h1>
+           <p className="text-slate-500 text-sm font-medium">HOD Dashboard for managing leave requests</p>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all hover:border-indigo-100">
-          <p className="text-[10px] font-bold text-gray-400 uppercase">Casual</p>
-          <p className="text-xl font-bold text-indigo-600">{leaveStats.casualLeave}</p>
-        </div>
-        <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all hover:border-emerald-100">
-          <p className="text-[10px] font-bold text-gray-400 uppercase">Earned</p>
-          <p className="text-xl font-bold text-emerald-600">{leaveStats.earnedLeave}</p>
-        </div>
-        <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all hover:border-rose-100">
-          <p className="text-[10px] font-bold text-gray-400 uppercase">Sick</p>
-          <p className="text-xl font-bold text-rose-600">{leaveStats.sickLeave}</p>
-        </div>
-        <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all hover:border-amber-100">
-          <p className="text-[10px] font-bold text-gray-400 uppercase">Restricted</p>
-          <p className="text-xl font-bold text-amber-600">{leaveStats.restrictedHoliday}</p>
-        </div>
-        <div className="bg-indigo-600 p-3 rounded-lg border border-indigo-700 shadow-sm col-span-2 md:col-span-1 shadow-indigo-100">
-          <p className="text-[10px] font-bold text-indigo-100 uppercase">Total Taken</p>
-          <p className="text-xl font-bold text-white">{leaveStats.totalLeave}</p>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by name or ID..."
-            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs sm:text-sm transition-all shadow-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-           <select 
-            value={selectedEmployee}
-            onChange={(e) => setSelectedEmployee(e.target.value)}
-            className="px-3 py-1.5 border border-gray-300 rounded-md text-[11px] font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all shadow-sm bg-white"
-          >
-            <option value="all">ALL EMPLOYEES</option>
-            {uniqueEmployeeNames.map(name => (
-              <option key={name} value={name}>{name.toUpperCase()}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Content Card with Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="border-b border-gray-100 bg-gray-50/30">
-          <nav className="flex px-2 overflow-x-auto no-scrollbar">
-            {[
-              { id: "pending", label: "Pending", count: pendingLeaves.length },
-              { id: "approved", label: "Approved", count: approvedLeaves.length },
-              { id: "rejected", label: "Rejected", count: rejectedLeaves.length }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                className={`py-3 px-4 font-bold text-[10px] uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
-                  ? "border-indigo-600 text-indigo-700"
-                  : "border-transparent text-gray-400 hover:text-gray-600"
-                  }`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="p-0">
-          <div className="overflow-x-auto">
-            {tableLoading ? (
-              <LoadingSpinner message="Synchronizing leave requests..." minHeight="300px" />
-            ) : error ? (
-              <div className="px-6 py-12 text-center">
-                <p className="text-rose-500 text-xs font-bold mb-2">Error: {error}</p>
-                <button onClick={fetchLeaveData} className="px-3 py-1 bg-rose-50 text-rose-600 border border-rose-100 rounded text-xs font-bold shadow-sm">Retry</button>
-              </div>
-            ) : (
-               <>
-                {/* Desktop Tables */}
-                <div className="hidden md:block">
-                  {activeTab === "pending" && (
-                    <table className="min-w-full divide-y divide-gray-100">
-                      <thead className="bg-gray-50/50">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select</th>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dates</th>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type / Reason</th>
-                          <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50 bg-white">
-                        {filteredPendingLeaves.length > 0 ? (
-                          filteredPendingLeaves.map((item, index) => (
-                            <tr key={index} className="hover:bg-gray-50/50 transition-colors group">
-                               <td className="px-4 py-2 whitespace-nowrap">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedRow?.serialNo === item.serialNo}
-                                  onChange={() => handleCheckboxChange(item.serialNo, item)}
-                                  className="h-3.5 w-3.5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded shadow-sm"
-                                />
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap">
-                                <p className="text-xs font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{item.employeeName}</p>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase">{item.employeeId}</p>
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap">
-                                <div className="flex flex-col gap-1">
-                                  {selectedRow?.serialNo === item.serialNo ? (
-                                    <div className="flex items-center gap-1">
-                                      <input type="date" value={editableDates.from} onChange={(e) => handleDateChange("from", e.target.value)} className="border border-gray-200 rounded px-1.5 py-0.5 text-[10px] focus:ring-1 focus:ring-indigo-500 outline-none" />
-                                      <span className="text-gray-300">-</span>
-                                      <input type="date" value={editableDates.to} onChange={(e) => handleDateChange("to", e.target.value)} className="border border-gray-200 rounded px-1.5 py-0.5 text-[10px] focus:ring-1 focus:ring-indigo-500 outline-none" />
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[11px] font-bold text-gray-600">{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
-                                      <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1 rounded">{item.days}D</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-4 py-2">
-                                <p className="text-[11px] font-bold text-gray-700">{item.leaveType}</p>
-                                <p className="text-[10px] text-gray-400 italic line-clamp-1">"{item.remark}"</p>
-                              </td>
-                              <td className="px-4 py-2 whitespace-nowrap text-center">
-                                <div className="flex items-center justify-center gap-1.5">
-                                  <button
-                                    onClick={() => handleLeaveAction("accept")}
-                                    disabled={!selectedRow || selectedRow.serialNo !== item.serialNo || loading}
-                                    className={`px-3 py-1 bg-emerald-50 text-emerald-700 rounded border border-emerald-100 text-[10px] font-bold hover:bg-emerald-600 hover:text-white transition-all shadow-sm ${(!selectedRow || selectedRow.serialNo !== item.serialNo || loading) ? "opacity-40" : ""}`}
-                                  >
-                                    {loading && selectedRow?.serialNo === item.serialNo && actionInProgress === "accept" ? "Wait.." : "Approve"}
-                                  </button>
-                                  <button
-                                    onClick={() => handleLeaveAction("rejected")}
-                                    disabled={selectedRow?.serialNo !== item.serialNo || loading}
-                                    className={`px-3 py-1 bg-rose-50 text-rose-700 rounded border border-rose-100 text-[10px] font-bold hover:bg-rose-600 hover:text-white transition-all shadow-sm ${(selectedRow?.serialNo !== item.serialNo || loading) ? "opacity-40" : ""}`}
-                                  >
-                                    {loading && selectedRow?.serialNo === item.serialNo && actionInProgress === "rejected" ? "Wait.." : "Reject"}
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr><td colSpan="5" className="px-4 py-12 text-center text-gray-400 text-xs">No pending requests.</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  )}
-                  {activeTab === "approved" && (
-                    <table className="min-w-full divide-y divide-gray-100">
-                      <thead className="bg-gray-50/50">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Period</th>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type</th>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Days</th>
-                          <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50 bg-white">
-                        {filteredApprovedLeaves.map((item, index) => (
-                           <tr key={index} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="px-4 py-2 whitespace-nowrap">
-                              <p className="text-xs font-bold text-gray-900">{item.employeeName}</p>
-                              <p className="text-[10px] text-gray-400 font-bold uppercase">{item.employeeId}</p>
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-gray-600">{formatDate(item.startDate)} - {formatDate(item.endDate)}</td>
-                            <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-gray-700">{item.leaveType}</td>
-                            <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-indigo-600 bg-indigo-50/50 text-center rounded">{item.days}D</td>
-                            <td className="px-4 py-2 whitespace-nowrap text-center">
-                              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[9px] font-bold uppercase tracking-widest shadow-sm">Approved</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                  {activeTab === "rejected" && (
-                     <table className="min-w-full divide-y divide-gray-100">
-                      <thead className="bg-gray-50/50">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Period</th>
-                          <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Reason</th>
-                          <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50 bg-white">
-                        {filteredRejectedLeaves.map((item, index) => (
-                           <tr key={index} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="px-4 py-2 whitespace-nowrap">
-                              <p className="text-xs font-bold text-gray-900">{item.employeeName}</p>
-                              <p className="text-[10px] text-gray-400 font-bold uppercase">{item.employeeId}</p>
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-gray-600">{formatDate(item.startDate)} - {formatDate(item.endDate)}</td>
-                            <td className="px-4 py-2 text-[10px] text-gray-400 italic">"{item.remark}"</td>
-                            <td className="px-4 py-2 whitespace-nowrap text-center">
-                              <span className="px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-[9px] font-bold uppercase tracking-widest shadow-sm">Rejected</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-                {/* Mobile View */}
-                <div className="md:hidden divide-y divide-gray-100">
-                  {activeTab === "pending" && (
-                    filteredPendingLeaves.length > 0 ? (
-                      filteredPendingLeaves.map((item, index) => (
-                        <div key={index} className="p-3 space-y-2">
-                          <div className="flex justify-between items-center text-[10px]">
-                            <span className="font-bold text-indigo-600">#{item.employeeId}</span>
-                            <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">{item.department}</span>
-                          </div>
-                          <div>
-                            <div className="text-sm font-bold text-gray-900 leading-tight">{item.employeeName}</div>
-                            <div className="text-[11px] text-indigo-600 font-medium">{item.leaveType}</div>
-                          </div>
-                          <div className="bg-gray-50 p-2 rounded border border-gray-100">
-                            <div className="flex justify-between items-center text-[11px]">
-                              <span className="text-gray-400 uppercase font-bold tracking-tighter">Period</span>
-                              <span className="font-bold text-gray-700">{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-[11px] mt-1">
-                              <span className="text-gray-400 uppercase font-bold tracking-tighter">Remark</span>
-                              <span className="text-gray-500 italic max-w-[200px] truncate">"{item.remark}"</span>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 pt-1">
-                            <button
-                              onClick={() => {
-                                handleCheckboxChange(item.serialNo, item);
-                                setTimeout(() => handleLeaveAction("accept"), 50);
-                              }}
-                              className="flex-1 py-2 bg-emerald-50 text-emerald-700 rounded border border-emerald-100 text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all"
-                            >
-                              Approve
-                            </button>
-                            <button
-                               onClick={() => {
-                                handleCheckboxChange(item.serialNo, item);
-                                setTimeout(() => handleLeaveAction("rejected"), 50);
-                              }}
-                              className="flex-1 py-2 bg-rose-50 text-rose-700 rounded border border-rose-100 text-xs font-bold hover:bg-rose-600 hover:text-white transition-all"
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-8 text-center text-gray-400 text-xs font-medium">No pending requests.</div>
-                    )
-                  )}
-                  {(activeTab === "approved" || activeTab === "rejected") && (
-                    (activeTab === "approved" ? filteredApprovedLeaves : filteredRejectedLeaves).map((item, index) => (
-                      <div key={index} className="p-3 space-y-2">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="font-bold text-indigo-600">#{item.employeeId}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${activeTab === "approved" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{activeTab}</span>
-                        </div>
-                        <div className="text-sm font-bold text-gray-900">{item.employeeName}</div>
-                        <div className="flex justify-between items-center pt-1 border-t border-gray-50 text-[10px]">
-                          <span className="text-gray-400 font-bold uppercase tracking-widest">{item.leaveType}</span>
-                          <span className="text-gray-600 font-bold">{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-               </>
-            )}
+      {/* Modern Leave Statistics Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {[
+          { label: "Casual", taken: leaveStats.casualLeave, total: 6, color: "indigo" },
+          { label: "Earned", taken: leaveStats.earnedLeave, total: 12, color: "emerald" },
+          { label: "Sick", taken: leaveStats.sickLeave, total: 6, color: "rose" },
+          { label: "Restricted", taken: leaveStats.restrictedHoliday, total: 2, color: "amber" }
+        ].map((stat) => (
+          <div key={stat.label} className="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm transition-all hover:shadow-md">
+            <p className={`text-[11px] font-bold text-slate-400 uppercase tracking-widest`}>{stat.label}</p>
+            <div className="flex items-end gap-1 mt-2 mb-3">
+              <span className={`text-3xl font-black text-${stat.color}-600 leading-none`}>{stat.taken || 0}</span>
+              <span className="text-sm text-slate-300 font-bold mb-1">/ {stat.total}</span>
+            </div>
+            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+               <div 
+                className={`h-full bg-${stat.color}-500 rounded-full transition-all`} 
+                style={{ width: `${Math.min(100, ((stat.taken || 0) / stat.total) * 100)}%` }}
+              ></div>
+            </div>
           </div>
+        ))}
+        <div className="bg-slate-900 p-5 rounded-3xl shadow-lg shadow-slate-200 col-span-2 md:col-span-4 lg:col-span-1 flex flex-col justify-center">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Total Approved</p>
+          <p className="text-4xl font-black text-white mt-1">{leaveStats.totalLeave || 0}</p>
+          <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-widest">Current Year</p>
         </div>
+      </div>
+
+      {/* Unified Filter Toolbar */}
+      <div className="bg-white/60 backdrop-blur-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 rounded-3xl border border-slate-200/60 shadow-sm">
+         <div className="flex p-1.5 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm w-full md:w-auto overflow-x-auto no-scrollbar">
+            {[
+              { id: "pending", label: "Pending", count: pendingLeaves.length, icon: Clock, activeColor: 'bg-indigo-600 text-white shadow-lg shadow-indigo-100', inactiveColor: 'text-slate-500 hover:text-slate-700' },
+              { id: "approved", label: "Approved", count: approvedLeaves.length, icon: CheckCircle2, activeColor: 'bg-emerald-600 text-white shadow-lg shadow-emerald-100', inactiveColor: 'text-slate-500 hover:text-slate-700' },
+              { id: "rejected", label: "Rejected", count: rejectedLeaves.length, icon: XCircle, activeColor: 'bg-rose-600 text-white shadow-lg shadow-rose-100', inactiveColor: 'text-slate-500 hover:text-slate-700' }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+                    activeTab === tab.id ? tab.activeColor : tab.inactiveColor
+                  }`}
+                >
+                  <Icon size={16} /> {tab.label} ({tab.count})
+                </button>
+              )
+            })}
+         </div>
+
+         <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+             <div className="relative w-full md:w-64">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Search name or ID..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-400"
+                />
+             </div>
+             <select 
+                value={selectedEmployee}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+                className="w-full md:w-auto px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+              >
+                <option value="all">All Employees</option>
+                {uniqueEmployeeNames.map(name => (
+                  <option key={name} value={name}>{name.toUpperCase()}</option>
+                ))}
+              </select>
+         </div>
+      </div>
+
+      {/* Main Table Container */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+          {tableLoading ? (
+            <div className="p-12 flex items-center justify-center min-h-[300px]">
+               <LoadingSpinner message="Synchronizing leave requests..." />
+            </div>
+          ) : error ? (
+            <div className="p-12 text-center min-h-[300px] flex flex-col justify-center items-center">
+              <p className="text-rose-500 text-sm font-bold mb-3">{error}</p>
+              <button onClick={fetchLeaveData} className="px-5 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-100 transition-colors uppercase tracking-widest shadow-sm">Retry Request</button>
+            </div>
+          ) : (
+            <>
+              {/* Desktop View */}
+              <div className="hidden md:block overflow-x-auto min-h-[530px] max-h-[calc(105vh-280px)] overflow-y-auto">
+                 <table className="w-full text-left border-collapse min-w-[1000px]">
+                     <thead className="bg-slate-50/50 sticky top-0 z-10 backdrop-blur-sm">
+                       <tr>
+                          {activeTab === "pending" && <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60 w-12">Select</th>}
+                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Employee</th>
+                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Dates</th>
+                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60">Type & Reason</th>
+                          {activeTab === "pending" ? (
+                             <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60 text-right">Action</th>
+                          ) : (
+                             <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60 text-right">Status</th>
+                          )}
+                       </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-100">
+                        {(() => {
+                           const displayData = activeTab === "pending" ? filteredPendingLeaves : activeTab === "approved" ? filteredApprovedLeaves : filteredRejectedLeaves;
+                           if (displayData.length === 0) {
+                              return (
+                                 <tr>
+                                   <td colSpan={activeTab === "pending" ? 5 : 4} className="px-6 py-20 text-center">
+                                      <p className="text-sm font-bold text-slate-400">No {activeTab} requests found.</p>
+                                   </td>
+                                 </tr>
+                              );
+                           }
+
+                           return displayData.map((item, index) => (
+                              <tr key={index} className={`hover:bg-slate-50/80 transition-colors group ${selectedRow?.serialNo === item.serialNo ? 'bg-indigo-50/30' : ''}`}>
+                                  {activeTab === "pending" && (
+                                    <td className="px-6 py-4">
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedRow?.serialNo === item.serialNo}
+                                          onChange={() => handleCheckboxChange(item.serialNo, item)}
+                                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded shadow-sm cursor-pointer accent-indigo-600"
+                                        />
+                                    </td>
+                                  )}
+                                  <td className="px-6 py-4">
+                                     <div className="flex items-center gap-3">
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${activeTab === 'pending' ? 'bg-indigo-100 text-indigo-600' : activeTab === 'approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                            {item.employeeName?.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className={`text-sm font-bold ${selectedRow?.serialNo === item.serialNo ? 'text-indigo-600' : 'text-slate-900 group-hover:text-indigo-600'} transition-colors`}>{item.employeeName}</p>
+                                            <p className="text-[11px] font-medium text-slate-400">{item.employeeId} • {item.department}</p>
+                                        </div>
+                                     </div>
+                                  </td>
+                                  <td className="px-6 py-4">
+                                     {activeTab === "pending" && selectedRow?.serialNo === item.serialNo ? (
+                                        <div className="flex items-center gap-2">
+                                           <input type="date" value={editableDates.from} onChange={(e) => handleDateChange("from", e.target.value)} className="bg-white border border-indigo-200 rounded-lg px-2.5 py-1.5 text-[11px] font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-700 shadow-sm" />
+                                           <span className="text-slate-300 font-bold">→</span>
+                                           <input type="date" value={editableDates.to} onChange={(e) => handleDateChange("to", e.target.value)} className="bg-white border border-indigo-200 rounded-lg px-2.5 py-1.5 text-[11px] font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-700 shadow-sm" />
+                                        </div>
+                                     ) : (
+                                        <div className="flex flex-col gap-1">
+                                            <div className="text-xs font-bold text-slate-700">
+                                                {formatDate(item.startDate)} <span className="text-slate-300 mx-1">→</span> {formatDate(item.endDate)}
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full inline-block w-fit">{item.days} Days Total</span>
+                                        </div>
+                                     )}
+                                  </td>
+                                  <td className="px-6 py-4">
+                                     <div className="space-y-1.5">
+                                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-widest shadow-sm ${item.leaveType?.includes('Casual') ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                                            {item.leaveType}
+                                        </span>
+                                        <p className="text-xs font-medium text-slate-500 max-w-[250px] italic">"{item.remark}"</p>
+                                        {item.substitute && <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">Sub: {item.substitute}</p>}
+                                     </div>
+                                  </td>
+                                  <td className="px-6 py-4 text-right">
+                                     {activeTab === "pending" ? (
+                                        <div className="flex items-center justify-end gap-2">
+                                           <button
+                                             onClick={() => handleLeaveAction("accept")}
+                                             disabled={!selectedRow || selectedRow.serialNo !== item.serialNo || loading}
+                                             className={`px-4 py-2 border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-xl text-[11px] font-bold hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center min-w-[80px] uppercase tracking-widest ${(!selectedRow || selectedRow.serialNo !== item.serialNo || loading) ? "opacity-50 cursor-not-allowed" : ""}`}
+                                           >
+                                              {loading && selectedRow?.serialNo === item.serialNo && actionInProgress === "accept" ? "Wait..." : "Approve"}
+                                           </button>
+                                           <button
+                                             onClick={() => handleLeaveAction("rejected")}
+                                             disabled={selectedRow?.serialNo !== item.serialNo || loading}
+                                             className={`px-4 py-2 border border-rose-200 bg-rose-50 text-rose-700 rounded-xl text-[11px] font-bold hover:bg-rose-600 hover:text-white transition-all shadow-sm flex items-center justify-center min-w-[80px] uppercase tracking-widest ${(selectedRow?.serialNo !== item.serialNo || loading) ? "opacity-50 cursor-not-allowed" : ""}`}
+                                           >
+                                              {loading && selectedRow?.serialNo === item.serialNo && actionInProgress === "rejected" ? "Wait..." : "Reject"}
+                                           </button>
+                                        </div>
+                                     ) : (
+                                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm ${activeTab === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                            {activeTab}
+                                        </span>
+                                     )}
+                                  </td>
+                              </tr>
+                           ))
+                        })()}
+                     </tbody>
+                 </table>
+              </div>
+
+              {/* Mobile View */}
+              <div className="md:hidden divide-y divide-slate-100 bg-slate-50 min-h-[500px]">
+                 {(() => {
+                    const displayData = activeTab === "pending" ? filteredPendingLeaves : activeTab === "approved" ? filteredApprovedLeaves : filteredRejectedLeaves;
+                    if (displayData.length === 0) {
+                        return (
+                          <div className="p-12 text-center text-slate-400">
+                             <p className="text-sm font-bold">No {activeTab} requests found</p>
+                          </div>
+                        );
+                    }
+
+                    return displayData.map((item, index) => (
+                        <div key={index} className={`p-4 bg-white hover:bg-slate-50 transition-colors ${selectedRow?.serialNo === item.serialNo ? 'ring-2 ring-indigo-500/20' : ''}`}>
+                             <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-center gap-3">
+                                   {activeTab === "pending" && (
+                                     <input
+                                        type="checkbox"
+                                        checked={selectedRow?.serialNo === item.serialNo}
+                                        onChange={() => handleCheckboxChange(item.serialNo, item)}
+                                        className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded shadow-sm cursor-pointer accent-indigo-600 mr-1"
+                                     />
+                                   )}
+                                   <div>
+                                       <p className="text-sm font-bold text-slate-900">{item.employeeName}</p>
+                                       <p className="text-[11px] font-bold text-slate-400">{item.employeeId} • {item.department}</p>
+                                   </div>
+                                </div>
+                                {activeTab === "pending" ? (
+                                   <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-sm ${item.leaveType?.includes('Casual') ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                                      {item.leaveType}
+                                   </span>
+                                ) : (
+                                   <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded shadow-sm ${activeTab === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                      {activeTab}
+                                   </span>
+                                )}
+                             </div>
+
+                             <div className="bg-slate-50 rounded-xl p-3 space-y-2 mb-3 border border-slate-100">
+                                 {activeTab === "pending" && selectedRow?.serialNo === item.serialNo ? (
+                                    <div className="flex items-center gap-2 mb-1 justify-between">
+                                        <div className="flex flex-col gap-1 w-full">
+                                            <label className="text-[9px] font-bold text-indigo-500 uppercase">From</label>
+                                            <input type="date" value={editableDates.from} onChange={(e) => handleDateChange("from", e.target.value)} className="bg-white border border-indigo-200 rounded p-1.5 text-[11px] font-bold focus:ring-1 focus:ring-indigo-500" />
+                                        </div>
+                                        <div className="flex flex-col gap-1 w-full">
+                                            <label className="text-[9px] font-bold text-indigo-500 uppercase">To</label>
+                                            <input type="date" value={editableDates.to} onChange={(e) => handleDateChange("to", e.target.value)} className="bg-white border border-indigo-200 rounded p-1.5 text-[11px] font-bold focus:ring-1 focus:ring-indigo-500" />
+                                        </div>
+                                    </div>
+                                 ) : (
+                                    <div className="flex items-center justify-between text-[11px] font-bold">
+                                        <span className="text-slate-500 flex items-center gap-1.5"><Calendar size={12}/> {formatDate(item.startDate)} <span className="text-slate-300">→</span> {formatDate(item.endDate)}</span>
+                                        <span className="text-slate-900 bg-white px-1.5 py-0.5 rounded shadow-sm border border-slate-200">{item.days} Days</span>
+                                    </div>
+                                 )}
+                                 <p className="text-xs font-medium text-slate-600 line-clamp-2 italic pt-1border-t border-slate-200/60 mt-2">"{item.remark}"</p>
+                             </div>
+
+                             {activeTab === "pending" && selectedRow?.serialNo === item.serialNo && (
+                                <div className="flex gap-2 mt-2 pt-1">
+                                    <button
+                                      onClick={() => handleLeaveAction("accept")}
+                                      disabled={loading}
+                                      className="flex-1 py-2.5 bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold uppercase tracking-widest shadow-sm hover:bg-emerald-600 hover:text-white transition-all disabled:opacity-50"
+                                    >
+                                       {loading && actionInProgress === "accept" ? "Wait..." : "Approve"}
+                                    </button>
+                                    <button
+                                      onClick={() => handleLeaveAction("rejected")}
+                                      disabled={loading}
+                                      className="flex-1 py-2.5 bg-rose-100 text-rose-700 rounded-xl text-xs font-bold uppercase tracking-widest shadow-sm hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50"
+                                    >
+                                       {loading && actionInProgress === "rejected" ? "Wait..." : "Reject"}
+                                    </button>
+                                </div>
+                             )}
+                        </div>
+                    ))
+                 })()}
+              </div>
+            </>
+          )}
       </div>
     </div>
   );
